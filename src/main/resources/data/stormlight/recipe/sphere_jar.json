@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "G G",
+    "GAG",
+    "GGG"
+  ],
+  "key": {
+    "G": "minecraft:glass_pane",
+    "A": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "stormlight:sphere_jar",
+    "count": 1
+  }
+}

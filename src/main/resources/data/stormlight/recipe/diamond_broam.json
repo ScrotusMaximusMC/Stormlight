@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MMM",
+    "MMM",
+    "MMM"
+  ],
+  "key": {
+    "M": "stormlight:diamond_mark"
+  },
+  "result": {
+    "id": "stormlight:diamond_broam",
+    "count": 1
+  }
+}
