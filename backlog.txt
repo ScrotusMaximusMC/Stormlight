@@ -1,0 +1,37 @@
+Backlog
+
+items:
+- sphere lamps
+
+highstorms:
+- cause damage
+- see stormwall arriving
+
+expansions:
+- different gemstones
+
+textural improvements:
+- gemstone peaking out of jar
+- light from spheres
+- light from sphere jars
+- particle effects
+
+magic:
+- consuming stormlight
+- using stormlight for:
+	- healing
+	
+Ores
+-add ore generation
+-balance ore distrubution
+
+	
+	
+	
+Next steps:
+Add the Sphere Jar crafting recipe.
+Establish the five uncut/cut gemstone materials.
+Add empty Chip, Mark, and Broam recipes for every gemstone.
+Later add gemstone ore generation and possibly a jeweller’s workbench or cutting tool.
+
+Let’s begin with the Sphere Jar recipe, then inspect your existing sphere item registrations before generating all 15 sphere recipes.
