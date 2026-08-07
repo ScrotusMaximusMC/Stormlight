@@ -1,12 +1,18 @@
 {
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
-
   "item.stormlight.diamond_mark.dun": "Dun Diamond Mark",
   "item.stormlight.diamond_mark.infused": "Infused Diamond Mark",
-
   "item.stormlight.diamond_broam.dun": "Dun Diamond Broam",
   "item.stormlight.diamond_broam.infused": "Infused Diamond Broam",
+
+  "item.stormlight.emerald_chip.dun": "Dun Emerald Chip",
+  "item.stormlight.emerald_chip.infused": "Infused Emerald Chip",
+  "item.stormlight.emerald_mark.dun": "Dun Emerald Mark",
+  "item.stormlight.emerald_mark.infused": "Infused Emerald Mark",
+  "item.stormlight.emerald_broam.dun": "Dun Emerald Broam",
+  "item.stormlight.emerald_broam.infused": "Infused Emerald Broam",
+
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 

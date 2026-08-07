@@ -23,7 +23,7 @@ import java.util.Set;
 public final class HighstormManager {
     private static final int TICKS_PER_SECOND = 20;
 
-    // The largest sphere currently available: Diamond Broam = 200.
+    // Base number of charging steps used by Diamond spheres.
     private static final int MAX_SPHERE_CAPACITY = 200;
 
     // Change these values whenever you want to rebalance charging.
@@ -432,7 +432,13 @@ public final class HighstormManager {
             return false;
         }
 
-        sphere.setCharge(stack, currentCharge + 1);
+        int chargeIncrease =
+                (int) (currentProgress - previousProgress);
+
+        sphere.setCharge(
+                stack,
+                currentCharge + chargeIncrease
+        );
         return true;
     }
 

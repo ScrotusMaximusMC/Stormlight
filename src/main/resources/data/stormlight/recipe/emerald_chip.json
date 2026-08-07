@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GEG",
+    "GGG"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "E": "minecraft:emerald"
+  },
+  "result": {
+    "id": "stormlight:emerald_chip",
+    "count": 1
+  }
+}
