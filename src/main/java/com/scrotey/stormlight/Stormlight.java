@@ -2,10 +2,12 @@ package com.scrotey.stormlight;
 
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.block.entity.ModBlockEntities;
+import com.scrotey.stormlight.breathing.StormlightBreathingManager;
 import com.scrotey.stormlight.component.ModComponents;
 import com.scrotey.stormlight.highstorm.HighstormCommands;
 import com.scrotey.stormlight.highstorm.HighstormManager;
 import com.scrotey.stormlight.item.ModItems;
+import com.scrotey.stormlight.network.ModNetworking;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import net.fabricmc.api.ModInitializer;
@@ -25,8 +27,10 @@ public class Stormlight implements ModInitializer {
         ModBlockEntities.initialize();
         ModMenuTypes.initialize();
         ModRecipes.initialize();
+        ModNetworking.initialize();
         HighstormManager.initialize();
         HighstormCommands.initialize();
+        StormlightBreathingManager.initialize();
 
         LOGGER.info("Hello Kaladin!");
     }

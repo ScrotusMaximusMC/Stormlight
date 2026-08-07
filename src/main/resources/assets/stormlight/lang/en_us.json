@@ -13,6 +13,19 @@
   "item.stormlight.emerald_broam.dun": "Dun Emerald Broam",
   "item.stormlight.emerald_broam.infused": "Infused Emerald Broam",
 
+  "item.stormlight.garnet_chip.dun": "Dun Garnet Chip",
+  "item.stormlight.garnet_chip.infused": "Infused Garnet Chip",
+  "item.stormlight.garnet_mark.dun": "Dun Garnet Mark",
+  "item.stormlight.garnet_mark.infused": "Infused Garnet Mark",
+  "item.stormlight.garnet_broam.dun": "Dun Garnet Broam",
+  "item.stormlight.garnet_broam.infused": "Infused Garnet Broam",
+
+  "item.stormlight.garnet": "Garnet",
+
+  "key.category.stormlight.controls": "Stormlight",
+  "key.stormlight.breathe": "Breathe Stormlight",
+
+
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 
