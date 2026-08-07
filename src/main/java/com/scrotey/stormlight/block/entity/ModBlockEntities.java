@@ -2,6 +2,7 @@ package com.scrotey.stormlight.block.entity;
 
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.block.ModBlocks;
+
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;

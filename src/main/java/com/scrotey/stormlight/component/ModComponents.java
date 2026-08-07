@@ -1,7 +1,8 @@
 package com.scrotey.stormlight.component;
 
-import com.mojang.serialization.Codec;
 import com.scrotey.stormlight.Stormlight;
+
+import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;

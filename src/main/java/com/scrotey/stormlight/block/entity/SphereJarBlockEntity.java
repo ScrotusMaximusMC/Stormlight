@@ -1,24 +1,24 @@
 package com.scrotey.stormlight.block.entity;
 
+import com.scrotey.stormlight.block.custom.SphereJarBlock;
 import com.scrotey.stormlight.item.SphereItem;
+import com.scrotey.stormlight.screen.SphereJarMenu;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.Nullable;
-
-import com.scrotey.stormlight.screen.SphereJarMenu;
-import com.scrotey.stormlight.block.custom.SphereJarBlock;
 
 public class SphereJarBlockEntity
         extends BlockEntity
@@ -28,7 +28,6 @@ public class SphereJarBlockEntity
     public static final int TOTAL_SLOTS =
             SLOTS_PER_COMPARTMENT * 3;
 
-    public static final int CHIP_SLOT_START = 0;
     public static final int MARK_SLOT_START = 16;
     public static final int BROAM_SLOT_START = 32;
 

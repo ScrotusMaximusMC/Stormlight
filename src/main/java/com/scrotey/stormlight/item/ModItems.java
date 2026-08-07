@@ -1,5 +1,7 @@
 package com.scrotey.stormlight.item;
 
+import com.scrotey.stormlight.component.ModComponents;
+
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -8,8 +10,6 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 
 import java.util.function.Function;
-
-import com.scrotey.stormlight.component.ModComponents;
 
 public class ModItems {
     public static final Item DIAMOND_CHIP = register(

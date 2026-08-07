@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.screen;
 
 import com.scrotey.stormlight.Stormlight;
+
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;

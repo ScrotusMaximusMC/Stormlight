@@ -1,15 +1,15 @@
 package com.scrotey.stormlight.item;
 
 import com.scrotey.stormlight.component.ModComponents;
+
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.CustomModelData;
-
+import net.minecraft.world.item.component.TooltipDisplay;
 
 import java.util.List;
 import java.util.function.Consumer;

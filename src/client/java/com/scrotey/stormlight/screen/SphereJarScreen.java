@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.screen;
 
 import com.scrotey.stormlight.Stormlight;
+
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -40,6 +41,7 @@ public class SphereJarScreen
         inventoryLabelX = 8;
         inventoryLabelY = 127;
     }
+
 
     @Override
     protected void init() {

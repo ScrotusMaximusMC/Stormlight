@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.item;
 
 import com.scrotey.stormlight.Stormlight;
+
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
