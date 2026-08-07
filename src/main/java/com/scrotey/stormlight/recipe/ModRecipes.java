@@ -36,6 +36,21 @@ public class ModRecipes {
                     SphereUpgradeRecipe.EMERALD_MARK_TO_BROAM_STREAM_CODEC
             );
 
+
+    public static final RecipeSerializer<SphereUpgradeRecipe> GARNET_CHIP_TO_MARK =
+            register(
+                    "garnet_chip_to_mark",
+                    SphereUpgradeRecipe.GARNET_CHIP_TO_MARK_CODEC,
+                    SphereUpgradeRecipe.GARNET_CHIP_TO_MARK_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe> GARNET_MARK_TO_BROAM =
+            register(
+                    "garnet_mark_to_broam",
+                    SphereUpgradeRecipe.GARNET_MARK_TO_BROAM_CODEC,
+                    SphereUpgradeRecipe.GARNET_MARK_TO_BROAM_STREAM_CODEC
+            );
+
     private static RecipeSerializer<SphereUpgradeRecipe> register(
             String name,
             com.mojang.serialization.MapCodec<SphereUpgradeRecipe> codec,

@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.block.entity;
 
 import com.scrotey.stormlight.block.custom.SphereJarBlock;
+import com.scrotey.stormlight.item.ModItemTags;
 import com.scrotey.stormlight.item.SphereItem;
 import com.scrotey.stormlight.screen.SphereJarMenu;
 
@@ -30,10 +31,6 @@ public class SphereJarBlockEntity
 
     public static final int MARK_SLOT_START = 16;
     public static final int BROAM_SLOT_START = 32;
-
-    private static final int CHIP_CAPACITY = 10;
-    private static final int MARK_CAPACITY = 50;
-    private static final int BROAM_CAPACITY = 200;
 
     private final NonNullList<ItemStack> items =
             NonNullList.withSize(
@@ -134,22 +131,19 @@ public class SphereJarBlockEntity
             return false;
         }
 
-        if (!(stack.getItem()
-                instanceof SphereItem sphere)) {
+        if (!(stack.getItem() instanceof SphereItem)) {
             return false;
         }
 
-        int capacity = sphere.getCapacity();
-
         if (slot < MARK_SLOT_START) {
-            return capacity == CHIP_CAPACITY;
+            return stack.is(ModItemTags.CHIPS);
         }
 
         if (slot < BROAM_SLOT_START) {
-            return capacity == MARK_CAPACITY;
+            return stack.is(ModItemTags.MARKS);
         }
 
-        return capacity == BROAM_CAPACITY;
+        return stack.is(ModItemTags.BROAMS);
     }
 
     @Override

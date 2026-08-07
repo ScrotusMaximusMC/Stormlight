@@ -17,7 +17,7 @@ public class ModComponents {
                             "stormlight_charge"
                     ),
                     DataComponentType.<Integer>builder()
-                            .persistent(Codec.intRange(0, 200))
+                            .persistent(Codec.intRange(0, 1000))
                             .build()
             );
 

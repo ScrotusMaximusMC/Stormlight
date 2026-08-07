@@ -15,6 +15,12 @@ public class ModItemIds {
     public static final ResourceKey<Item> EMERALD_MARK = create("emerald_mark");
     public static final ResourceKey<Item> EMERALD_BROAM = create("emerald_broam");
 
+
+    public static final ResourceKey<Item> GARNET = create("garnet");
+    public static final ResourceKey<Item> GARNET_CHIP = create("garnet_chip");
+    public static final ResourceKey<Item> GARNET_MARK = create("garnet_mark");
+    public static final ResourceKey<Item> GARNET_BROAM = create("garnet_broam");
+
     private static ResourceKey<Item> create(String name) {
         return ResourceKey.create(
                 Registries.ITEM,

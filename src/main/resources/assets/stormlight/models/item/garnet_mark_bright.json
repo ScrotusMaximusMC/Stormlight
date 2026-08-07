@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "stormlight:item/garnet_mark_bright"
+  }
+}

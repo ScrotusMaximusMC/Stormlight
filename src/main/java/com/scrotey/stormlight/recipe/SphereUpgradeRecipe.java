@@ -25,6 +25,13 @@ public class SphereUpgradeRecipe extends CustomRecipe {
     public static final SphereUpgradeRecipe EMERALD_MARK_TO_BROAM =
             new SphereUpgradeRecipe(ModItems.EMERALD_MARK, ModItems.EMERALD_BROAM);
 
+
+    public static final SphereUpgradeRecipe GARNET_CHIP_TO_MARK =
+            new SphereUpgradeRecipe(ModItems.GARNET_CHIP, ModItems.GARNET_MARK);
+
+    public static final SphereUpgradeRecipe GARNET_MARK_TO_BROAM =
+            new SphereUpgradeRecipe(ModItems.GARNET_MARK, ModItems.GARNET_BROAM);
+
     public static final MapCodec<SphereUpgradeRecipe> DIAMOND_CHIP_TO_MARK_CODEC =
             MapCodec.unit(DIAMOND_CHIP_TO_MARK);
 
@@ -48,6 +55,19 @@ public class SphereUpgradeRecipe extends CustomRecipe {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SphereUpgradeRecipe>
             EMERALD_MARK_TO_BROAM_STREAM_CODEC = StreamCodec.unit(EMERALD_MARK_TO_BROAM);
+
+
+    public static final MapCodec<SphereUpgradeRecipe> GARNET_CHIP_TO_MARK_CODEC =
+            MapCodec.unit(GARNET_CHIP_TO_MARK);
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, SphereUpgradeRecipe>
+            GARNET_CHIP_TO_MARK_STREAM_CODEC = StreamCodec.unit(GARNET_CHIP_TO_MARK);
+
+    public static final MapCodec<SphereUpgradeRecipe> GARNET_MARK_TO_BROAM_CODEC =
+            MapCodec.unit(GARNET_MARK_TO_BROAM);
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, SphereUpgradeRecipe>
+            GARNET_MARK_TO_BROAM_STREAM_CODEC = StreamCodec.unit(GARNET_MARK_TO_BROAM);
 
     private final Item inputItem;
     private final Item outputItem;
@@ -108,6 +128,12 @@ public class SphereUpgradeRecipe extends CustomRecipe {
         }
         if (this == EMERALD_MARK_TO_BROAM) {
             return ModRecipes.EMERALD_MARK_TO_BROAM;
+        }
+        if (this == GARNET_CHIP_TO_MARK) {
+            return ModRecipes.GARNET_CHIP_TO_MARK;
+        }
+        if (this == GARNET_MARK_TO_BROAM) {
+            return ModRecipes.GARNET_MARK_TO_BROAM;
         }
 
         throw new IllegalStateException("Unregistered sphere upgrade recipe");

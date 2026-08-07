@@ -59,6 +59,30 @@ public class ModItems {
             sphereProperties()
     );
 
+    public static final Item GARNET = register(
+            ModItemIds.GARNET,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item GARNET_CHIP = register(
+            ModItemIds.GARNET_CHIP,
+            properties -> new SphereItem(properties, 20, "garnet_chip"),
+            sphereProperties()
+    );
+
+    public static final Item GARNET_MARK = register(
+            ModItemIds.GARNET_MARK,
+            properties -> new SphereItem(properties, 100, "garnet_mark"),
+            sphereProperties()
+    );
+
+    public static final Item GARNET_BROAM = register(
+            ModItemIds.GARNET_BROAM,
+            properties -> new SphereItem(properties, 400, "garnet_broam"),
+            sphereProperties()
+    );
+
     private static Item.Properties sphereProperties() {
         return new Item.Properties()
                 .stacksTo(1)
@@ -84,6 +108,10 @@ public class ModItems {
                     entries.accept(EMERALD_CHIP);
                     entries.accept(EMERALD_MARK);
                     entries.accept(EMERALD_BROAM);
+                    entries.accept(GARNET);
+                    entries.accept(GARNET_CHIP);
+                    entries.accept(GARNET_MARK);
+                    entries.accept(GARNET_BROAM);
                 });
     }
 }

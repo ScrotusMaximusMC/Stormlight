@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GRG",
+    "GGG"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "R": "stormlight:garnet"
+  },
+  "result": {
+    "id": "stormlight:garnet_chip",
+    "count": 1
+  }
+}
