@@ -1,16 +1,3 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "misc",
-  "pattern": [
-    "CCC",
-    "CCC",
-    "CCC"
-  ],
-  "key": {
-    "C": "stormlight:diamond_chip"
-  },
-  "result": {
-    "id": "stormlight:diamond_mark",
-    "count": 1
-  }
+  "type": "stormlight:diamond_chip_to_mark"
 }

@@ -5,6 +5,7 @@ import com.scrotey.stormlight.block.entity.ModBlockEntities;
 import com.scrotey.stormlight.component.ModComponents;
 import com.scrotey.stormlight.highstorm.HighstormManager;
 import com.scrotey.stormlight.item.ModItems;
+import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 
 import net.fabricmc.api.ModInitializer;
@@ -27,6 +28,7 @@ public class Stormlight implements ModInitializer {
 		ModBlocks.initialize();
 		ModBlockEntities.initialize();
 		ModMenuTypes.initialize();
+		ModRecipes.initialize();
 		HighstormManager.initialize();
 
 
