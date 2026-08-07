@@ -1,0 +1,237 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "diamond": "stormlight:block/sphere_jar_diamond",
+    "emerald": "stormlight:block/sphere_jar_emerald",
+    "sapphire": "stormlight:block/sphere_jar_sapphire",
+    "garnet": "stormlight:block/sphere_jar_garnet",
+    "ruby": "stormlight:block/sphere_jar_ruby",
+    "particle": "stormlight:block/sphere_jar_sapphire"
+  },
+  "elements": [
+    {
+      "from": [
+        3.6,
+        8.6,
+        3.7
+      ],
+      "to": [
+        5.6,
+        10.6,
+        5.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#garnet"
+        },
+        "east": {
+          "texture": "#garnet"
+        },
+        "south": {
+          "texture": "#garnet"
+        },
+        "west": {
+          "texture": "#garnet"
+        },
+        "up": {
+          "texture": "#garnet"
+        },
+        "down": {
+          "texture": "#garnet"
+        }
+      }
+    },
+    {
+      "from": [
+        6.15,
+        8.65,
+        3.45
+      ],
+      "to": [
+        8.25,
+        10.75,
+        5.55
+      ],
+      "faces": {
+        "north": {
+          "texture": "#ruby"
+        },
+        "east": {
+          "texture": "#ruby"
+        },
+        "south": {
+          "texture": "#ruby"
+        },
+        "west": {
+          "texture": "#ruby"
+        },
+        "up": {
+          "texture": "#ruby"
+        },
+        "down": {
+          "texture": "#ruby"
+        }
+      }
+    },
+    {
+      "from": [
+        8.7,
+        8.6,
+        3.8
+      ],
+      "to": [
+        10.7,
+        10.6,
+        5.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#diamond"
+        },
+        "east": {
+          "texture": "#diamond"
+        },
+        "south": {
+          "texture": "#diamond"
+        },
+        "west": {
+          "texture": "#diamond"
+        },
+        "up": {
+          "texture": "#diamond"
+        },
+        "down": {
+          "texture": "#diamond"
+        }
+      }
+    },
+    {
+      "from": [
+        3.95,
+        8.65,
+        6.35
+      ],
+      "to": [
+        6.05,
+        10.75,
+        8.45
+      ],
+      "faces": {
+        "north": {
+          "texture": "#emerald"
+        },
+        "east": {
+          "texture": "#emerald"
+        },
+        "south": {
+          "texture": "#emerald"
+        },
+        "west": {
+          "texture": "#emerald"
+        },
+        "up": {
+          "texture": "#emerald"
+        },
+        "down": {
+          "texture": "#emerald"
+        }
+      }
+    },
+    {
+      "from": [
+        6.6,
+        8.6,
+        6.2
+      ],
+      "to": [
+        8.6,
+        10.6,
+        8.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#sapphire"
+        },
+        "east": {
+          "texture": "#sapphire"
+        },
+        "south": {
+          "texture": "#sapphire"
+        },
+        "west": {
+          "texture": "#sapphire"
+        },
+        "up": {
+          "texture": "#sapphire"
+        },
+        "down": {
+          "texture": "#sapphire"
+        }
+      }
+    },
+    {
+      "from": [
+        8.95,
+        8.65,
+        6.45
+      ],
+      "to": [
+        11.05,
+        10.75,
+        8.55
+      ],
+      "faces": {
+        "north": {
+          "texture": "#garnet"
+        },
+        "east": {
+          "texture": "#garnet"
+        },
+        "south": {
+          "texture": "#garnet"
+        },
+        "west": {
+          "texture": "#garnet"
+        },
+        "up": {
+          "texture": "#garnet"
+        },
+        "down": {
+          "texture": "#garnet"
+        }
+      }
+    },
+    {
+      "from": [
+        6.4,
+        8.7,
+        8.8
+      ],
+      "to": [
+        8.4,
+        10.7,
+        10.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#ruby"
+        },
+        "east": {
+          "texture": "#ruby"
+        },
+        "south": {
+          "texture": "#ruby"
+        },
+        "west": {
+          "texture": "#ruby"
+        },
+        "up": {
+          "texture": "#ruby"
+        },
+        "down": {
+          "texture": "#ruby"
+        }
+      }
+    }
+  ]
+}

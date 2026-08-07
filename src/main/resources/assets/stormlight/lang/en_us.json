@@ -1,0 +1,14 @@
+{
+  "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
+  "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
+
+  "item.stormlight.diamond_mark.dun": "Dun Diamond Mark",
+  "item.stormlight.diamond_mark.infused": "Infused Diamond Mark",
+
+  "item.stormlight.diamond_broam.dun": "Dun Diamond Broam",
+  "item.stormlight.diamond_broam.infused": "Infused Diamond Broam",
+
+  "block.stormlight.sphere_jar": "Sphere Jar",
+
+  "tooltip.stormlight.charge": "Stormlight: %s / %s"
+}
