@@ -168,6 +168,11 @@ public final class HighstormManager {
 
         ensureInitialized(data, level.getRandom());
         maintainWeather(level, data);
+        HighstormAtmosphere.tick(
+                level,
+                data.getPhase(),
+                data.getTicksRemaining()
+        );
 
         if (data.getPhase() == HighstormPhase.HIGHSTORM) {
             long elapsedHighstormTicks =
