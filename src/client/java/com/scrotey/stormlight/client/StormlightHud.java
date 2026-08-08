@@ -1,9 +1,12 @@
 package com.scrotey.stormlight.client;
 
+import com.scrotey.stormlight.breathing.AbilityId;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+
+import java.util.EnumSet;
 
 public final class StormlightHud {
     private static final int BAR_WIDTH = 120;
@@ -16,7 +19,7 @@ public final class StormlightHud {
 
     private static int charge;
     private static int capacity;
-    private static boolean breathing;
+    private static EnumSet<AbilityId> activeAbilities = EnumSet.noneOf(AbilityId.class);
 
     private StormlightHud() {
     }
@@ -24,11 +27,19 @@ public final class StormlightHud {
     public static void update(StormlightStatusPayload payload) {
         charge = Math.max(0, payload.charge());
         capacity = Math.max(0, payload.capacity());
-        breathing = payload.breathing();
+        activeAbilities = decode(payload.activeAbilitiesMask());
     }
 
-    public static boolean isBreathing() {
-        return breathing;
+    private static EnumSet<AbilityId> decode(int mask) {
+        EnumSet<AbilityId> abilities = EnumSet.noneOf(AbilityId.class);
+
+        for (AbilityId id : AbilityId.values()) {
+            if ((mask & (1 << id.ordinal())) != 0) {
+                abilities.add(id);
+            }
+        }
+
+        return abilities;
     }
 
     public static void render(
@@ -85,10 +96,7 @@ public final class StormlightHud {
         }
 
         Component label = Component.literal(
-                (breathing ? "Breathing Stormlight — " : "Stormlight — ")
-                        + charge
-                        + " / "
-                        + capacity
+                statusLabel() + " — " + charge + " / " + capacity
         );
 
         int textX = (screenWidth - client.font.width(label)) / 2;
@@ -101,6 +109,25 @@ public final class StormlightHud {
                 TEXT_COLOUR,
                 true
         );
+    }
+
+    private static String statusLabel() {
+        boolean surging = activeAbilities.contains(AbilityId.STRENGTH_SURGE);
+        boolean healing = activeAbilities.contains(AbilityId.EMERGENCY_HEAL);
+
+        if (surging && healing) {
+            return "Surging + Healing";
+        }
+
+        if (healing) {
+            return "Healing";
+        }
+
+        if (surging) {
+            return "Surging";
+        }
+
+        return "Stormlight";
     }
 
     private static int colourForCapacity(int totalCapacity) {

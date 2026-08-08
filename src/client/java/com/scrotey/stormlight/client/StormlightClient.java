@@ -2,7 +2,8 @@ package com.scrotey.stormlight.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.scrotey.stormlight.Stormlight;
-import com.scrotey.stormlight.network.SetBreathingPayload;
+import com.scrotey.stormlight.breathing.AbilityId;
+import com.scrotey.stormlight.network.AbilityInputPayload;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.screen.SphereJarScreen;
@@ -16,6 +17,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 public class StormlightClient implements ClientModInitializer {
+    private static final int HOLD_THRESHOLD_TICKS = 8;
+
     private static final KeyMapping.Category STORMLIGHT_CATEGORY =
             KeyMapping.Category.register(
                     Stormlight.id("controls")
@@ -31,6 +34,9 @@ public class StormlightClient implements ClientModInitializer {
                     )
             );
 
+    private static int heldTicks = 0;
+    private static boolean holdActivated = false;
+
     @Override
     public void onInitializeClient() {
         MenuScreens.register(
@@ -43,22 +49,51 @@ public class StormlightClient implements ClientModInitializer {
                 (payload, context) -> StormlightHud.update(payload)
         );
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(
-                            new SetBreathingPayload(
-                                    !StormlightHud.isBreathing()
-                            )
-                    );
-                }
-            }
-        });
+        ClientTickEvents.END_CLIENT_TICK.register(StormlightClient::tick);
 
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
                 Stormlight.id("stormlight_bar"),
                 StormlightHud::render
         );
+    }
+
+    private static void tick(net.minecraft.client.Minecraft client) {
+        if (client.player == null) {
+            heldTicks = 0;
+            holdActivated = false;
+            return;
+        }
+
+        boolean down = BREATHE_STORMLIGHT_KEY.isDown() && client.gui.screen() == null;
+
+        if (down) {
+            heldTicks++;
+
+            if (!holdActivated && heldTicks == HOLD_THRESHOLD_TICKS) {
+                holdActivated = true;
+                send(AbilityId.EMERGENCY_HEAL, AbilityInputPayload.Action.START);
+            }
+        } else {
+            if (heldTicks > 0) {
+                if (holdActivated) {
+                    send(AbilityId.EMERGENCY_HEAL, AbilityInputPayload.Action.STOP);
+                } else if (heldTicks < HOLD_THRESHOLD_TICKS) {
+                    send(AbilityId.STRENGTH_SURGE, AbilityInputPayload.Action.TOGGLE);
+                }
+            }
+
+            heldTicks = 0;
+            holdActivated = false;
+        }
+
+        while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
+            // Drain the click queue defensively; tap/hold logic above
+            // uses isDown() polling, not consumeClick().
+        }
+    }
+
+    private static void send(AbilityId ability, AbilityInputPayload.Action action) {
+        ClientPlayNetworking.send(new AbilityInputPayload(ability, action));
     }
 }

@@ -1,6 +1,6 @@
 package com.scrotey.stormlight.network;
 
-import com.scrotey.stormlight.breathing.StormlightBreathingManager;
+import com.scrotey.stormlight.breathing.StormlightManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -10,8 +10,8 @@ public final class ModNetworking {
 
     public static void initialize() {
         PayloadTypeRegistry.serverboundPlay().register(
-                SetBreathingPayload.TYPE,
-                SetBreathingPayload.CODEC
+                AbilityInputPayload.TYPE,
+                AbilityInputPayload.CODEC
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
@@ -20,11 +20,12 @@ public final class ModNetworking {
         );
 
         ServerPlayNetworking.registerGlobalReceiver(
-                SetBreathingPayload.TYPE,
+                AbilityInputPayload.TYPE,
                 (payload, context) ->
-                        StormlightBreathingManager.setBreathing(
+                        StormlightManager.handleInput(
                                 context.player(),
-                                payload.breathing()
+                                payload.ability(),
+                                payload.action()
                         )
         );
     }
