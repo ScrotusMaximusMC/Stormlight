@@ -7,10 +7,23 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.ItemContainerContents;
 
 import java.util.function.Function;
 
 public class ModItems {
+
+    public static final Item SPHERE_POUCH = register(
+            ModItemIds.SPHERE_POUCH,
+            SpherePouchItem::new,
+            new Item.Properties()
+                    .stacksTo(1)
+                    .component(
+                            ModComponents.SPHERE_POUCH_CONTENTS,
+                            ItemContainerContents.EMPTY
+                    )
+    );
+
     public static final Item DIAMOND_CHIP = register(
             ModItemIds.DIAMOND_CHIP,
             properties -> new SphereItem(properties, 10, "diamond_chip"),
@@ -102,6 +115,7 @@ public class ModItems {
     public static void initialize() {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> {
+                    entries.accept(SPHERE_POUCH);
                     entries.accept(DIAMOND_CHIP);
                     entries.accept(DIAMOND_MARK);
                     entries.accept(DIAMOND_BROAM);

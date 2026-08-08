@@ -1,6 +1,6 @@
 package com.scrotey.stormlight.highstorm;
 
-import net.minecraft.core.particles.ParticleTypes;
+import com.scrotey.stormlight.particle.ModParticles;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -14,6 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
 
+
 public final class HighstormAtmosphere {
     private static final int APPROACHING_TICKS = 60 * 20;
     private static final int PASSING_TICKS = 30 * 20;
@@ -23,11 +24,15 @@ public final class HighstormAtmosphere {
     private static final double WIND_Z = 0.0;
 
     // Sparse v2-style blue wisps, now spawning in a full circle around players.
-    private static final int PARTICLE_INTERVAL_TICKS = 12;
-    private static final int WINDSPREN_PER_BURST = 4;
-    private static final double WINDSPREN_MIN_DISTANCE = 6.0;
-    private static final double WINDSPREN_MAX_DISTANCE = 28.0;
-    private static final double WINDSPREN_WEST_SPEED = -0.55;
+    private static final int PARTICLE_INTERVAL_TICKS = 10;
+    private static final int WINDSPREN_PER_BURST = 7;
+    private static final double WINDSPREN_MIN_DISTANCE = 2.0;
+    private static final double WINDSPREN_MAX_DISTANCE = 48.0;
+
+    // Strong westward current with gentle firefly-like wandering.
+    private static final double WINDSPREN_WEST_SPEED = -0.9;
+    private static final double WINDSPREN_VERTICAL_WISP = 0.070;
+    private static final double WINDSPREN_SIDEWAYS_WISP = 0.11;
 
     // Actual lightning. Each check has a chance to create one real strike.
     private static final int LIGHTNING_CHECK_INTERVAL_TICKS = 24;
@@ -136,30 +141,43 @@ public final class HighstormAtmosphere {
             for (int i = 0; i < count; i++) {
                 double angle = level.getRandom().nextDouble()
                         * Math.PI * 2.0;
+
                 double distance = WINDSPREN_MIN_DISTANCE
                         + level.getRandom().nextDouble()
                         * (WINDSPREN_MAX_DISTANCE
                         - WINDSPREN_MIN_DISTANCE);
 
-                // Spawn anywhere around the player, not only to the east.
                 double x = player.getX()
                         + Math.cos(angle) * distance;
-                double y = player.getY() - 1.0
-                        + level.getRandom().nextDouble() * 8.0;
+
+                double y = player.getY() - 0.5
+                        + level.getRandom().nextDouble() * 7.0;
+
                 double z = player.getZ()
                         + Math.sin(angle) * distance;
 
-                // count == 0 gives this one particle exact velocity.
-                // Negative X means every windspren travels due west.
+                double westSpeed = WINDSPREN_WEST_SPEED
+                        * (0.80
+                        + level.getRandom().nextDouble() * 0.40)
+                        * intensity;
+
+                double verticalWisp =
+                        (level.getRandom().nextDouble() - 0.5)
+                                * WINDSPREN_VERTICAL_WISP;
+
+                double sidewaysWisp =
+                        (level.getRandom().nextDouble() - 0.5)
+                                * WINDSPREN_SIDEWAYS_WISP;
+
                 level.sendParticles(
-                        ParticleTypes.SOUL,
+                        ModParticles.WINDSPREN,
                         x,
                         y,
                         z,
                         0,
-                        WINDSPREN_WEST_SPEED * intensity,
-                        0.0,
-                        0.0,
+                        westSpeed,
+                        verticalWisp,
+                        sidewaysWisp,
                         1.0
                 );
             }

@@ -7,6 +7,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.component.ItemContainerContents;
 
 public class ModComponents {
     public static final DataComponentType<Integer> STORMLIGHT_CHARGE =
@@ -16,8 +17,25 @@ public class ModComponents {
                             Stormlight.MOD_ID,
                             "stormlight_charge"
                     ),
+
                     DataComponentType.<Integer>builder()
                             .persistent(Codec.intRange(0, 1000))
+                            .build()
+            );
+
+    public static final DataComponentType<ItemContainerContents> SPHERE_POUCH_CONTENTS =
+            Registry.register(
+                    BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    Identifier.fromNamespaceAndPath(
+                            Stormlight.MOD_ID,
+                            "sphere_pouch_contents"
+                    ),
+                    DataComponentType
+                            .<ItemContainerContents>builder()
+                            .persistent(ItemContainerContents.CODEC)
+                            .networkSynchronized(
+                                    ItemContainerContents.STREAM_CODEC
+                            )
                             .build()
             );
 

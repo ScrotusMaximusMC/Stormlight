@@ -9,9 +9,9 @@ import net.minecraft.network.chat.Component;
 import java.util.EnumSet;
 
 public final class StormlightHud {
-    private static final int BAR_WIDTH = 120;
-    private static final int BAR_HEIGHT = 9;
-    private static final int INNER_WIDTH = BAR_WIDTH - 4;
+    private static final int BAR_WIDTH = 81;
+    private static final int BAR_HEIGHT = 5;
+    private static final int INNER_WIDTH = BAR_WIDTH - 2;
 
     private static final int BORDER_COLOUR = 0xDD07121F;
     private static final int EMPTY_COLOUR = 0xCC102638;
@@ -55,8 +55,9 @@ public final class StormlightHud {
 
         int screenWidth = client.getWindow().getGuiScaledWidth();
         int screenHeight = client.getWindow().getGuiScaledHeight();
-        int x = (screenWidth - BAR_WIDTH) / 2;
-        int y = screenHeight - 55;
+        // Aligns with the hunger bar, opposite the armour display.
+        int x = screenWidth / 2 + 10;
+        int y = screenHeight - 49;
 
         double fullness = Math.min(
                 1.0,
@@ -78,28 +79,26 @@ public final class StormlightHud {
         );
 
         graphics.fill(
-                x + 2,
-                y + 2,
-                x + 2 + INNER_WIDTH,
-                y + BAR_HEIGHT - 2,
+                x + 1,
+                y + 1,
+                x + 1 + INNER_WIDTH,
+                y + BAR_HEIGHT - 1,
                 EMPTY_COLOUR
         );
 
         if (filledWidth > 0) {
             graphics.fill(
-                    x + 2,
-                    y + 2,
-                    x + 2 + filledWidth,
-                    y + BAR_HEIGHT - 2,
+                    x + 1,
+                    y + 1,
+                    x + 1 + filledWidth,
+                    y + BAR_HEIGHT - 1,
                     colourForCapacity(capacity)
             );
         }
 
-        Component label = Component.literal(
-                statusLabel() + " — " + charge + " / " + capacity
-        );
+        Component label = Component.literal(statusLabel());
 
-        int textX = (screenWidth - client.font.width(label)) / 2;
+        int textX = x + (BAR_WIDTH - client.font.width(label)) / 2;
 
         graphics.text(
                 client.font,
@@ -127,7 +126,7 @@ public final class StormlightHud {
             return "Surging";
         }
 
-        return "Stormlight";
+        return "";
     }
 
     private static int colourForCapacity(int totalCapacity) {

@@ -1,12 +1,18 @@
 package com.scrotey.stormlight.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.breathing.AbilityId;
 import com.scrotey.stormlight.network.AbilityInputPayload;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.screen.SphereJarScreen;
+import com.scrotey.stormlight.particle.ModParticles;
+
+import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
+import net.minecraft.client.particle.EndRodParticle;
+import net.minecraft.client.particle.FireflyParticle;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -39,6 +45,16 @@ public class StormlightClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ParticleProviderRegistry.getInstance().register(
+                ModParticles.WINDSPREN,
+                EndRodParticle.Provider::new
+        );
+
+        ParticleProviderRegistry.getInstance().register(
+                ModParticles.SURGE_LIGHT,
+                FireflyParticle.FireflyProvider::new
+        );
+
         MenuScreens.register(
                 ModMenuTypes.SPHERE_JAR,
                 SphereJarScreen::new

@@ -1,4 +1,8 @@
 {
+
+  "item.stormlight.sphere_pouch": "Sphere Pouch",
+  "tooltip.stormlight.sphere_pouch": "Spheres: %s / %s",
+
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
   "item.stormlight.diamond_mark.dun": "Dun Diamond Mark",

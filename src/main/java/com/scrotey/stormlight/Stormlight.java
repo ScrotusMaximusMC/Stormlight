@@ -10,6 +10,8 @@ import com.scrotey.stormlight.item.ModItems;
 import com.scrotey.stormlight.network.ModNetworking;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
+import com.scrotey.stormlight.particle.ModParticles;
+
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -28,6 +30,7 @@ public class Stormlight implements ModInitializer {
         ModMenuTypes.initialize();
         ModRecipes.initialize();
         ModNetworking.initialize();
+        ModParticles.initialize();
         HighstormManager.initialize();
         HighstormCommands.initialize();
         StormlightManager.initialize();

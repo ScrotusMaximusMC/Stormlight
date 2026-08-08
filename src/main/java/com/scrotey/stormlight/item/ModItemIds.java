@@ -7,6 +7,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 
 public class ModItemIds {
+
+    public static final ResourceKey<Item> SPHERE_POUCH = create("sphere_pouch");
+
     public static final ResourceKey<Item> DIAMOND_CHIP = create("diamond_chip");
     public static final ResourceKey<Item> DIAMOND_MARK = create("diamond_mark");
     public static final ResourceKey<Item> DIAMOND_BROAM = create("diamond_broam");

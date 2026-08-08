@@ -1,7 +1,7 @@
 package com.scrotey.stormlight.breathing;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.particles.ParticleTypes;
+import com.scrotey.stormlight.particle.ModParticles;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
@@ -22,7 +22,8 @@ public final class StrengthSurgeAbility implements StormlightAbility {
 
     private static final int EFFECT_REFRESH_INTERVAL_TICKS = 20;
     private static final int EFFECT_DURATION_TICKS = 45;
-    private static final int PARTICLE_INTERVAL_TICKS = 5;
+    private static final int PARTICLE_INTERVAL_TICKS = 3;
+    private static final int PARTICLES_PER_BURST = 4;
 
     @Override
     public AbilityId id() {
@@ -100,15 +101,15 @@ public final class StrengthSurgeAbility implements StormlightAbility {
         ServerLevel level = (ServerLevel) player.level();
 
         level.sendParticles(
-                ParticleTypes.SOUL,
+                ModParticles.SURGE_LIGHT,
                 player.getX(),
-                player.getY() + 1.0,
+                player.getY() + 0.95,
                 player.getZ(),
-                2,
-                0.30,
-                0.45,
-                0.30,
-                0.015
+                PARTICLES_PER_BURST,
+                0.42,
+                0.78,
+                0.42,
+                0.012
         );
     }
 }
