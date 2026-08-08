@@ -9,10 +9,22 @@ import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.screen.SphereJarScreen;
 import com.scrotey.stormlight.particle.ModParticles;
+import com.scrotey.stormlight.attachment.ModAttachments;
+import com.scrotey.stormlight.client.mixin.AbstractContainerScreenAccessor;
+import com.scrotey.stormlight.network.OpenSpherePouchPayload;
+import com.scrotey.stormlight.network.SpherePouchSlotPayload;
+import com.scrotey.stormlight.screen.SpherePouchScreen;
 
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
 import net.minecraft.client.particle.EndRodParticle;
 import net.minecraft.client.particle.FireflyParticle;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -59,6 +71,13 @@ public class StormlightClient implements ClientModInitializer {
                 ModMenuTypes.SPHERE_JAR,
                 SphereJarScreen::new
         );
+
+        MenuScreens.register(
+                ModMenuTypes.SPHERE_POUCH,
+                SpherePouchScreen::new
+        );
+
+        registerSpherePouchInventoryControls();
 
         ClientPlayNetworking.registerGlobalReceiver(
                 StormlightStatusPayload.TYPE,
@@ -107,6 +126,138 @@ public class StormlightClient implements ClientModInitializer {
             // Drain the click queue defensively; tap/hold logic above
             // uses isDown() polling, not consumeClick().
         }
+    }
+
+    private static void registerSpherePouchInventoryControls() {
+        ScreenEvents.AFTER_INIT.register(
+                (
+                        client,
+                        screen,
+                        scaledWidth,
+                        scaledHeight
+                ) -> {
+                    if (!(screen
+                            instanceof InventoryScreen)) {
+                        return;
+                    }
+
+                    AbstractContainerScreenAccessor accessor =
+                            (AbstractContainerScreenAccessor)
+                                    screen;
+
+                    Button equipmentSlot =
+                            Button.builder(
+                                    Component.literal("+"),
+                                    button ->
+                                            ClientPlayNetworking.send(
+                                                    SpherePouchSlotPayload
+                                                            .INSTANCE
+                                            )
+                            ).bounds(
+                                    accessor.stormlight$getLeftPos()
+                                            + 77,
+                                    accessor.stormlight$getTopPos()
+                                            + 43,
+                                    18,
+                                    18
+                            ).build();
+
+                    Button pouchTab =
+                            Button.builder(
+                                    Component.translatable(
+                                            "button.stormlight."
+                                                    + "sphere_pouch"
+                                    ),
+                                    button ->
+                                            ClientPlayNetworking.send(
+                                                    OpenSpherePouchPayload
+                                                            .INSTANCE
+                                            )
+                            ).bounds(
+                                    accessor.stormlight$getLeftPos()
+                                            + 128,
+                                    accessor.stormlight$getTopPos()
+                                            + 61,
+                                    44,
+                                    18
+                            ).build();
+
+                    Screens.getWidgets(screen).add(
+                            equipmentSlot
+                    );
+
+                    Screens.getWidgets(screen).add(
+                            pouchTab
+                    );
+
+                    ScreenEvents.beforeExtract(screen)
+                            .register(
+                                    (
+                                            ignoredScreen,
+                                            ignoredGraphics,
+                                            ignoredMouseX,
+                                            ignoredMouseY,
+                                            ignoredDelta
+                                    ) -> {
+                                        int left =
+                                                accessor
+                                                        .stormlight$getLeftPos();
+
+                                        int top =
+                                                accessor
+                                                        .stormlight$getTopPos();
+
+                                        equipmentSlot.setPosition(
+                                                left + 77,
+                                                top + 43
+                                        );
+
+                                        pouchTab.setPosition(
+                                                left + 128,
+                                                top + 61
+                                        );
+
+                                        pouchTab.active =
+                                                client.player != null
+                                                        && ModAttachments
+                                                        .hasEquippedPouch(
+                                                                client.player
+                                                        );
+                                    }
+                            );
+
+                    ScreenEvents.afterExtract(screen)
+                            .register(
+                                    (
+                                            ignoredScreen,
+                                            graphics,
+                                            mouseX,
+                                            mouseY,
+                                            delta
+                                    ) -> {
+                                        if (client.player == null) {
+                                            return;
+                                        }
+
+                                        ItemStack pouch =
+                                                ModAttachments
+                                                        .getEquippedPouch(
+                                                                client.player
+                                                        );
+
+                                        if (!pouch.isEmpty()) {
+                                            graphics.item(
+                                                    pouch,
+                                                    equipmentSlot.getX()
+                                                            + 1,
+                                                    equipmentSlot.getY()
+                                                            + 1
+                                            );
+                                        }
+                                    }
+                            );
+                }
+        );
     }
 
     private static void send(AbilityId ability, AbilityInputPayload.Action action) {

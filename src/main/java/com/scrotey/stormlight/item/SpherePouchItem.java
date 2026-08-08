@@ -1,7 +1,12 @@
 package com.scrotey.stormlight.item;
 
 import com.scrotey.stormlight.component.ModComponents;
+import com.scrotey.stormlight.attachment.ModAttachments;
 
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -34,6 +39,49 @@ public class SpherePouchItem extends Item {
                 ModComponents.SPHERE_POUCH_CONTENTS,
                 contents
         );
+    }
+
+    @Override
+    public InteractionResult use(
+            Level level,
+            Player player,
+            InteractionHand hand
+    ) {
+        if (level.isClientSide()) {
+            return InteractionResult.PASS;
+        }
+
+        ItemStack heldPouch =
+                player.getItemInHand(hand);
+
+        ItemStack previouslyEquipped =
+                ModAttachments.getEquippedPouch(player);
+
+        ModAttachments.setEquippedPouch(
+                player,
+                heldPouch
+        );
+
+        player.setItemInHand(
+                hand,
+                previouslyEquipped
+        );
+
+        if (previouslyEquipped.isEmpty()) {
+            player.sendOverlayMessage(
+                    Component.translatable(
+                            "message.stormlight.sphere_pouch.equipped"
+                    )
+            );
+        } else {
+            player.sendOverlayMessage(
+                    Component.translatable(
+                            "message.stormlight.sphere_pouch.swapped"
+                    )
+            );
+        }
+
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     @Override

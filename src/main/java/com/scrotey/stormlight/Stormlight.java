@@ -1,5 +1,6 @@
 package com.scrotey.stormlight;
 
+import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.block.entity.ModBlockEntities;
 import com.scrotey.stormlight.breathing.StormlightManager;
@@ -25,6 +26,7 @@ public class Stormlight implements ModInitializer {
     public void onInitialize() {
         ModComponents.initialize();
         ModItems.initialize();
+        ModAttachments.initialize();
         ModBlocks.initialize();
         ModBlockEntities.initialize();
         ModMenuTypes.initialize();

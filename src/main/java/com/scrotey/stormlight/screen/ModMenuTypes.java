@@ -16,6 +16,13 @@ public final class ModMenuTypes {
                     SphereJarMenu::new
             );
 
+    public static final MenuType<SpherePouchMenu>
+            SPHERE_POUCH =
+            register(
+                    "sphere_pouch",
+                    SpherePouchMenu::new
+            );
+
     private ModMenuTypes() {
     }
 

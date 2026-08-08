@@ -1,7 +1,12 @@
 {
-
   "item.stormlight.sphere_pouch": "Sphere Pouch",
   "tooltip.stormlight.sphere_pouch": "Spheres: %s / %s",
+  "message.stormlight.sphere_pouch.equipped": "Sphere Pouch equipped",
+  "message.stormlight.sphere_pouch.swapped": "Sphere Pouches swapped",
+  "container.stormlight.sphere_pouch": "Sphere Pouch",
+  "button.stormlight.sphere_pouch": "Pouch",
+  "message.stormlight.sphere_pouch.none_equipped": "No Sphere Pouch equipped",
+  "message.stormlight.sphere_pouch.invalid_item": "Only a Sphere Pouch can be equipped here",
 
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
