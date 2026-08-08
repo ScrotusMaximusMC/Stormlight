@@ -24,7 +24,9 @@ public class SphereJarBlock extends BaseEntityBlock {
     ) {
         super(properties);
         registerDefaultState(
-                defaultBlockState().setValue(FILL_LEVEL, 0)
+                defaultBlockState()
+                        .setValue(FILL_LEVEL, 0)
+                        .setValue(LIGHT_LEVEL, 0)
         );
 
     }
@@ -32,12 +34,15 @@ public class SphereJarBlock extends BaseEntityBlock {
     public static final IntegerProperty FILL_LEVEL =
             IntegerProperty.create("fill_level", 0, 4);
 
+    public static final IntegerProperty LIGHT_LEVEL =
+            IntegerProperty.create("light_level", 0, 15);
+
 
     @Override
     protected void createBlockStateDefinition(
             StateDefinition.Builder<Block, BlockState> builder
     ) {
-        builder.add(FILL_LEVEL);
+        builder.add(FILL_LEVEL, LIGHT_LEVEL);
     }
 
     @Override

@@ -45,6 +45,9 @@ public final class ModBlocks {
                                     .strength(0.3F)
                                     .sound(SoundType.GLASS)
                                     .noOcclusion()
+                                    .lightLevel(state ->
+                                            state.getValue(SphereJarBlock.LIGHT_LEVEL)
+                                    )
                     )
             );
 

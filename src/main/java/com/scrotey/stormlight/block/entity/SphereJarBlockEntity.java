@@ -52,19 +52,31 @@ public class SphereJarBlockEntity
     @Override
     public void setChanged() {
         super.setChanged();
-        updateFillLevel();
+        updateBlockState();
     }
 
-    private void updateFillLevel() {
+    private void updateBlockState() {
         if (level == null || level.isClientSide()) {
             return;
         }
 
+        BlockState state = getBlockState();
+
+        if (!state.hasProperty(SphereJarBlock.FILL_LEVEL)
+                || !state.hasProperty(SphereJarBlock.LIGHT_LEVEL)) {
+            return;
+        }
+
         int occupiedSlots = 0;
+        int totalCharge = 0;
 
         for (ItemStack stack : items) {
             if (!stack.isEmpty()) {
                 occupiedSlots++;
+            }
+
+            if (stack.getItem() instanceof SphereItem sphere) {
+                totalCharge += sphere.getCharge(stack);
             }
         }
 
@@ -75,20 +87,65 @@ public class SphereJarBlockEntity
                 (occupiedSlots + 11) / 12
         );
 
-        BlockState state = getBlockState();
+        int newLightLevel = lightLevelForCharge(totalCharge);
 
-        if (state.hasProperty(SphereJarBlock.FILL_LEVEL)
-                && state.getValue(SphereJarBlock.FILL_LEVEL)
-                != newFillLevel) {
+        if (state.getValue(SphereJarBlock.FILL_LEVEL) != newFillLevel
+                || state.getValue(SphereJarBlock.LIGHT_LEVEL) != newLightLevel) {
 
             level.setBlockAndUpdate(
                     worldPosition,
                     state.setValue(
-                            SphereJarBlock.FILL_LEVEL,
-                            newFillLevel
-                    )
+                                    SphereJarBlock.FILL_LEVEL,
+                                    newFillLevel
+                            )
+                            .setValue(
+                                    SphereJarBlock.LIGHT_LEVEL,
+                                    newLightLevel
+                            )
             );
         }
+    }
+
+    /**
+     * Maps the jar's total stored Stormlight (summed across every
+     * sphere inside, regardless of how many spheres or their capacity)
+     * to a block light level - more Stormlight glows brighter and
+     * further, independent of how full the jar looks.
+     */
+    private static int lightLevelForCharge(int totalCharge) {
+        if (totalCharge <= 0) {
+            return 0;
+        }
+
+        if (totalCharge < 10) {
+            return 2;
+        }
+
+        if (totalCharge < 25) {
+            return 4;
+        }
+
+        if (totalCharge < 50) {
+            return 6;
+        }
+
+        if (totalCharge < 100) {
+            return 8;
+        }
+
+        if (totalCharge < 250) {
+            return 10;
+        }
+
+        if (totalCharge < 500) {
+            return 12;
+        }
+
+        if (totalCharge < 1000) {
+            return 14;
+        }
+
+        return 15;
     }
 
     @Override

@@ -1,0 +1,15 @@
+{
+  "match": {
+    "items": [
+      "stormlight:diamond_mark",
+      "stormlight:emerald_mark",
+      "stormlight:garnet_mark"
+    ],
+    "components": {
+      "minecraft:custom_model_data": {
+        "floats": [1.0]
+      }
+    }
+  },
+  "luminance": 4
+}

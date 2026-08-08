@@ -1,0 +1,15 @@
+{
+  "match": {
+    "items": [
+      "stormlight:diamond_broam",
+      "stormlight:emerald_broam",
+      "stormlight:garnet_broam"
+    ],
+    "components": {
+      "minecraft:custom_model_data": {
+        "floats": [3.0]
+      }
+    }
+  },
+  "luminance": 12
+}
