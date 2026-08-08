@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class SphereItem extends Item {
+    private static final long FULL_DECAY_TICKS =
+            10L * 24_000L;
     private final int capacity;
 
     public SphereItem(Properties properties, int capacity, String sphereName) {
@@ -66,25 +68,161 @@ public class SphereItem extends Item {
         return Math.max(0, Math.min(storedCharge, capacity));
     }
 
-    public void setCharge(ItemStack stack, int newCharge) {
-        int clampedCharge = Math.max(0, Math.min(newCharge, capacity));
+    public void setCharge(
+            ItemStack stack,
+            int newCharge
+    ) {
+        int previousCharge =
+                getCharge(stack);
+
+        int clampedCharge =
+                Math.max(
+                        0,
+                        Math.min(
+                                newCharge,
+                                capacity
+                        )
+                );
 
         stack.set(
                 ModComponents.STORMLIGHT_CHARGE,
                 clampedCharge
         );
 
-        int visualStage = getVisualStage(clampedCharge);
+        /*
+         * Receiving new Stormlight restarts the decay timer.
+         *
+         * Highstorm charging happens gradually, so its final charging
+         * pulse becomes the start of the new ten-day decay period.
+         */
+        if (clampedCharge > previousCharge
+                || clampedCharge <= 0) {
+
+            stack.set(
+                    ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                    -1L
+            );
+        }
+
+        int visualStage =
+                getVisualStage(clampedCharge);
 
         stack.set(
                 DataComponents.CUSTOM_MODEL_DATA,
                 new CustomModelData(
-                        List.of((float) visualStage),
+                        List.of(
+                                (float) visualStage
+                        ),
                         List.of(),
                         List.of(),
                         List.of()
                 )
         );
+    }
+
+    /**
+     * Applies time-based Stormlight leakage to this sphere.
+     *
+     * Every denomination loses its entire capacity over exactly ten
+     * Minecraft days. Larger spheres therefore lose individual charge
+     * points more frequently than smaller spheres.
+     *
+     * Returns true when the stack's data changed.
+     */
+    public boolean applyPassiveDecay(
+            ItemStack stack,
+            long currentGameTick
+    ) {
+        int currentCharge =
+                getCharge(stack);
+
+        if (currentCharge <= 0) {
+            long lastDecayTick =
+                    stack.getOrDefault(
+                            ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                            -1L
+                    );
+
+            if (lastDecayTick != -1L) {
+                stack.set(
+                        ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                        -1L
+                );
+
+                return true;
+            }
+
+            return false;
+        }
+
+        long lastDecayTick =
+                stack.getOrDefault(
+                        ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                        -1L
+                );
+
+        /*
+         * Begin a fresh ten-day timer for newly infused spheres and
+         * safely recover if the stored timestamp is invalid.
+         */
+        if (lastDecayTick < 0L
+                || lastDecayTick > currentGameTick) {
+
+            stack.set(
+                    ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                    currentGameTick
+            );
+
+            return true;
+        }
+
+        long ticksPerChargePoint =
+                FULL_DECAY_TICKS
+                        / capacity;
+
+        long elapsedTicks =
+                currentGameTick
+                        - lastDecayTick;
+
+        long decaySteps =
+                elapsedTicks
+                        / ticksPerChargePoint;
+
+        if (decaySteps <= 0L) {
+            return false;
+        }
+
+        int chargeLost =
+                (int) Math.min(
+                        currentCharge,
+                        decaySteps
+                );
+
+        int remainingCharge =
+                currentCharge
+                        - chargeLost;
+
+        /*
+         * Preserve any partial progress toward the next lost point.
+         */
+        long updatedDecayTick =
+                lastDecayTick
+                        + chargeLost
+                        * ticksPerChargePoint;
+
+        setCharge(
+                stack,
+                remainingCharge
+        );
+
+        if (remainingCharge > 0) {
+            stack.set(
+                    ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                    updatedDecayTick
+            );
+        }
+
+        return true;
     }
 
     private int getVisualStage(int charge) {

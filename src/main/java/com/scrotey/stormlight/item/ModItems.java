@@ -99,7 +99,14 @@ public class ModItems {
     private static Item.Properties sphereProperties() {
         return new Item.Properties()
                 .stacksTo(1)
-                .component(ModComponents.STORMLIGHT_CHARGE, 0);
+                .component(
+                        ModComponents.STORMLIGHT_CHARGE,
+                        0
+                )
+                .component(
+                        ModComponents.STORMLIGHT_LAST_DECAY_TICK,
+                        -1L
+                );
     }
 
     private static Item register(

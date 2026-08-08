@@ -23,6 +23,19 @@ public class ModComponents {
                             .build()
             );
 
+    public static final DataComponentType<Long>
+            STORMLIGHT_LAST_DECAY_TICK =
+            Registry.register(
+                    BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    Identifier.fromNamespaceAndPath(
+                            Stormlight.MOD_ID,
+                            "stormlight_last_decay_tick"
+                    ),
+                    DataComponentType.<Long>builder()
+                            .persistent(Codec.LONG)
+                            .build()
+            );
+
     public static final DataComponentType<ItemContainerContents> SPHERE_POUCH_CONTENTS =
             Registry.register(
                     BuiltInRegistries.DATA_COMPONENT_TYPE,
