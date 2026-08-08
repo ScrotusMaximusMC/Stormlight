@@ -4,7 +4,7 @@
   "message.stormlight.sphere_pouch.equipped": "Sphere Pouch equipped",
   "message.stormlight.sphere_pouch.swapped": "Sphere Pouches swapped",
   "container.stormlight.sphere_pouch": "Sphere Pouch",
-  "button.stormlight.sphere_pouch": "Pouch",
+  "button.stormlight.sphere_pouch": "Sphere Pouch",
   "message.stormlight.sphere_pouch.none_equipped": "No Sphere Pouch equipped",
   "message.stormlight.sphere_pouch.invalid_item": "Only a Sphere Pouch can be equipped here",
 
@@ -33,8 +33,6 @@
 
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
-
-
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 

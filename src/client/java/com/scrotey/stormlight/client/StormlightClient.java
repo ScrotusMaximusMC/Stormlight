@@ -15,8 +15,14 @@ import com.scrotey.stormlight.network.OpenSpherePouchPayload;
 import com.scrotey.stormlight.network.SpherePouchSlotPayload;
 import com.scrotey.stormlight.screen.SpherePouchScreen;
 
+import java.util.function.Supplier;
+
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
@@ -36,6 +42,14 @@ import net.minecraft.client.gui.screens.MenuScreens;
 
 public class StormlightClient implements ClientModInitializer {
     private static final int HOLD_THRESHOLD_TICKS = 8;
+    private static final int SLOT_DARK_EDGE = 0xFF373737;
+    private static final int SLOT_BACKGROUND = 0xFF8B8B8B;
+    private static final int SLOT_LIGHT_EDGE = 0xFFFFFFFF;
+    private static final int SLOT_HOVER = 0x40FFFFFF;
+
+    private static final int EMPTY_POUCH_OUTLINE = 0xFF5A5A5A;
+
+    private static final float POUCH_BUTTON_TEXT_SCALE = 0.55F;
 
     private static final KeyMapping.Category STORMLIGHT_CATEGORY =
             KeyMapping.Category.register(
@@ -145,29 +159,30 @@ public class StormlightClient implements ClientModInitializer {
                             (AbstractContainerScreenAccessor)
                                     screen;
 
-                    Button equipmentSlot =
-                            Button.builder(
-                                    Component.literal("+"),
-                                    button ->
-                                            ClientPlayNetworking.send(
-                                                    SpherePouchSlotPayload
-                                                            .INSTANCE
-                                            )
-                            ).bounds(
+                    SpherePouchSlotWidget equipmentSlot =
+                            new SpherePouchSlotWidget(
                                     accessor.stormlight$getLeftPos()
-                                            + 77,
+                                            + 76,
                                     accessor.stormlight$getTopPos()
                                             + 43,
-                                    18,
-                                    18
-                            ).build();
+                                    () ->
+                                            ClientPlayNetworking.send(
+                                                    SpherePouchSlotPayload.INSTANCE
+                                            ),
+                                    () -> {
+                                        if (client.player == null) {
+                                            return ItemStack.EMPTY;
+                                        }
+
+                                        return ModAttachments.getEquippedPouch(
+                                                client.player
+                                        );
+                                    }
+                            );
 
                     Button pouchTab =
                             Button.builder(
-                                    Component.translatable(
-                                            "button.stormlight."
-                                                    + "sphere_pouch"
-                                    ),
+                                    Component.empty(),
                                     button ->
                                             ClientPlayNetworking.send(
                                                     OpenSpherePouchPayload
@@ -208,7 +223,7 @@ public class StormlightClient implements ClientModInitializer {
                                                         .stormlight$getTopPos();
 
                                         equipmentSlot.setPosition(
-                                                left + 77,
+                                                left + 76,
                                                 top + 43
                                         );
 
@@ -235,29 +250,292 @@ public class StormlightClient implements ClientModInitializer {
                                             mouseY,
                                             delta
                                     ) -> {
-                                        if (client.player == null) {
-                                            return;
-                                        }
-
-                                        ItemStack pouch =
-                                                ModAttachments
-                                                        .getEquippedPouch(
-                                                                client.player
-                                                        );
-
-                                        if (!pouch.isEmpty()) {
-                                            graphics.item(
-                                                    pouch,
-                                                    equipmentSlot.getX()
-                                                            + 1,
-                                                    equipmentSlot.getY()
-                                                            + 1
-                                            );
-                                        }
+                                        drawPouchButtonLabel(
+                                                graphics,
+                                                client,
+                                                pouchTab
+                                        );
                                     }
                             );
                 }
         );
+    }
+
+    private static final class SpherePouchSlotWidget
+            extends AbstractWidget {
+
+        private final Runnable onPress;
+        private final Supplier<ItemStack> pouchSupplier;
+
+        private SpherePouchSlotWidget(
+                int x,
+                int y,
+                Runnable onPress,
+                Supplier<ItemStack> pouchSupplier
+        ) {
+            super(
+                    x,
+                    y,
+                    18,
+                    18,
+                    Component.translatable(
+                            "item.stormlight.sphere_pouch"
+                    )
+            );
+
+            this.onPress = onPress;
+            this.pouchSupplier = pouchSupplier;
+        }
+
+        @Override
+        protected void extractWidgetRenderState(
+                GuiGraphicsExtractor graphics,
+                int mouseX,
+                int mouseY,
+                float delta
+        ) {
+            int x = getX();
+            int y = getY();
+
+            // Recessed slot background.
+            graphics.fill(
+                    x,
+                    y,
+                    x + 18,
+                    y + 18,
+                    SLOT_BACKGROUND
+            );
+
+            // Dark top and left edges.
+            graphics.fill(
+                    x,
+                    y,
+                    x + 18,
+                    y + 1,
+                    SLOT_DARK_EDGE
+            );
+
+            graphics.fill(
+                    x,
+                    y,
+                    x + 1,
+                    y + 18,
+                    SLOT_DARK_EDGE
+            );
+
+            // Light bottom and right edges.
+            graphics.fill(
+                    x + 17,
+                    y + 1,
+                    x + 18,
+                    y + 18,
+                    SLOT_LIGHT_EDGE
+            );
+
+            graphics.fill(
+                    x + 1,
+                    y + 17,
+                    x + 17,
+                    y + 18,
+                    SLOT_LIGHT_EDGE
+            );
+
+            ItemStack pouch = pouchSupplier.get();
+
+            if (pouch.isEmpty()) {
+                drawEmptyPouchOutline(
+                        graphics,
+                        x + 1,
+                        y + 1
+                );
+            } else {
+                graphics.item(
+                        pouch,
+                        x + 1,
+                        y + 1
+                );
+            }
+
+            if (isHovered()) {
+                graphics.fill(
+                        x + 1,
+                        y + 1,
+                        x + 17,
+                        y + 17,
+                        SLOT_HOVER
+                );
+            }
+        }
+
+        private void drawEmptyPouchOutline(
+                GuiGraphicsExtractor graphics,
+                int x,
+                int y
+        ) {
+            // Tied neck of the pouch.
+            graphics.fill(
+                    x + 6,
+                    y + 2,
+                    x + 10,
+                    y + 3,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            graphics.fill(
+                    x + 5,
+                    y + 3,
+                    x + 6,
+                    y + 5,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            graphics.fill(
+                    x + 10,
+                    y + 3,
+                    x + 11,
+                    y + 5,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            // Top of the pouch.
+            graphics.fill(
+                    x + 5,
+                    y + 5,
+                    x + 11,
+                    y + 6,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            // Upper sides.
+            graphics.fill(
+                    x + 4,
+                    y + 6,
+                    x + 5,
+                    y + 8,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            graphics.fill(
+                    x + 11,
+                    y + 6,
+                    x + 12,
+                    y + 8,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            // Wide middle.
+            graphics.fill(
+                    x + 3,
+                    y + 8,
+                    x + 4,
+                    y + 12,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            graphics.fill(
+                    x + 12,
+                    y + 8,
+                    x + 13,
+                    y + 12,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            // Lower sides.
+            graphics.fill(
+                    x + 4,
+                    y + 12,
+                    x + 5,
+                    y + 14,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            graphics.fill(
+                    x + 11,
+                    y + 12,
+                    x + 12,
+                    y + 14,
+                    EMPTY_POUCH_OUTLINE
+            );
+
+            // Bottom.
+            graphics.fill(
+                    x + 5,
+                    y + 14,
+                    x + 11,
+                    y + 15,
+                    EMPTY_POUCH_OUTLINE
+            );
+        }
+
+        @Override
+        public void onClick(
+                MouseButtonEvent event,
+                boolean doubleClick
+        ) {
+            onPress.run();
+        }
+
+        @Override
+        protected void updateWidgetNarration(
+                NarrationElementOutput output
+        ) {
+            defaultButtonNarrationText(output);
+        }
+    }
+
+    private static void drawPouchButtonLabel(
+            net.minecraft.client.gui.GuiGraphicsExtractor graphics,
+            net.minecraft.client.Minecraft client,
+            Button pouchTab
+    ) {
+        Component label = Component.translatable(
+                "button.stormlight.sphere_pouch"
+        );
+
+        float scaledWidth =
+                client.font.width(label)
+                        * POUCH_BUTTON_TEXT_SCALE;
+
+        float textX =
+                pouchTab.getX()
+                        + (
+                        pouchTab.getWidth()
+                                - scaledWidth
+                ) / 2.0F;
+
+        float textY =
+                pouchTab.getY()
+                        + (
+                        pouchTab.getHeight()
+                                - 9.0F
+                                * POUCH_BUTTON_TEXT_SCALE
+                ) / 2.0F;
+
+        graphics.pose().pushMatrix();
+
+        graphics.pose().scale(
+                POUCH_BUTTON_TEXT_SCALE,
+                POUCH_BUTTON_TEXT_SCALE
+        );
+
+        graphics.text(
+                client.font,
+                label,
+                Math.round(
+                        textX
+                                / POUCH_BUTTON_TEXT_SCALE
+                ),
+                Math.round(
+                        textY
+                                / POUCH_BUTTON_TEXT_SCALE
+                ),
+                pouchTab.active
+                        ? 0xFFFFFFFF
+                        : 0xFFA0A0A0,
+                true
+        );
+
+        graphics.pose().popMatrix();
     }
 
     private static void send(AbilityId ability, AbilityInputPayload.Action action) {
