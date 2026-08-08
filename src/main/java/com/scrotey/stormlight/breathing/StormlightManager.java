@@ -33,19 +33,39 @@ public final class StormlightManager {
     private static final Map<UUID, EnumSet<AbilityId>> ACTIVE_ABILITIES =
             new HashMap<>();
 
+    private static final Map<UUID, StormlightStatusPayload> LAST_SENT_STATUS =
+            new HashMap<>();
+
     private StormlightManager() {
     }
 
     public static void initialize() {
         ServerTickEvents.END_SERVER_TICK.register(StormlightManager::tick);
 
-        ServerLifecycleEvents.SERVER_STOPPED.register(
-                server -> ACTIVE_ABILITIES.clear()
-        );
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            ACTIVE_ABILITIES.clear();
+            LAST_SENT_STATUS.clear();
+        });
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayer player = handler.getPlayer();
+
+            EnumSet<AbilityId> active = ACTIVE_ABILITIES.getOrDefault(
+                    player.getUUID(),
+                    EnumSet.noneOf(AbilityId.class)
+            );
+
+            LAST_SENT_STATUS.remove(player.getUUID());
+            sendStatus(player, active);
+        });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayer player = handler.getPlayer();
-            EnumSet<AbilityId> active = ACTIVE_ABILITIES.remove(player.getUUID());
+
+            EnumSet<AbilityId> active =
+                    ACTIVE_ABILITIES.remove(player.getUUID());
+
+            LAST_SENT_STATUS.remove(player.getUUID());
 
             if (active != null) {
                 for (AbilityId id : active) {
@@ -75,7 +95,8 @@ public final class StormlightManager {
 
         switch (action) {
             case TOGGLE -> {
-                if (ability.activationMode() != StormlightAbility.ActivationMode.TOGGLE) {
+                if (ability.activationMode()
+                        != StormlightAbility.ActivationMode.TOGGLE) {
                     return;
                 }
 
@@ -86,8 +107,10 @@ public final class StormlightManager {
                     active.add(id);
                 }
             }
+
             case START -> {
-                if (ability.activationMode() != StormlightAbility.ActivationMode.HOLD) {
+                if (ability.activationMode()
+                        != StormlightAbility.ActivationMode.HOLD) {
                     return;
                 }
 
@@ -95,6 +118,7 @@ public final class StormlightManager {
                     active.add(id);
                 }
             }
+
             case STOP -> {
                 if (isActive) {
                     ability.stop(player);
@@ -108,52 +132,95 @@ public final class StormlightManager {
 
     private static void tick(MinecraftServer server) {
         long gameTime = server.overworld().getGameTime();
-        boolean syncNow = gameTime % STATUS_SYNC_INTERVAL_TICKS == 0;
+
+        boolean syncNow =
+                gameTime % STATUS_SYNC_INTERVAL_TICKS == 0;
 
         ACTIVE_ABILITIES.keySet().removeIf(
                 uuid -> server.getPlayerList().getPlayer(uuid) == null
         );
 
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            EnumSet<AbilityId> active = ACTIVE_ABILITIES.get(player.getUUID());
+        for (ServerPlayer player
+                : server.getPlayerList().getPlayers()) {
 
-            if (active == null || active.isEmpty()) {
-                continue;
-            }
+            EnumSet<AbilityId> active =
+                    ACTIVE_ABILITIES.get(player.getUUID());
 
             boolean changed = false;
 
-            for (Iterator<AbilityId> it = active.iterator(); it.hasNext(); ) {
-                StormlightAbility ability = ABILITIES_BY_ID.get(it.next());
+            if (active != null) {
+                for (Iterator<AbilityId> iterator = active.iterator();
+                     iterator.hasNext(); ) {
 
-                if (!ability.tick(player, gameTime)) {
-                    ability.stop(player);
-                    it.remove();
-                    changed = true;
+                    AbilityId id = iterator.next();
+                    StormlightAbility ability = ABILITIES_BY_ID.get(id);
+
+                    if (!ability.tick(player, gameTime)) {
+                        ability.stop(player);
+                        iterator.remove();
+                        changed = true;
+                    }
                 }
+
+                if (active.isEmpty()) {
+                    ACTIVE_ABILITIES.remove(player.getUUID());
+                }
+            } else {
+                active = EnumSet.noneOf(AbilityId.class);
             }
 
-            if (changed || syncNow) {
+            if (changed) {
                 sendStatus(player, active);
+            } else if (syncNow) {
+                syncStatusIfChanged(player, active);
             }
         }
     }
 
-    private static void sendStatus(ServerPlayer player, EnumSet<AbilityId> active) {
-        StormlightPool.Totals totals = StormlightPool.getTotals(player);
+    private static void sendStatus(
+            ServerPlayer player,
+            EnumSet<AbilityId> active
+    ) {
+        StormlightStatusPayload payload =
+                createStatus(player, active);
+
+        ServerPlayNetworking.send(player, payload);
+        LAST_SENT_STATUS.put(player.getUUID(), payload);
+    }
+
+    private static void syncStatusIfChanged(
+            ServerPlayer player,
+            EnumSet<AbilityId> active
+    ) {
+        StormlightStatusPayload payload =
+                createStatus(player, active);
+
+        StormlightStatusPayload previous =
+                LAST_SENT_STATUS.get(player.getUUID());
+
+        if (!payload.equals(previous)) {
+            ServerPlayNetworking.send(player, payload);
+            LAST_SENT_STATUS.put(player.getUUID(), payload);
+        }
+    }
+
+    private static StormlightStatusPayload createStatus(
+            ServerPlayer player,
+            EnumSet<AbilityId> active
+    ) {
+        StormlightPool.Totals totals =
+                StormlightPool.getTotals(player);
+
         int mask = 0;
 
         for (AbilityId id : active) {
             mask |= 1 << id.ordinal();
         }
 
-        ServerPlayNetworking.send(
-                player,
-                new StormlightStatusPayload(
-                        totals.charge(),
-                        totals.capacity(),
-                        mask
-                )
+        return new StormlightStatusPayload(
+                totals.charge(),
+                totals.capacity(),
+                mask
         );
     }
 }
