@@ -3,7 +3,8 @@
     "items": [
       "stormlight:diamond_mark",
       "stormlight:emerald_mark",
-      "stormlight:garnet_mark"
+      "stormlight:garnet_mark",
+      "stormlight:sapphire_mark"
     ],
     "components": {
       "minecraft:custom_model_data": {

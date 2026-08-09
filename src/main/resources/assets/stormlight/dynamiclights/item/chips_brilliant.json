@@ -3,7 +3,9 @@
     "items": [
       "stormlight:diamond_chip",
       "stormlight:emerald_chip",
-      "stormlight:garnet_chip"
+      "stormlight:garnet_chip",
+      "stormlight:ruby_chip",
+      "stormlight:sapphire_chip"
     ],
     "components": {
       "minecraft:custom_model_data": {

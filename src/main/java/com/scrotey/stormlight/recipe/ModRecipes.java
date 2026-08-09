@@ -50,6 +50,37 @@ public class ModRecipes {
                     SphereUpgradeRecipe.GARNET_MARK_TO_BROAM_CODEC,
                     SphereUpgradeRecipe.GARNET_MARK_TO_BROAM_STREAM_CODEC
             );
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            RUBY_CHIP_TO_MARK =
+            register(
+                    "ruby_chip_to_mark",
+                    SphereUpgradeRecipe.RUBY_CHIP_TO_MARK_CODEC,
+                    SphereUpgradeRecipe.RUBY_CHIP_TO_MARK_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            RUBY_MARK_TO_BROAM =
+            register(
+                    "ruby_mark_to_broam",
+                    SphereUpgradeRecipe.RUBY_MARK_TO_BROAM_CODEC,
+                    SphereUpgradeRecipe.RUBY_MARK_TO_BROAM_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            SAPPHIRE_CHIP_TO_MARK =
+            register(
+                    "sapphire_chip_to_mark",
+                    SphereUpgradeRecipe.SAPPHIRE_CHIP_TO_MARK_CODEC,
+                    SphereUpgradeRecipe.SAPPHIRE_CHIP_TO_MARK_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            SAPPHIRE_MARK_TO_BROAM =
+            register(
+                    "sapphire_mark_to_broam",
+                    SphereUpgradeRecipe.SAPPHIRE_MARK_TO_BROAM_CODEC,
+                    SphereUpgradeRecipe.SAPPHIRE_MARK_TO_BROAM_STREAM_CODEC
+            );
 
     private static RecipeSerializer<SphereUpgradeRecipe> register(
             String name,

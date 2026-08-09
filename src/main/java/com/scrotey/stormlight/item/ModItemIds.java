@@ -24,6 +24,16 @@ public class ModItemIds {
     public static final ResourceKey<Item> GARNET_MARK = create("garnet_mark");
     public static final ResourceKey<Item> GARNET_BROAM = create("garnet_broam");
 
+    public static final ResourceKey<Item> RUBY = create("ruby");
+    public static final ResourceKey<Item> RUBY_CHIP = create("ruby_chip");
+    public static final ResourceKey<Item> RUBY_MARK = create("ruby_mark");
+    public static final ResourceKey<Item> RUBY_BROAM = create("ruby_broam");
+
+    public static final ResourceKey<Item> SAPPHIRE = create("sapphire");
+    public static final ResourceKey<Item> SAPPHIRE_CHIP = create("sapphire_chip");
+    public static final ResourceKey<Item> SAPPHIRE_MARK = create("sapphire_mark");
+    public static final ResourceKey<Item> SAPPHIRE_BROAM = create("sapphire_broam");
+
     private static ResourceKey<Item> create(String name) {
         return ResourceKey.create(
                 Registries.ITEM,

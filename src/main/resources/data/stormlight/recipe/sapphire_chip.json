@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GSG",
+    "GGG"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "S": "stormlight:sapphire"
+  },
+  "result": {
+    "id": "stormlight:sapphire_chip",
+    "count": 1
+  }
+}

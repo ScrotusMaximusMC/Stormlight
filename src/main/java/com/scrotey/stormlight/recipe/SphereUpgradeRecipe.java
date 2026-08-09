@@ -25,12 +25,35 @@ public class SphereUpgradeRecipe extends CustomRecipe {
     public static final SphereUpgradeRecipe EMERALD_MARK_TO_BROAM =
             new SphereUpgradeRecipe(ModItems.EMERALD_MARK, ModItems.EMERALD_BROAM);
 
-
     public static final SphereUpgradeRecipe GARNET_CHIP_TO_MARK =
             new SphereUpgradeRecipe(ModItems.GARNET_CHIP, ModItems.GARNET_MARK);
 
     public static final SphereUpgradeRecipe GARNET_MARK_TO_BROAM =
             new SphereUpgradeRecipe(ModItems.GARNET_MARK, ModItems.GARNET_BROAM);
+
+    public static final SphereUpgradeRecipe RUBY_CHIP_TO_MARK =
+            new SphereUpgradeRecipe(
+                    ModItems.RUBY_CHIP,
+                    ModItems.RUBY_MARK
+            );
+
+    public static final SphereUpgradeRecipe RUBY_MARK_TO_BROAM =
+            new SphereUpgradeRecipe(
+                    ModItems.RUBY_MARK,
+                    ModItems.RUBY_BROAM
+            );
+
+    public static final SphereUpgradeRecipe SAPPHIRE_CHIP_TO_MARK =
+            new SphereUpgradeRecipe(
+                    ModItems.SAPPHIRE_CHIP,
+                    ModItems.SAPPHIRE_MARK
+            );
+
+    public static final SphereUpgradeRecipe SAPPHIRE_MARK_TO_BROAM =
+            new SphereUpgradeRecipe(
+                    ModItems.SAPPHIRE_MARK,
+                    ModItems.SAPPHIRE_BROAM
+            );
 
     public static final MapCodec<SphereUpgradeRecipe> DIAMOND_CHIP_TO_MARK_CODEC =
             MapCodec.unit(DIAMOND_CHIP_TO_MARK);
@@ -68,6 +91,46 @@ public class SphereUpgradeRecipe extends CustomRecipe {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SphereUpgradeRecipe>
             GARNET_MARK_TO_BROAM_STREAM_CODEC = StreamCodec.unit(GARNET_MARK_TO_BROAM);
+
+    public static final MapCodec<SphereUpgradeRecipe>
+            RUBY_CHIP_TO_MARK_CODEC =
+            MapCodec.unit(RUBY_CHIP_TO_MARK);
+
+    public static final StreamCodec<
+            RegistryFriendlyByteBuf,
+            SphereUpgradeRecipe
+            > RUBY_CHIP_TO_MARK_STREAM_CODEC =
+            StreamCodec.unit(RUBY_CHIP_TO_MARK);
+
+    public static final MapCodec<SphereUpgradeRecipe>
+            RUBY_MARK_TO_BROAM_CODEC =
+            MapCodec.unit(RUBY_MARK_TO_BROAM);
+
+    public static final StreamCodec<
+            RegistryFriendlyByteBuf,
+            SphereUpgradeRecipe
+            > RUBY_MARK_TO_BROAM_STREAM_CODEC =
+            StreamCodec.unit(RUBY_MARK_TO_BROAM);
+
+    public static final MapCodec<SphereUpgradeRecipe>
+            SAPPHIRE_CHIP_TO_MARK_CODEC =
+            MapCodec.unit(SAPPHIRE_CHIP_TO_MARK);
+
+    public static final StreamCodec<
+            RegistryFriendlyByteBuf,
+            SphereUpgradeRecipe
+            > SAPPHIRE_CHIP_TO_MARK_STREAM_CODEC =
+            StreamCodec.unit(SAPPHIRE_CHIP_TO_MARK);
+
+    public static final MapCodec<SphereUpgradeRecipe>
+            SAPPHIRE_MARK_TO_BROAM_CODEC =
+            MapCodec.unit(SAPPHIRE_MARK_TO_BROAM);
+
+    public static final StreamCodec<
+            RegistryFriendlyByteBuf,
+            SphereUpgradeRecipe
+            > SAPPHIRE_MARK_TO_BROAM_STREAM_CODEC =
+            StreamCodec.unit(SAPPHIRE_MARK_TO_BROAM);
 
     private final Item inputItem;
     private final Item outputItem;
@@ -134,6 +197,18 @@ public class SphereUpgradeRecipe extends CustomRecipe {
         }
         if (this == GARNET_MARK_TO_BROAM) {
             return ModRecipes.GARNET_MARK_TO_BROAM;
+        }
+        if (this == RUBY_CHIP_TO_MARK) {
+            return ModRecipes.RUBY_CHIP_TO_MARK;
+        }
+        if (this == RUBY_MARK_TO_BROAM) {
+            return ModRecipes.RUBY_MARK_TO_BROAM;
+        }
+        if (this == SAPPHIRE_CHIP_TO_MARK) {
+            return ModRecipes.SAPPHIRE_CHIP_TO_MARK;
+        }
+        if (this == SAPPHIRE_MARK_TO_BROAM) {
+            return ModRecipes.SAPPHIRE_MARK_TO_BROAM;
         }
 
         throw new IllegalStateException("Unregistered sphere upgrade recipe");

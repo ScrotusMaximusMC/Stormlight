@@ -96,6 +96,78 @@ public class ModItems {
             sphereProperties()
     );
 
+    public static final Item RUBY = register(
+            ModItemIds.RUBY,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item RUBY_CHIP = register(
+            ModItemIds.RUBY_CHIP,
+            properties -> new SphereItem(
+                    properties,
+                    30,
+                    "ruby_chip"
+            ),
+            sphereProperties()
+    );
+
+    public static final Item RUBY_MARK = register(
+            ModItemIds.RUBY_MARK,
+            properties -> new SphereItem(
+                    properties,
+                    150,
+                    "ruby_mark"
+            ),
+            sphereProperties()
+    );
+
+    public static final Item RUBY_BROAM = register(
+            ModItemIds.RUBY_BROAM,
+            properties -> new SphereItem(
+                    properties,
+                    600,
+                    "ruby_broam"
+            ),
+            sphereProperties()
+    );
+
+    public static final Item SAPPHIRE = register(
+            ModItemIds.SAPPHIRE,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item SAPPHIRE_CHIP = register(
+            ModItemIds.SAPPHIRE_CHIP,
+            properties -> new SphereItem(
+                    properties,
+                    40,
+                    "sapphire_chip"
+            ),
+            sphereProperties()
+    );
+
+    public static final Item SAPPHIRE_MARK = register(
+            ModItemIds.SAPPHIRE_MARK,
+            properties -> new SphereItem(
+                    properties,
+                    200,
+                    "sapphire_mark"
+            ),
+            sphereProperties()
+    );
+
+    public static final Item SAPPHIRE_BROAM = register(
+            ModItemIds.SAPPHIRE_BROAM,
+            properties -> new SphereItem(
+                    properties,
+                    800,
+                    "sapphire_broam"
+            ),
+            sphereProperties()
+    );
+
     private static Item.Properties sphereProperties() {
         return new Item.Properties()
                 .stacksTo(1)
@@ -123,16 +195,29 @@ public class ModItems {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> {
                     entries.accept(SPHERE_POUCH);
+
                     entries.accept(DIAMOND_CHIP);
                     entries.accept(DIAMOND_MARK);
                     entries.accept(DIAMOND_BROAM);
+
                     entries.accept(EMERALD_CHIP);
                     entries.accept(EMERALD_MARK);
                     entries.accept(EMERALD_BROAM);
+
                     entries.accept(GARNET);
                     entries.accept(GARNET_CHIP);
                     entries.accept(GARNET_MARK);
                     entries.accept(GARNET_BROAM);
+
+                    entries.accept(RUBY);
+                    entries.accept(RUBY_CHIP);
+                    entries.accept(RUBY_MARK);
+                    entries.accept(RUBY_BROAM);
+
+                    entries.accept(SAPPHIRE);
+                    entries.accept(SAPPHIRE_CHIP);
+                    entries.accept(SAPPHIRE_MARK);
+                    entries.accept(SAPPHIRE_BROAM);
                 });
     }
 }

@@ -22,6 +22,7 @@
   "item.stormlight.emerald_broam.dun": "Dun Emerald Broam",
   "item.stormlight.emerald_broam.infused": "Infused Emerald Broam",
 
+  "item.stormlight.garnet": "Garnet",
   "item.stormlight.garnet_chip.dun": "Dun Garnet Chip",
   "item.stormlight.garnet_chip.infused": "Infused Garnet Chip",
   "item.stormlight.garnet_mark.dun": "Dun Garnet Mark",
@@ -29,7 +30,21 @@
   "item.stormlight.garnet_broam.dun": "Dun Garnet Broam",
   "item.stormlight.garnet_broam.infused": "Infused Garnet Broam",
 
-  "item.stormlight.garnet": "Garnet",
+  "item.stormlight.ruby": "Ruby",
+  "item.stormlight.ruby_chip.dun": "Dun Ruby Chip",
+  "item.stormlight.ruby_chip.infused": "Infused Ruby Chip",
+  "item.stormlight.ruby_mark.dun": "Dun Ruby Mark",
+  "item.stormlight.ruby_mark.infused": "Infused Ruby Mark",
+  "item.stormlight.ruby_broam.dun": "Dun Ruby Broam",
+  "item.stormlight.ruby_broam.infused": "Infused Ruby Broam",
+
+  "item.stormlight.sapphire": "Sapphire",
+  "item.stormlight.sapphire_chip.dun": "Dun Sapphire Chip",
+  "item.stormlight.sapphire_chip.infused": "Infused Sapphire Chip",
+  "item.stormlight.sapphire_mark.dun": "Dun Sapphire Mark",
+  "item.stormlight.sapphire_mark.infused": "Infused Sapphire Mark",
+  "item.stormlight.sapphire_broam.dun": "Dun Sapphire Broam",
+  "item.stormlight.sapphire_broam.infused": "Infused Sapphire Broam",
 
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
