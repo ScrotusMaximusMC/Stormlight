@@ -32,9 +32,20 @@ public final class HighstormAtmosphere {
     private static final double WINDSPREN_VERTICAL_WISP = 0.070;
     private static final double WINDSPREN_SIDEWAYS_WISP = 0.11;
 
-    // Actual lightning. Each check has a chance to create one real strike.
+    /*
+     * Lightning checks and overall strike frequency remain unchanged.
+     * Most generated bolts are visual-only, preventing them from
+     * damaging entities or setting blocks on fire.
+     */
     private static final int LIGHTNING_CHECK_INTERVAL_TICKS = 24;
     private static final float LIGHTNING_CHANCE_PER_CHECK = 0.38F;
+
+    /*
+     * Only 10% of successful strikes are genuine lightning.
+     * The remaining 90% are harmless visual bolts.
+     */
+    private static final float REAL_LIGHTNING_CHANCE = 0.10F;
+
     private static final double LIGHTNING_MIN_DISTANCE = 8.0;
     private static final double LIGHTNING_MAX_DISTANCE = 30.0;
 
@@ -65,6 +76,8 @@ public final class HighstormAtmosphere {
     private static final int THUNDER_SOUND_INTERVAL_TICKS = 75;
     private static final int RUMBLE_SOUND_INTERVAL_TICKS = 90;
     private static final int WARNING_RUMBLE_INTERVAL_TICKS = 180;
+
+
 
     private HighstormAtmosphere() {
     }
@@ -97,7 +110,7 @@ public final class HighstormAtmosphere {
 
         if (phase == HighstormPhase.HIGHSTORM) {
             if (gameTime % LIGHTNING_CHECK_INTERVAL_TICKS == 0) {
-                spawnRealLightning(level);
+                spawnLightning(level);
             }
 
             if (gameTime % HIGHSTORM_WIND_INTERVAL_TICKS == 0) {
@@ -212,36 +225,76 @@ public final class HighstormAtmosphere {
         }
     }
 
-    private static void spawnRealLightning(ServerLevel level) {
+    private static void spawnLightning(
+            ServerLevel level
+    ) {
         for (ServerPlayer player : level.players()) {
+            /*
+             * Preserve the existing overall strike frequency.
+             */
             if (level.getRandom().nextFloat()
                     > LIGHTNING_CHANCE_PER_CHECK) {
                 continue;
             }
 
-            double angle = level.getRandom().nextDouble()
-                    * Math.PI * 2.0;
-            double distance = LIGHTNING_MIN_DISTANCE
-                    + level.getRandom().nextDouble()
-                    * (LIGHTNING_MAX_DISTANCE - LIGHTNING_MIN_DISTANCE);
+            double angle =
+                    level.getRandom().nextDouble()
+                            * Math.PI
+                            * 2.0;
 
-            int x = Mth.floor(
-                    player.getX() + Math.cos(angle) * distance
-            );
-            int z = Mth.floor(
-                    player.getZ() + Math.sin(angle) * distance
-            );
-            int y = level.getHeight(
-                    Heightmap.Types.MOTION_BLOCKING,
-                    x,
-                    z
+            double distance =
+                    LIGHTNING_MIN_DISTANCE
+                            + level.getRandom().nextDouble()
+                            * (
+                            LIGHTNING_MAX_DISTANCE
+                                    - LIGHTNING_MIN_DISTANCE
+                    );
+
+            int x =
+                    Mth.floor(
+                            player.getX()
+                                    + Math.cos(angle)
+                                    * distance
+                    );
+
+            int z =
+                    Mth.floor(
+                            player.getZ()
+                                    + Math.sin(angle)
+                                    * distance
+                    );
+
+            int y =
+                    level.getHeight(
+                            Heightmap.Types.MOTION_BLOCKING,
+                            x,
+                            z
+                    );
+
+            LightningBolt lightning =
+                    new LightningBolt(
+                            EntityTypes.LIGHTNING_BOLT,
+                            level
+                    );
+
+            lightning.setPos(
+                    x + 0.5,
+                    y,
+                    z + 0.5
             );
 
-            LightningBolt lightning = new LightningBolt(
-                    EntityTypes.LIGHTNING_BOLT,
-                    level
+            /*
+             * Visual-only bolts retain the flash and thunder but cannot
+             * damage entities or ignite blocks.
+             */
+            boolean realStrike =
+                    level.getRandom().nextFloat()
+                            < REAL_LIGHTNING_CHANCE;
+
+            lightning.setVisualOnly(
+                    !realStrike
             );
-            lightning.setPos(x + 0.5, y, z + 0.5);
+
             level.addFreshEntity(lightning);
         }
     }

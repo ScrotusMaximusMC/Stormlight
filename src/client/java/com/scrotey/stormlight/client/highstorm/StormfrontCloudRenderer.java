@@ -51,6 +51,16 @@ public final class StormfrontCloudRenderer {
     private static final float LAYER_SPACING = 32.0F;
 
     /*
+     * Gives both outer faces of the stormwall a rounded profile.
+     *
+     * The middle cloud rows protrude furthest, while the curve fades
+     * through the first few layers so it joins the main cloud mass
+     * smoothly.
+     */
+    private static final float STORMFACE_MAX_BULGE = 48.0F;
+    private static final float STORMFACE_CURVE_DEPTH = 4.0F;
+
+    /*
      * One visible internal lightning event every twelve seconds.
      */
     private static final long LIGHTNING_PERIOD_TICKS =
@@ -481,6 +491,26 @@ public final class StormfrontCloudRenderer {
     ) {
 
         /*
+         * The complete storm has permanent layers 0–30:
+         *
+         * 0  = western outer face, seen during approach
+         * 30 = eastern outer face, seen during departure
+         *
+         * The curvature fades into the first four layers on either side,
+         * preventing the cloud wall from becoming a thin curved shell.
+         */
+        float westSurfaceStrength =
+                calculateSurfaceStrength(
+                        canonicalLayer
+                );
+
+        float eastSurfaceStrength =
+                calculateSurfaceStrength(
+                        NEAR_HALF_LAYERS * 2
+                                - canonicalLayer
+                );
+
+        /*
          * Each lightning event selects one area of the storm wall.
          * These values are calculated once per layer, not once per box.
          */
@@ -532,6 +562,44 @@ public final class StormfrontCloudRenderer {
         for (int row = MIN_ROW;
              row <= MAX_ROW;
              row++) {
+            /*
+             * Produces a symmetrical vertical curve:
+             *
+             * rows 4–5 protrude furthest
+             * rows 3 and 6 protrude moderately
+             * rows 2 and 7 remain recessed
+             */
+            float middleRow =
+                    (MIN_ROW + MAX_ROW) * 0.5F;
+
+            float halfRowRange =
+                    (MAX_ROW - MIN_ROW) * 0.5F;
+
+            float distanceFromMiddle =
+                    Math.abs(row - middleRow)
+                            / halfRowRange;
+
+            /*
+             * Parabolic profile ranging from approximately 1.0 in the
+             * middle to 0.0 at the top and bottom.
+             */
+            float rowCurve =
+                    1.0F
+                            - distanceFromMiddle
+                            * distanceFromMiddle;
+
+            float rowBulge =
+                    STORMFACE_MAX_BULGE
+                            * rowCurve;
+
+            /*
+             * The western face curves towards negative X.
+             * The eastern face curves towards positive X.
+             */
+            float stormfaceOffset =
+                    -rowBulge * westSurfaceStrength
+                            + rowBulge * eastSurfaceStrength;
+
             for (int column = -halfColumnRange;
                  column <= halfColumnRange;
                  column++) {
@@ -630,6 +698,7 @@ public final class StormfrontCloudRenderer {
                                         - NEAR_HALF_LAYERS
                         ) * LAYER_SPACING
                                 + layerPositionOffset
+                                + stormfaceOffset
                                 + xJitter;
 
                 float centreY =
@@ -748,6 +817,26 @@ public final class StormfrontCloudRenderer {
                 );
             }
         }
+    }
+
+    private static float calculateSurfaceStrength(
+            int depthFromSurface
+    ) {
+        /*
+         * 1.0 on the outermost layer, fading smoothly to 0.0
+         * after STORMFACE_CURVE_DEPTH layers.
+         */
+        float strength =
+                Math.max(
+                        0.0F,
+                        1.0F
+                                - depthFromSurface
+                                / STORMFACE_CURVE_DEPTH
+                );
+
+        return strength
+                * strength
+                * (3.0F - 2.0F * strength);
     }
 
     private static void renderCloudBox(

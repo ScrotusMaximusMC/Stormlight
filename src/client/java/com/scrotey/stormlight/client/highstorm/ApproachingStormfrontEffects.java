@@ -27,6 +27,16 @@ public final class ApproachingStormfrontEffects {
     private static final int MIN_CLOUD_PARTICLES = 24;
     private static final int MAX_CLOUD_PARTICLES = 78;
 
+    /*
+     * During the active Highstorm, particles spawn in a tighter
+     * area just east of the player and stream rapidly westwards.
+     */
+    private static final int HIGHSTORM_PARTICLES_PER_TICK = 52;
+    private static final double HIGHSTORM_MIN_EAST_DISTANCE = 8.0;
+    private static final double HIGHSTORM_SPAWN_DEPTH = 52.0;
+    private static final double HIGHSTORM_HALF_WIDTH = 58.0;
+    private static final double HIGHSTORM_HEIGHT = 48.0;
+
     private static final RandomSource RANDOM =
             RandomSource.create();
 
@@ -38,15 +48,27 @@ public final class ApproachingStormfrontEffects {
     ) {
         if (client.level == null
                 || client.player == null
-                || !ClientHighstormState.isApproaching()
                 || !client.level.dimension()
                 .equals(Level.OVERWORLD)) {
             return;
         }
 
         /*
-         * Half the spawn frequency without making the
-         * particles themselves move less smoothly.
+         * The active Highstorm emits a denser and faster-moving
+         * particle field every client tick.
+         */
+        if (ClientHighstormState.isHighstorm()) {
+            spawnHighstormClouds(client);
+            return;
+        }
+
+        if (!ClientHighstormState.isApproaching()) {
+            return;
+        }
+
+        /*
+         * Approach particles retain their lighter,
+         * every-second-tick emission rate.
          */
         if ((client.level.getGameTime() & 1L) != 0L) {
             return;
@@ -55,10 +77,6 @@ public final class ApproachingStormfrontEffects {
         float progress =
                 ClientHighstormState.getApproachProgress();
 
-        /*
-         * Smoothstep prevents the wall suddenly starting
-         * or stopping when the phase changes.
-         */
         float smoothProgress =
                 progress
                         * progress
@@ -175,6 +193,81 @@ public final class ApproachingStormfrontEffects {
         }
 
         return ParticleTypes.ASH;
+    }
+
+    private static void spawnHighstormClouds(
+            Minecraft client
+    ) {
+        for (int i = 0;
+             i < HIGHSTORM_PARTICLES_PER_TICK;
+             i++) {
+            /*
+             * Spawn the particles east of the player so they
+             * travel through and beyond the player's position.
+             */
+            double x =
+                    client.player.getX()
+                            + HIGHSTORM_MIN_EAST_DISTANCE
+                            + RANDOM.nextDouble()
+                            * HIGHSTORM_SPAWN_DEPTH;
+
+            double z =
+                    client.player.getZ()
+                            + (RANDOM.nextDouble() - 0.5)
+                            * HIGHSTORM_HALF_WIDTH
+                            * 2.0;
+
+            int groundY =
+                    client.level.getHeight(
+                            Heightmap.Types.MOTION_BLOCKING,
+                            Mth.floor(x),
+                            Mth.floor(z)
+                    );
+
+            /*
+             * Bias the particles towards the ground, producing
+             * a particularly thick layer of smoke and ash below.
+             */
+            double heightFraction =
+                    Math.pow(
+                            RANDOM.nextDouble(),
+                            1.25
+                    );
+
+            double y =
+                    groundY - 3.0
+                            + heightFraction
+                            * HIGHSTORM_HEIGHT;
+
+            /*
+             * East is positive X. Because the Highstorm arrives
+             * from the east, negative X carries debris westwards.
+             *
+             * This is around three times faster than the particles
+             * at the end of the approaching phase.
+             */
+            double westSpeed =
+                    -0.52
+                            - RANDOM.nextDouble() * 0.34;
+
+            double verticalMovement =
+                    -0.045
+                            + RANDOM.nextDouble() * 0.085;
+
+            double sidewaysMovement =
+                    (RANDOM.nextDouble() - 0.5)
+                            * 0.16;
+
+            client.level.addAlwaysVisibleParticle(
+                    selectCloudParticle(),
+                    x,
+                    y,
+                    z,
+                    westSpeed,
+                    verticalMovement,
+                    sidewaysMovement
+            );
+        }
     }
 
     private static void spawnRainCurtain(
