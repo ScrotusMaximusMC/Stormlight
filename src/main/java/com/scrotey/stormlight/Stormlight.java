@@ -13,6 +13,7 @@ import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.particle.ModParticles;
 import com.scrotey.stormlight.highstorm.SphereDecayManager;
+import com.scrotey.stormlight.worldgen.ModWorldGeneration;
 
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -29,6 +30,7 @@ public class Stormlight implements ModInitializer {
         ModItems.initialize();
         ModAttachments.initialize();
         ModBlocks.initialize();
+        ModWorldGeneration.initialize();
         ModBlockEntities.initialize();
         ModMenuTypes.initialize();
         ModRecipes.initialize();

@@ -46,6 +46,13 @@
   "item.stormlight.sapphire_broam.dun": "Dun Sapphire Broam",
   "item.stormlight.sapphire_broam.infused": "Infused Sapphire Broam",
 
+  "block.stormlight.garnet_ore": "Garnet Ore",
+  "block.stormlight.deepslate_garnet_ore": "Deepslate Garnet Ore",
+  "block.stormlight.ruby_ore": "Ruby Ore",
+  "block.stormlight.deepslate_ruby_ore": "Deepslate Ruby Ore",
+  "block.stormlight.sapphire_ore": "Sapphire Ore",
+  "block.stormlight.deepslate_sapphire_ore": "Deepslate Sapphire Ore",
+
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
 

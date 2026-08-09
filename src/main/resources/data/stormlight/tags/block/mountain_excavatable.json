@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:dirt",
+    "#minecraft:logs",
+    "#minecraft:leaves",
+
+    "minecraft:grass_block",
+    "minecraft:short_grass",
+    "minecraft:tall_grass",
+    "minecraft:fern",
+    "minecraft:large_fern",
+    "minecraft:podzol",
+    "minecraft:mycelium",
+    "minecraft:rooted_dirt",
+    "minecraft:moss_block",
+
+    "minecraft:stone",
+    "minecraft:deepslate",
+    "minecraft:tuff",
+    "minecraft:granite",
+    "minecraft:andesite",
+    "minecraft:diorite",
+    "minecraft:calcite",
+    "minecraft:dripstone_block",
+
+    "minecraft:gravel",
+    "minecraft:clay",
+    "minecraft:sand",
+    "minecraft:red_sand",
+
+    "minecraft:snow",
+    "minecraft:snow_block",
+    "minecraft:powder_snow"
+  ]
+}
