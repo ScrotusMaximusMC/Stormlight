@@ -16,8 +16,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 
 public final class HighstormAtmosphere {
-    private static final int APPROACHING_TICKS = 60 * 20;
-    private static final int PASSING_TICKS = 30 * 20;
 
     // Highstorms blow due west (negative X).
     private static final double WIND_X = -0.085;
@@ -111,13 +109,13 @@ public final class HighstormAtmosphere {
             case CALM -> 0.0F;
             case APPROACHING -> clamp(
                     1.0F - ticksRemaining
-                            / (float) APPROACHING_TICKS,
+                            / (float) HighstormTimings.APPROACHING_TICKS,
                     0.15F,
                     0.75F
             );
             case HIGHSTORM -> 1.0F;
             case PASSING -> clamp(
-                    ticksRemaining / (float) PASSING_TICKS,
+                    ticksRemaining / (float) HighstormTimings.PASSING_TICKS,
                     0.10F,
                     0.65F
             );

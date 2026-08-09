@@ -14,6 +14,10 @@ import com.scrotey.stormlight.client.mixin.AbstractContainerScreenAccessor;
 import com.scrotey.stormlight.network.OpenSpherePouchPayload;
 import com.scrotey.stormlight.network.SpherePouchSlotPayload;
 import com.scrotey.stormlight.screen.SpherePouchScreen;
+import com.scrotey.stormlight.client.highstorm.ApproachingStormfrontEffects;
+import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
+import com.scrotey.stormlight.network.HighstormVisualPayload;
+import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 
 import java.util.function.Supplier;
 
@@ -98,6 +102,12 @@ public class StormlightClient implements ClientModInitializer {
                 (payload, context) -> StormlightHud.update(payload)
         );
 
+        ClientPlayNetworking.registerGlobalReceiver(
+                HighstormVisualPayload.TYPE,
+                (payload, context) ->
+                        ClientHighstormState.update(payload)
+        );
+
         ClientTickEvents.END_CLIENT_TICK.register(StormlightClient::tick);
 
         HudElementRegistry.attachElementBefore(
@@ -105,9 +115,13 @@ public class StormlightClient implements ClientModInitializer {
                 Stormlight.id("stormlight_bar"),
                 StormlightHud::render
         );
+
+        StormfrontCloudRenderer.register();
     }
 
     private static void tick(net.minecraft.client.Minecraft client) {
+        ClientHighstormState.tick(client);
+        ApproachingStormfrontEffects.tick(client);
         if (client.player == null) {
             heldTicks = 0;
             holdActivated = false;

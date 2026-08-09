@@ -27,6 +27,11 @@ public final class ModNetworking {
                 StormlightStatusPayload.CODEC
         );
 
+        PayloadTypeRegistry.clientboundPlay().register(
+                HighstormVisualPayload.TYPE,
+                HighstormVisualPayload.CODEC
+        );
+
         PayloadTypeRegistry.serverboundPlay().register(
                 OpenSpherePouchPayload.TYPE,
                 OpenSpherePouchPayload.CODEC

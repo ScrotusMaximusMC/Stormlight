@@ -32,6 +32,12 @@ public final class HighstormCommands {
                                                         .executes(HighstormCommands::stop)
                                         )
                                         .then(
+                                                Commands.literal("approach")
+                                                        .executes(
+                                                                HighstormCommands::approach
+                                                        )
+                                        )
+                                        .then(
                                                 Commands.literal("status")
                                                         .executes(HighstormCommands::status)
                                         )
@@ -66,6 +72,23 @@ public final class HighstormCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal(
                         "Stopped the Highstorm and scheduled the next one."
+                ),
+                true
+        );
+
+        return 1;
+    }
+
+    private static int approach(
+            CommandContext<CommandSourceStack> context
+    ) {
+        HighstormManager.startApproachNow(
+                context.getSource().getServer()
+        );
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Started the three-minute Highstorm approach."
                 ),
                 true
         );

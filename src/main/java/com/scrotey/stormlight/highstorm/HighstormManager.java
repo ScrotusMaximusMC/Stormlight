@@ -6,6 +6,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import com.scrotey.stormlight.network.HighstormVisualPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Locale;
 
@@ -16,14 +19,6 @@ public final class HighstormManager {
     private static final int MIN_CALM_DAYS = 3;
     private static final int MAX_CALM_DAYS = 5;
 
-    private static final int APPROACHING_TICKS =
-            60 * TICKS_PER_SECOND;
-
-    private static final int HIGHSTORM_TICKS =
-            5 * 60 * TICKS_PER_SECOND;
-
-    private static final int PASSING_TICKS =
-            30 * TICKS_PER_SECOND;
 
     private static final int WEATHER_BUFFER_TICKS =
             5 * 60 * TICKS_PER_SECOND;
@@ -50,18 +45,44 @@ public final class HighstormManager {
 
         data.setPhase(
                 HighstormPhase.HIGHSTORM,
-                HIGHSTORM_TICKS
+                HighstormTimings.HIGHSTORM_TICKS
         );
 
         setHighstormWeather(
                 level,
-                HIGHSTORM_TICKS
+                HighstormTimings.HIGHSTORM_TICKS
         );
 
         announce(
                 server,
                 "A Highstorm has arrived!",
                 ChatFormatting.AQUA
+        );
+    }
+
+    public static void startApproachNow(
+            MinecraftServer server
+    ) {
+        ServerLevel level =
+                server.overworld();
+
+        HighstormSavedData data =
+                HighstormSavedData.get(server);
+
+        data.setPhase(
+                HighstormPhase.APPROACHING,
+                HighstormTimings.APPROACHING_TICKS
+        );
+
+        setRainWithoutThunder(
+                level,
+                HighstormTimings.APPROACHING_TICKS
+        );
+
+        announce(
+                server,
+                "A Highstorm is approaching!",
+                ChatFormatting.YELLOW
         );
     }
 
@@ -165,11 +186,18 @@ public final class HighstormManager {
                 data.getTicksRemaining()
         );
 
+        if (level.getGameTime() % 10L == 0L) {
+            syncVisualState(
+                    level,
+                    data
+            );
+        }
+
         if (data.getPhase()
                 == HighstormPhase.HIGHSTORM) {
 
             long elapsedHighstormTicks =
-                    HIGHSTORM_TICKS
+                    HighstormTimings.HIGHSTORM_TICKS
                             - data.getTicksRemaining()
                             + 1L;
 
@@ -211,12 +239,12 @@ public final class HighstormManager {
             case CALM -> {
                 data.setPhase(
                         HighstormPhase.APPROACHING,
-                        APPROACHING_TICKS
+                        HighstormTimings.APPROACHING_TICKS
                 );
 
                 setRainWithoutThunder(
                         level,
-                        APPROACHING_TICKS
+                        HighstormTimings.APPROACHING_TICKS
                 );
 
                 announce(
@@ -229,12 +257,12 @@ public final class HighstormManager {
             case APPROACHING -> {
                 data.setPhase(
                         HighstormPhase.HIGHSTORM,
-                        HIGHSTORM_TICKS
+                        HighstormTimings.HIGHSTORM_TICKS
                 );
 
                 setHighstormWeather(
                         level,
-                        HIGHSTORM_TICKS
+                        HighstormTimings.HIGHSTORM_TICKS
                 );
 
                 announce(
@@ -247,12 +275,12 @@ public final class HighstormManager {
             case HIGHSTORM -> {
                 data.setPhase(
                         HighstormPhase.PASSING,
-                        PASSING_TICKS
+                        HighstormTimings.PASSING_TICKS
                 );
 
                 setRainWithoutThunder(
                         level,
-                        PASSING_TICKS
+                        HighstormTimings.PASSING_TICKS
                 );
 
                 announce(
@@ -450,6 +478,32 @@ public final class HighstormManager {
             case PASSING ->
                     ChatFormatting.GRAY;
         };
+    }
+
+    private static void syncVisualState(
+            ServerLevel level,
+            HighstormSavedData data
+    ) {
+        int ticksRemaining = (int) Math.min(
+                Integer.MAX_VALUE,
+                Math.max(
+                        0L,
+                        data.getTicksRemaining()
+                )
+        );
+
+        HighstormVisualPayload payload =
+                new HighstormVisualPayload(
+                        data.getPhase().ordinal(),
+                        ticksRemaining
+                );
+
+        for (ServerPlayer player : level.players()) {
+            ServerPlayNetworking.send(
+                    player,
+                    payload
+            );
+        }
     }
 
     private static void announce(
