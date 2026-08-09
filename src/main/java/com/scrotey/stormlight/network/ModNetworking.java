@@ -3,11 +3,8 @@ package com.scrotey.stormlight.network;
 import com.scrotey.stormlight.breathing.StormlightManager;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.item.SpherePouchItem;
-import com.scrotey.stormlight.screen.SpherePouchContainer;
-import com.scrotey.stormlight.screen.SpherePouchMenu;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -33,11 +30,6 @@ public final class ModNetworking {
         );
 
         PayloadTypeRegistry.serverboundPlay().register(
-                OpenSpherePouchPayload.TYPE,
-                OpenSpherePouchPayload.CODEC
-        );
-
-        PayloadTypeRegistry.serverboundPlay().register(
                 SpherePouchSlotPayload.TYPE,
                 SpherePouchSlotPayload.CODEC
         );
@@ -50,44 +42,6 @@ public final class ModNetworking {
                                 payload.ability(),
                                 payload.action()
                         )
-        );
-
-        ServerPlayNetworking.registerGlobalReceiver(
-                OpenSpherePouchPayload.TYPE,
-                (payload, context) -> {
-                    var player = context.player();
-
-                    if (!ModAttachments.hasEquippedPouch(player)) {
-                        player.sendOverlayMessage(
-                                Component.translatable(
-                                        "message.stormlight."
-                                                + "sphere_pouch.none_equipped"
-                                )
-                        );
-
-                        return;
-                    }
-
-                    player.openMenu(
-                            new SimpleMenuProvider(
-                                    (
-                                            containerId,
-                                            inventory,
-                                            menuPlayer
-                                    ) -> new SpherePouchMenu(
-                                            containerId,
-                                            inventory,
-                                            new SpherePouchContainer(
-                                                    player
-                                            )
-                                    ),
-                                    Component.translatable(
-                                            "container.stormlight."
-                                                    + "sphere_pouch"
-                                    )
-                            )
-                    );
-                }
         );
 
         ServerPlayNetworking.registerGlobalReceiver(

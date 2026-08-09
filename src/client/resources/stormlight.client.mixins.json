@@ -5,6 +5,8 @@
 	"client": [
 		"ExampleClientMixin",
 		"AbstractContainerScreenAccessor",
+		"InventoryScreenMixin",
+		"SpherePouchClickBoundsMixin",
 		"CloudRendererMixin",
 		"DaylightDarkeningMixin"
 	],

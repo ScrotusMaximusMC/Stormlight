@@ -3,7 +3,7 @@ package com.scrotey.stormlight.attachment;
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.item.SpherePouchItem;
 import com.scrotey.stormlight.screen.SphereJarMenu;
-import com.scrotey.stormlight.screen.SpherePouchMenu;
+import com.scrotey.stormlight.screen.SpherePouchInventoryAccess;
 
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
@@ -126,13 +126,18 @@ public final class ModAttachments {
                         ItemStack.EMPTY
                 );
 
-        player.getAttachedOrElse(
-                        PLAYER_SPHERE_STORAGE,
-                        ItemContainerContents.EMPTY
-                )
-                .copyInto(storedItems);
+        getSphereContents(player).copyInto(storedItems);
 
         return storedItems;
+    }
+
+    public static ItemContainerContents getSphereContents(
+            Player player
+    ) {
+        return player.getAttachedOrElse(
+                PLAYER_SPHERE_STORAGE,
+                ItemContainerContents.EMPTY
+        );
     }
 
     public static void setSphereItems(
@@ -168,15 +173,15 @@ public final class ModAttachments {
         );
 
         if (player.containerMenu
-                instanceof SpherePouchMenu pouchMenu) {
-
-            pouchMenu.refreshSphereStorage();
-        }
-
-        if (player.containerMenu
                 instanceof SphereJarMenu jarMenu) {
 
             jarMenu.refreshSphereStorage();
+        }
+
+        if (player.inventoryMenu
+                instanceof SpherePouchInventoryAccess inventoryMenu) {
+
+            inventoryMenu.stormlight$refreshSphereStorage();
         }
     }
 

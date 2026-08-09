@@ -11,9 +11,8 @@ import com.scrotey.stormlight.screen.SphereJarScreen;
 import com.scrotey.stormlight.particle.ModParticles;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.client.mixin.AbstractContainerScreenAccessor;
-import com.scrotey.stormlight.network.OpenSpherePouchPayload;
 import com.scrotey.stormlight.network.SpherePouchSlotPayload;
-import com.scrotey.stormlight.screen.SpherePouchScreen;
+import com.scrotey.stormlight.screen.SpherePouchInventoryLayout;
 import com.scrotey.stormlight.client.highstorm.ApproachingStormfrontEffects;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
@@ -21,7 +20,6 @@ import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 
 import java.util.function.Supplier;
 
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -46,14 +44,12 @@ import net.minecraft.client.gui.screens.MenuScreens;
 
 public class StormlightClient implements ClientModInitializer {
     private static final int HOLD_THRESHOLD_TICKS = 8;
-    private static final int SLOT_DARK_EDGE = 0xFF373737;
-    private static final int SLOT_BACKGROUND = 0xFF8B8B8B;
-    private static final int SLOT_LIGHT_EDGE = 0xFFFFFFFF;
-    private static final int SLOT_HOVER = 0x40FFFFFF;
+    private static final int SLOT_DARK_EDGE = 0xFF06131F;
+    private static final int SLOT_BACKGROUND = 0xFF102B3D;
+    private static final int SLOT_LIGHT_EDGE = 0xFF6DE8FF;
+    private static final int SLOT_HOVER = 0x506DE8FF;
 
-    private static final int EMPTY_POUCH_OUTLINE = 0xFF5A5A5A;
-
-    private static final float POUCH_BUTTON_TEXT_SCALE = 0.55F;
+    private static final int EMPTY_POUCH_OUTLINE = 0xFF78E8FF;
 
     private static final KeyMapping.Category STORMLIGHT_CATEGORY =
             KeyMapping.Category.register(
@@ -88,11 +84,6 @@ public class StormlightClient implements ClientModInitializer {
         MenuScreens.register(
                 ModMenuTypes.SPHERE_JAR,
                 SphereJarScreen::new
-        );
-
-        MenuScreens.register(
-                ModMenuTypes.SPHERE_POUCH,
-                SpherePouchScreen::new
         );
 
         registerSpherePouchInventoryControls();
@@ -194,36 +185,15 @@ public class StormlightClient implements ClientModInitializer {
                                     }
                             );
 
-                    Button pouchTab =
-                            Button.builder(
-                                    Component.empty(),
-                                    button ->
-                                            ClientPlayNetworking.send(
-                                                    OpenSpherePouchPayload
-                                                            .INSTANCE
-                                            )
-                            ).bounds(
-                                    accessor.stormlight$getLeftPos()
-                                            + 116,
-                                    accessor.stormlight$getTopPos()
-                                            - 18,
-                                    56,
-                                    18
-                            ).build();
-
                     Screens.getWidgets(screen).add(
                             equipmentSlot
-                    );
-
-                    Screens.getWidgets(screen).add(
-                            pouchTab
                     );
 
                     ScreenEvents.beforeExtract(screen)
                             .register(
                                     (
                                             ignoredScreen,
-                                            ignoredGraphics,
+                                            graphics,
                                             ignoredMouseX,
                                             ignoredMouseY,
                                             ignoredDelta
@@ -240,35 +210,7 @@ public class StormlightClient implements ClientModInitializer {
                                                 left + 76,
                                                 top + 43
                                         );
-
-                                        pouchTab.setPosition(
-                                                left + 116,
-                                                top - 18
-                                        );
-
-                                        pouchTab.active =
-                                                client.player != null
-                                                        && ModAttachments
-                                                        .hasEquippedPouch(
-                                                                client.player
-                                                        );
-                                    }
-                            );
-
-                    ScreenEvents.afterExtract(screen)
-                            .register(
-                                    (
-                                            ignoredScreen,
-                                            graphics,
-                                            mouseX,
-                                            mouseY,
-                                            delta
-                                    ) -> {
-                                        drawPouchButtonLabel(
-                                                graphics,
-                                                client,
-                                                pouchTab
-                                        );
+                                        
                                     }
                             );
                 }
@@ -497,59 +439,33 @@ public class StormlightClient implements ClientModInitializer {
         }
     }
 
-    private static void drawPouchButtonLabel(
-            net.minecraft.client.gui.GuiGraphicsExtractor graphics,
+    private static void drawPouchInventoryPanel(
+            GuiGraphicsExtractor graphics,
             net.minecraft.client.Minecraft client,
-            Button pouchTab
+            int left,
+            int top
     ) {
-        Component label = Component.translatable(
-                "button.stormlight.sphere_pouch"
-        );
+        int panelLeft = left
+                + SpherePouchInventoryLayout.PANEL_X;
 
-        float scaledWidth =
-                client.font.width(label)
-                        * POUCH_BUTTON_TEXT_SCALE;
+        int panelTop = top
+                + SpherePouchInventoryLayout.PANEL_Y;
 
-        float textX =
-                pouchTab.getX()
-                        + (
-                        pouchTab.getWidth()
-                                - scaledWidth
-                ) / 2.0F;
-
-        float textY =
-                pouchTab.getY()
-                        + (
-                        pouchTab.getHeight()
-                                - 9.0F
-                                * POUCH_BUTTON_TEXT_SCALE
-                ) / 2.0F;
-
-        graphics.pose().pushMatrix();
-
-        graphics.pose().scale(
-                POUCH_BUTTON_TEXT_SCALE,
-                POUCH_BUTTON_TEXT_SCALE
-        );
-
-        graphics.text(
+        StormlightGuiStyle.drawSpherePanel(
+                graphics,
                 client.font,
-                label,
-                Math.round(
-                        textX
-                                / POUCH_BUTTON_TEXT_SCALE
+                Component.translatable(
+                        "container.stormlight.sphere_pouch"
                 ),
-                Math.round(
-                        textY
-                                / POUCH_BUTTON_TEXT_SCALE
-                ),
-                pouchTab.active
-                        ? 0xFFFFFFFF
-                        : 0xFFA0A0A0,
-                true
+                panelLeft,
+                panelTop,
+                SpherePouchInventoryLayout.PANEL_WIDTH,
+                SpherePouchInventoryLayout.PANEL_HEIGHT,
+                left + SpherePouchInventoryLayout.SLOT_START_X,
+                top + SpherePouchInventoryLayout.SLOT_START_Y,
+                4,
+                4
         );
-
-        graphics.pose().popMatrix();
     }
 
     private static void send(AbilityId ability, AbilityInputPayload.Action action) {

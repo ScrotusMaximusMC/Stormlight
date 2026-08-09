@@ -89,7 +89,7 @@ public final class StrengthSurgeAbility implements StormlightAbility {
                 new MobEffectInstance(
                         effect,
                         EFFECT_DURATION_TICKS,
-                        0,
+                        1, // Level 2
                         true,
                         false,
                         false

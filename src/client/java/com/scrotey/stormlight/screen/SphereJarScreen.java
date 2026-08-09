@@ -1,10 +1,14 @@
 package com.scrotey.stormlight.screen;
 
 import com.scrotey.stormlight.Stormlight;
+import com.scrotey.stormlight.client.StormlightGuiStyle;
 
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -18,22 +22,6 @@ public class SphereJarScreen
                     Stormlight.MOD_ID,
                     "textures/gui/sphere_jar_gui.png"
             );
-
-    private static final int POUCH_PANEL_COLOUR =
-            0xFF172630;
-
-    private static final int POUCH_PANEL_BORDER =
-            0xFF5BD8F2;
-
-    private static final int POUCH_SLOT_BORDER =
-            0xFF08141C;
-
-    private static final int POUCH_SLOT_BACKGROUND =
-            0xFF365365;
-
-    private Button chipButton;
-    private Button markButton;
-    private Button broamButton;
 
     public SphereJarScreen(
             SphereJarMenu menu,
@@ -62,49 +50,35 @@ public class SphereJarScreen
     protected void init() {
         super.init();
 
-        chipButton = addRenderableWidget(
-                Button.builder(
-                        Component.literal("Chips"),
-                        button -> selectTab(
-                                SphereJarMenu.CHIP_TAB
-                        )
-                ).bounds(
+        addRenderableWidget(
+                new DenominationTab(
                         leftPos + 10,
                         topPos + 18,
-                        50,
-                        20
-                ).build()
+                        Component.literal("Chips"),
+                        SphereJarMenu.CHIP_TAB,
+                        1
+                )
         );
 
-        markButton = addRenderableWidget(
-                Button.builder(
-                        Component.literal("Marks"),
-                        button -> selectTab(
-                                SphereJarMenu.MARK_TAB
-                        )
-                ).bounds(
+        addRenderableWidget(
+                new DenominationTab(
                         leftPos + 63,
                         topPos + 18,
-                        50,
-                        20
-                ).build()
+                        Component.literal("Marks"),
+                        SphereJarMenu.MARK_TAB,
+                        2
+                )
         );
 
-        broamButton = addRenderableWidget(
-                Button.builder(
-                        Component.literal("Broams"),
-                        button -> selectTab(
-                                SphereJarMenu.BROAM_TAB
-                        )
-                ).bounds(
+        addRenderableWidget(
+                new DenominationTab(
                         leftPos + 116,
                         topPos + 18,
-                        50,
-                        20
-                ).build()
+                        Component.literal("Broams"),
+                        SphereJarMenu.BROAM_TAB,
+                        3
+                )
         );
-
-        updateTabButtons();
     }
 
     private void selectTab(int tab) {
@@ -123,22 +97,34 @@ public class SphereJarScreen
                             menu.containerId,
                             tab
                     );
-
-            updateTabButtons();
         }
     }
 
-    private void updateTabButtons() {
-        int selected = menu.getSelectedTab();
+    @Override
+    protected void extractLabels(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY
+    ) {
+        int stormlightWhite = 0xFFE9FBFF;
 
-        chipButton.active =
-                selected != SphereJarMenu.CHIP_TAB;
+        graphics.text(
+                font,
+                title,
+                titleLabelX,
+                titleLabelY,
+                stormlightWhite,
+                true
+        );
 
-        markButton.active =
-                selected != SphereJarMenu.MARK_TAB;
-
-        broamButton.active =
-                selected != SphereJarMenu.BROAM_TAB;
+        graphics.text(
+                font,
+                playerInventoryTitle,
+                inventoryLabelX,
+                inventoryLabelY,
+                stormlightWhite,
+                true
+        );
     }
 
     @Override
@@ -176,76 +162,135 @@ public class SphereJarScreen
     private void drawPouchPanel(
             GuiGraphicsExtractor graphics
     ) {
-        graphics.fill(
-                leftPos + 7,
-                topPos + 122,
-                leftPos + 169,
-                topPos + 215,
-                POUCH_PANEL_BORDER
-        );
-
-        graphics.fill(
-                leftPos + 9,
-                topPos + 124,
-                leftPos + 167,
-                topPos + 213,
-                POUCH_PANEL_COLOUR
-        );
-
-        graphics.text(
+        StormlightGuiStyle.drawSpherePanel(
+                graphics,
                 font,
                 Component.translatable(
                         "container.stormlight.sphere_pouch"
                 ),
-                leftPos + 13,
-                topPos + 127,
-                0xFFFFFFFF,
-                false
-        );
-
-        drawPouchSlotGrid(
-                graphics,
-                53,
-                139
+                leftPos + 7,
+                topPos + 122,
+                162,
+                93,
+                leftPos + 53,
+                topPos + 139,
+                4,
+                4
         );
     }
 
-    private void drawPouchSlotGrid(
-            GuiGraphicsExtractor graphics,
-            int startX,
-            int startY
-    ) {
-        for (int row = 0; row < 4; row++) {
-            for (int column = 0;
-                 column < 4;
-                 column++) {
+    /**
+     * A small blue-glass Stormlight tab. The row of crystal sparks indicates
+     * the denomination at a glance, while the selected tab looks infused.
+     */
+    private final class DenominationTab extends AbstractWidget {
+        private static final int FRAME_DARK = 0xFF03101A;
+        private static final int FRAME_BLUE = 0xFF287FA5;
+        private static final int FACE = 0xFF0B2638;
+        private static final int FACE_SELECTED = 0xFF17465D;
+        private static final int EDGE = 0xFF68E8FF;
+        private static final int TEXT = 0xFFC5EAF1;
+        private static final int TEXT_SELECTED = 0xFFFFFFFF;
 
-                int x =
-                        leftPos
-                                + startX
-                                + column * 18;
+        private final int tab;
+        private final int rank;
 
-                int y =
-                        topPos
-                                + startY
-                                + row * 18;
+        private DenominationTab(
+                int x,
+                int y,
+                Component label,
+                int tab,
+                int rank
+        ) {
+            super(x, y, 50, 20, label);
+            this.tab = tab;
+            this.rank = rank;
+        }
 
-                graphics.fill(
-                        x - 1,
-                        y - 1,
-                        x + 17,
-                        y + 17,
-                        POUCH_SLOT_BORDER
-                );
+        @Override
+        protected void extractWidgetRenderState(
+                GuiGraphicsExtractor graphics,
+                int mouseX,
+                int mouseY,
+                float delta
+        ) {
+            int left = getX();
+            int top = getY();
+            int right = left + getWidth();
+            int bottom = top + getHeight();
+            boolean selected = menu.getSelectedTab() == tab;
+            boolean highlighted = selected || isHovered();
 
-                graphics.fill(
-                        x,
-                        y,
-                        x + 16,
-                        y + 16,
-                        POUCH_SLOT_BACKGROUND
-                );
+            // A restrained aura appears on hover; the selected tab breathes.
+            if (highlighted) {
+                int aura = selected
+                        && (System.currentTimeMillis() / 350L) % 2L == 0L
+                        ? 0x7068E8FF
+                        : 0x4053CFEF;
+                graphics.fill(left - 1, top + 3, right + 1, bottom - 2, aura);
             }
+
+            graphics.fill(left, top, right, bottom, FRAME_DARK);
+            graphics.fill(left + 1, top + 1, right - 1, bottom - 1,
+                    highlighted ? EDGE : FRAME_BLUE);
+            graphics.fill(left + 2, top + 2, right - 2, bottom - 2,
+                    selected ? FACE_SELECTED : FACE);
+
+            // Tiny corner glyph marks break up the ordinary button silhouette.
+            graphics.fill(left + 3, top + 3, left + 6, top + 4, FRAME_BLUE);
+            graphics.fill(right - 6, top + 3, right - 3, top + 4, FRAME_BLUE);
+
+            // One, two or three crystal sparks identify chip, mark and broam.
+            int sparksWidth = rank * 4 - 1;
+            int sparkX = left + (getWidth() - sparksWidth) / 2;
+            for (int index = 0; index < rank; index++) {
+                int x = sparkX + index * 4;
+                graphics.fill(x + 1, top + 3, x + 2, top + 6, EDGE);
+                graphics.fill(x, top + 4, x + 3, top + 5, EDGE);
+            }
+
+            if (selected) {
+                graphics.fill(left + 4, bottom - 3, right - 4, bottom - 2, EDGE);
+                graphics.fill(left + 10, bottom - 2, right - 10, bottom - 1,
+                        0xFFDAFAFF);
+            } else if (isHovered()) {
+                graphics.fill(left + 8, bottom - 3, right - 8, bottom - 2,
+                        0xFF49BDD8);
+            }
+
+            drawCentredLabel(
+                    graphics,
+                    font,
+                    left,
+                    top + 9,
+                    selected ? TEXT_SELECTED : TEXT
+            );
+        }
+
+        private void drawCentredLabel(
+                GuiGraphicsExtractor graphics,
+                Font font,
+                int left,
+                int top,
+                int colour
+        ) {
+            int textX = left + (getWidth() - font.width(getMessage())) / 2;
+            graphics.text(font, getMessage(), textX, top, colour, true);
+        }
+
+        @Override
+        public void onClick(
+                MouseButtonEvent event,
+                boolean doubleClick
+        ) {
+            selectTab(tab);
+        }
+
+        @Override
+        protected void updateWidgetNarration(
+                NarrationElementOutput output
+        ) {
+            defaultButtonNarrationText(output);
         }
     }
 }
