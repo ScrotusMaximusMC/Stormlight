@@ -3,18 +3,15 @@ package com.scrotey.stormlight.highstorm;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.block.entity.SphereJarBlockEntity;
 import com.scrotey.stormlight.item.SphereItem;
-import com.scrotey.stormlight.item.SpherePouchItem;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.entity.EntityTypeTest;
 
@@ -157,12 +154,7 @@ final class HighstormCharging {
                     elapsedHighstormTicks
                             / VANILLA_STORAGE_INTERVAL_TICKS;
 
-            chargeExposedPlayerPouches(
-                    level,
-                    pulseNumber
-            );
-
-            chargeExposedDroppedPouches(
+            chargeExposedPlayerSphereStorage(
                     level,
                     pulseNumber
             );
@@ -356,7 +348,7 @@ final class HighstormCharging {
         }
     }
 
-    private static void chargeExposedPlayerPouches(
+    private static void chargeExposedPlayerSphereStorage(
             ServerLevel level,
             long pulseNumber
     ) {
@@ -369,76 +361,38 @@ final class HighstormCharging {
                 continue;
             }
 
-            var inventory =
-                    player.getInventory();
-
-            boolean inventoryChanged =
-                    false;
-
-            for (ItemStack stack
-                    : inventory.getNonEquipmentItems()) {
-
-                if (chargePouchContents(
-                        stack,
-                        pulseNumber
-                )) {
-                    inventoryChanged = true;
-                }
-            }
-
-            if (chargePouchContents(
-                    player.getOffhandItem(),
-                    pulseNumber
-            )) {
-                inventoryChanged = true;
-            }
-
-            if (inventoryChanged) {
-                inventory.setChanged();
-            }
-
-            ItemStack equippedPouch =
-                    ModAttachments.getEquippedPouch(
-                            player
-                    );
-
-            if (chargePouchContents(
-                    equippedPouch,
-                    pulseNumber
-            )) {
-                ModAttachments.setEquippedPouch(
-                        player,
-                        equippedPouch
-                );
-            }
-        }
-    }
-
-    private static void chargeExposedDroppedPouches(
-            ServerLevel level,
-            long pulseNumber
-    ) {
-        for (ItemEntity itemEntity
-                : getExposedDroppedItems(level)) {
-
-            ItemStack originalStack =
-                    itemEntity.getItem();
-
-            if (!(originalStack.getItem()
-                    instanceof SpherePouchItem)) {
+            /*
+             * Hidden spheres cannot charge unless the pouch that grants
+             * access to them is currently equipped.
+             */
+            if (!ModAttachments
+                    .hasEquippedPouch(player)) {
 
                 continue;
             }
 
-            ItemStack updatedStack =
-                    originalStack.copy();
+            var sphereItems =
+                    ModAttachments.getSphereItems(
+                            player
+                    );
 
-            if (chargePouchContents(
-                    updatedStack,
-                    pulseNumber
-            )) {
-                itemEntity.setItem(
-                        updatedStack
+            boolean changed = false;
+
+            for (ItemStack sphereStack
+                    : sphereItems) {
+
+                if (chargeSphere(
+                        sphereStack,
+                        pulseNumber
+                )) {
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                ModAttachments.setSphereItems(
+                        player,
+                        sphereItems
                 );
             }
         }
@@ -536,54 +490,7 @@ final class HighstormCharging {
             );
         }
 
-        return chargePouchContents(
-                stack,
-                pulseNumber
-        );
-    }
-
-    private static boolean chargePouchContents(
-            ItemStack pouch,
-            long pulseNumber
-    ) {
-        if (!(pouch.getItem()
-                instanceof SpherePouchItem pouchItem)) {
-
-            return false;
-        }
-
-        NonNullList<ItemStack> pouchItems =
-                NonNullList.withSize(
-                        SpherePouchItem.SLOT_COUNT,
-                        ItemStack.EMPTY
-                );
-
-        pouchItem.getContents(pouch)
-                .copyInto(pouchItems);
-
-        boolean changed = false;
-
-        for (ItemStack sphereStack
-                : pouchItems) {
-
-            if (chargeSphere(
-                    sphereStack,
-                    pulseNumber
-            )) {
-                changed = true;
-            }
-        }
-
-        if (changed) {
-            pouchItem.setContents(
-                    pouch,
-                    ItemContainerContents.fromItems(
-                            pouchItems
-                    )
-            );
-        }
-
-        return changed;
+        return false;
     }
 
     private static boolean chargeSphereOverDuration(

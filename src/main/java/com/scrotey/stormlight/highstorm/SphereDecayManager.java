@@ -2,7 +2,6 @@ package com.scrotey.stormlight.highstorm;
 
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.item.SphereItem;
-import com.scrotey.stormlight.item.SpherePouchItem;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -15,7 +14,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.entity.EntityTypeTest;
 
@@ -137,33 +135,43 @@ public final class SphereDecayManager {
                     currentGameTick
             );
 
-            decayEquippedPouch(
+            decayPlayerSphereStorage(
                     player,
                     currentGameTick
             );
         }
     }
 
-    private static void decayEquippedPouch(
+    private static void decayPlayerSphereStorage(
             ServerPlayer player,
             long currentGameTick
     ) {
-        ItemStack pouch =
-                ModAttachments.getEquippedPouch(
+        NonNullList<ItemStack> sphereItems =
+                ModAttachments.getSphereItems(
                         player
                 );
 
-        if (pouch.isEmpty()) {
-            return;
+        boolean changed = false;
+
+        /*
+         * Decay continues even while the pouch is unequipped. The
+         * spheres still exist; they are merely inaccessible.
+         */
+        for (ItemStack sphereStack
+                : sphereItems) {
+
+            if (decayStack(
+                    sphereStack,
+                    currentGameTick
+            )) {
+                changed = true;
+            }
         }
 
-        if (decayStack(
-                pouch,
-                currentGameTick
-        )) {
-            ModAttachments.setEquippedPouch(
+        if (changed) {
+            ModAttachments.setSphereItems(
                     player,
-                    pouch
+                    sphereItems
             );
         }
     }
@@ -240,8 +248,10 @@ public final class SphereDecayManager {
     }
 
     /**
-     * Decays either a sphere itself or all spheres stored inside a
-     * Sphere Pouch.
+     * Applies passive decay to a sphere stack.
+     */
+    /**
+     * Applies passive decay to a sphere stack.
      */
     private static boolean decayStack(
             ItemStack stack,
@@ -260,53 +270,6 @@ public final class SphereDecayManager {
             );
         }
 
-        if (stack.getItem()
-                instanceof SpherePouchItem pouchItem) {
-
-            return decayPouchContents(
-                    stack,
-                    pouchItem,
-                    currentGameTick
-            );
-        }
-
         return false;
-    }
-
-    private static boolean decayPouchContents(
-            ItemStack pouch,
-            SpherePouchItem pouchItem,
-            long currentGameTick
-    ) {
-        NonNullList<ItemStack> pouchItems =
-                NonNullList.withSize(
-                        SpherePouchItem.SLOT_COUNT,
-                        ItemStack.EMPTY
-                );
-
-        pouchItem.getContents(pouch)
-                .copyInto(pouchItems);
-
-        boolean changed = false;
-
-        for (ItemStack stack : pouchItems) {
-            if (decayStack(
-                    stack,
-                    currentGameTick
-            )) {
-                changed = true;
-            }
-        }
-
-        if (changed) {
-            pouchItem.setContents(
-                    pouch,
-                    ItemContainerContents.fromItems(
-                            pouchItems
-                    )
-            );
-        }
-
-        return changed;
     }
 }

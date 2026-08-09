@@ -40,6 +40,7 @@ public class SphereItem extends Item {
 
     private final String sphereName;
 
+    @SuppressWarnings("deprecation")
     @Override
     public void appendHoverText(
             ItemStack stack,

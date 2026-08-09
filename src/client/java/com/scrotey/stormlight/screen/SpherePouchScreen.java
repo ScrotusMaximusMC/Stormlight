@@ -4,6 +4,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+
+import org.lwjgl.glfw.GLFW;
 
 public class SpherePouchScreen
         extends AbstractContainerScreen<SpherePouchMenu> {
@@ -38,6 +42,64 @@ public class SpherePouchScreen
 
         inventoryLabelX = 8;
         inventoryLabelY = 96;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+
+        addRenderableWidget(
+                Button.builder(
+                        Component.translatable(
+                                "button.stormlight.inventory"
+                        ),
+                        button -> openPlayerInventory()
+                ).bounds(
+                        leftPos + 116,
+                        topPos - 18,
+                        56,
+                        18
+                ).build()
+        );
+    }
+
+    private void openPlayerInventory() {
+        if (minecraft == null
+                || minecraft.player == null) {
+
+            return;
+        }
+
+        /*
+         * Closing a container briefly re-grabs and recentres the
+         * mouse. Remember its position so switching screens feels
+         * like changing tabs.
+         */
+        long windowHandle =
+                minecraft.getWindow().handle();
+
+        double[] mouseX = new double[1];
+        double[] mouseY = new double[1];
+
+        GLFW.glfwGetCursorPos(
+                windowHandle,
+                mouseX,
+                mouseY
+        );
+
+        minecraft.player.closeContainer();
+
+        minecraft.gui.setScreen(
+                new InventoryScreen(
+                        minecraft.player
+                )
+        );
+
+        GLFW.glfwSetCursorPos(
+                windowHandle,
+                mouseX[0],
+                mouseY[0]
+        );
     }
 
     @Override

@@ -8,18 +8,27 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.network.codec.ByteBufCodecs;
 
 public class ModComponents {
-    public static final DataComponentType<Integer> STORMLIGHT_CHARGE =
+    public static final DataComponentType<Integer>
+            STORMLIGHT_CHARGE =
             Registry.register(
                     BuiltInRegistries.DATA_COMPONENT_TYPE,
                     Identifier.fromNamespaceAndPath(
                             Stormlight.MOD_ID,
                             "stormlight_charge"
                     ),
-
                     DataComponentType.<Integer>builder()
-                            .persistent(Codec.intRange(0, 1000))
+                            .persistent(
+                                    Codec.intRange(
+                                            0,
+                                            1000
+                                    )
+                            )
+                            .networkSynchronized(
+                                    ByteBufCodecs.VAR_INT
+                            )
                             .build()
             );
 

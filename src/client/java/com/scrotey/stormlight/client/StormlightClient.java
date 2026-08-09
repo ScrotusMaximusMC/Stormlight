@@ -204,10 +204,10 @@ public class StormlightClient implements ClientModInitializer {
                                             )
                             ).bounds(
                                     accessor.stormlight$getLeftPos()
-                                            + 128,
+                                            + 116,
                                     accessor.stormlight$getTopPos()
-                                            + 61,
-                                    44,
+                                            - 18,
+                                    56,
                                     18
                             ).build();
 
@@ -242,8 +242,8 @@ public class StormlightClient implements ClientModInitializer {
                                         );
 
                                         pouchTab.setPosition(
-                                                left + 128,
-                                                top + 61
+                                                left + 116,
+                                                top - 18
                                         );
 
                                         pouchTab.active =

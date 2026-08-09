@@ -2,17 +2,23 @@ package com.scrotey.stormlight.attachment;
 
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.item.SpherePouchItem;
+import com.scrotey.stormlight.screen.SphereJarMenu;
+import com.scrotey.stormlight.screen.SpherePouchMenu;
 
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 
+import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.gamerules.GameRules;
+
+import java.util.List;
 
 public final class ModAttachments {
     public static final AttachmentType<ItemStack>
@@ -25,6 +31,24 @@ public final class ModAttachments {
                             .copyOnDeath()
                             .syncWith(
                                     ItemStack.OPTIONAL_STREAM_CODEC,
+                                    AttachmentSyncPredicate.targetOnly()
+                            )
+            );
+
+    public static final AttachmentType<ItemContainerContents>
+            PLAYER_SPHERE_STORAGE =
+            AttachmentRegistry.<ItemContainerContents>create(
+                    Stormlight.id("player_sphere_storage"),
+                    builder -> builder
+                            .initializer(
+                                    () -> ItemContainerContents.EMPTY
+                            )
+                            .persistent(
+                                    ItemContainerContents.CODEC
+                            )
+                            .copyOnDeath()
+                            .syncWith(
+                                    ItemContainerContents.STREAM_CODEC,
                                     AttachmentSyncPredicate.targetOnly()
                             )
             );
@@ -91,6 +115,69 @@ public final class ModAttachments {
         );
 
         return pouch;
+    }
+
+    public static NonNullList<ItemStack> getSphereItems(
+            Player player
+    ) {
+        NonNullList<ItemStack> storedItems =
+                NonNullList.withSize(
+                        SpherePouchItem.SLOT_COUNT,
+                        ItemStack.EMPTY
+                );
+
+        player.getAttachedOrElse(
+                        PLAYER_SPHERE_STORAGE,
+                        ItemContainerContents.EMPTY
+                )
+                .copyInto(storedItems);
+
+        return storedItems;
+    }
+
+    public static void setSphereItems(
+            ServerPlayer player,
+            List<ItemStack> items
+    ) {
+        NonNullList<ItemStack> storedItems =
+                NonNullList.withSize(
+                        SpherePouchItem.SLOT_COUNT,
+                        ItemStack.EMPTY
+                );
+
+        int itemCount = Math.min(
+                items.size(),
+                SpherePouchItem.SLOT_COUNT
+        );
+
+        for (int slot = 0;
+             slot < itemCount;
+             slot++) {
+
+            storedItems.set(
+                    slot,
+                    items.get(slot).copy()
+            );
+        }
+
+        player.setAttached(
+                PLAYER_SPHERE_STORAGE,
+                ItemContainerContents.fromItems(
+                        storedItems
+                )
+        );
+
+        if (player.containerMenu
+                instanceof SpherePouchMenu pouchMenu) {
+
+            pouchMenu.refreshSphereStorage();
+        }
+
+        if (player.containerMenu
+                instanceof SphereJarMenu jarMenu) {
+
+            jarMenu.refreshSphereStorage();
+        }
     }
 
     public static void initialize() {

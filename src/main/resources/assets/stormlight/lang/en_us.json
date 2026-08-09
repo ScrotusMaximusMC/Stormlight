@@ -1,12 +1,15 @@
 {
-  "item.stormlight.sphere_pouch": "Sphere Pouch",
-  "tooltip.stormlight.sphere_pouch": "Spheres: %s / %s",
   "message.stormlight.sphere_pouch.equipped": "Sphere Pouch equipped",
   "message.stormlight.sphere_pouch.swapped": "Sphere Pouches swapped",
-  "container.stormlight.sphere_pouch": "Sphere Pouch",
-  "button.stormlight.sphere_pouch": "Sphere Pouch",
   "message.stormlight.sphere_pouch.none_equipped": "No Sphere Pouch equipped",
   "message.stormlight.sphere_pouch.invalid_item": "Only a Sphere Pouch can be equipped here",
+
+  "container.stormlight.sphere_pouch": "Sphere Pouch",
+
+  "button.stormlight.sphere_pouch": "Sphere Pouch",
+  "button.stormlight.inventory": "Inventory",
+
+  "item.stormlight.sphere_pouch": "Sphere Pouch",
 
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
@@ -58,5 +61,6 @@
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 
+  "tooltip.stormlight.sphere_pouch": "Unlocks your 16-slot Sphere Pouch inventory",
   "tooltip.stormlight.charge": "Stormlight: %s / %s"
 }

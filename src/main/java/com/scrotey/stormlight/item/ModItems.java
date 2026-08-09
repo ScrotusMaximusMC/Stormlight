@@ -1,13 +1,12 @@
 package com.scrotey.stormlight.item;
-
 import com.scrotey.stormlight.component.ModComponents;
+
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.component.ItemContainerContents;
 
 import java.util.function.Function;
 
@@ -18,10 +17,6 @@ public class ModItems {
             SpherePouchItem::new,
             new Item.Properties()
                     .stacksTo(1)
-                    .component(
-                            ModComponents.SPHERE_POUCH_CONTENTS,
-                            ItemContainerContents.EMPTY
-                    )
     );
 
     public static final Item DIAMOND_CHIP = register(

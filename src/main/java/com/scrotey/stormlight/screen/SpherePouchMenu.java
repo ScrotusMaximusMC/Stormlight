@@ -157,6 +157,16 @@ public class SpherePouchMenu
         return original;
     }
 
+    public void refreshSphereStorage() {
+        if (container
+                instanceof SpherePouchContainer
+                sphereContainer) {
+
+            sphereContainer
+                    .refreshFromPlayerStorage();
+        }
+    }
+
     @Override
     public boolean stillValid(Player player) {
         return container.stillValid(player);
