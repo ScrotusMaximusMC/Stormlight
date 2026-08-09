@@ -32,12 +32,12 @@ public final class StormfrontCloudRenderer {
      * The distant storm is broad but shallow. As it reaches the
      * player, it becomes narrower but considerably deeper.
      */
-    private static final int FAR_HALF_COLUMNS = 45;
-    private static final int NEAR_HALF_COLUMNS = 25;
+    private static final int FAR_HALF_COLUMNS = 65;
+    private static final int NEAR_HALF_COLUMNS = 15;
 
-    private static final int FAR_HALF_LAYERS = 2;
-    private static final int MID_HALF_LAYERS = 3;
-    private static final int NEAR_HALF_LAYERS = 4;
+    private static final int FAR_HALF_LAYERS = 4;
+    private static final int MID_HALF_LAYERS = 8;
+    private static final int NEAR_HALF_LAYERS = 15;
 
     private static final int MIN_ROW = 2;
     private static final int MAX_ROW = 7;
@@ -45,10 +45,16 @@ public final class StormfrontCloudRenderer {
      * Lowers the entire cloud formation without adding another
      * complete row directly over the player.
      */
-    private static final float CLOUD_VERTICAL_OFFSET = -6.0F;
+    private static final float CLOUD_VERTICAL_OFFSET = -1.0F;
 
     private static final float COLUMN_SPACING = 28.0F;
     private static final float LAYER_SPACING = 32.0F;
+
+    /*
+     * One visible internal lightning event every twelve seconds.
+     */
+    private static final long LIGHTNING_PERIOD_TICKS =
+            12L * 20L;
 
     /*
      * Camera-relative position of the cloud mass.
@@ -215,6 +221,7 @@ public final class StormfrontCloudRenderer {
 
         int halfColumnRange;
         int halfLayerRange;
+        float layerPositionOffset;
 
         if (state.passing()) {
             float passingProgress =
@@ -250,6 +257,19 @@ public final class StormfrontCloudRenderer {
                     selectDepartingLayerRange(
                             passingProgress
                     );
+
+            /*
+             * The retained layers are on the eastern side of the
+             * permanent formation. Gradually remove their positional
+             * bias as the departing wall becomes shallow again.
+             */
+            layerPositionOffset =
+                    -(
+                            NEAR_HALF_LAYERS
+                                    - FAR_HALF_LAYERS
+                    )
+                            * LAYER_SPACING
+                            * smoothProgress;
         } else if (state.highstorm()) {
             /*
              * During the Highstorm, the cloud mass is deepest and
@@ -263,6 +283,8 @@ public final class StormfrontCloudRenderer {
 
             halfLayerRange =
                     NEAR_HALF_LAYERS;
+
+            layerPositionOffset = 0.0F;
         } else {
             float approachProgress =
                     state.approachProgress();
@@ -297,25 +319,70 @@ public final class StormfrontCloudRenderer {
                     selectApproachingLayerRange(
                             approachProgress
                     );
+
+            /*
+             * The initial shallow formation is centred on its travel
+             * position. This compensation disappears as layers are
+             * appended eastwards behind the visible front.
+             */
+            layerPositionOffset =
+                    (
+                            NEAR_HALF_LAYERS
+                                    - FAR_HALF_LAYERS
+                    )
+                            * LAYER_SPACING
+                            * (1.0F - smoothProgress);
         }
 
         /*
-         * Logical layer numbers remain centred around zero.
-         * When extra layers appear, the existing layers retain
-         * their hashes and positions instead of rearranging.
+         * Calculates a single lightning event for the entire cloud mass.
+         * Most frames return zero, meaning no flash is active.
+         */
+        float lightningStrength =
+                calculateLightningStrength(
+                        state.gameTime(),
+                        cloudIntensity
+                );
+
+        /*
+         * Every possible layer has a permanent index from west to east.
+         * Approaching layers grow eastwards; passing layers shrink by
+         * losing their western side.
          */
         for (int logicalLayer = -halfLayerRange;
              logicalLayer <= halfLayerRange;
              logicalLayer++) {
+            int depthLayer =
+                    logicalLayer + halfLayerRange;
+
+            int canonicalLayer;
+
+            if (state.passing()) {
+                canonicalLayer =
+                        NEAR_HALF_LAYERS * 2
+                                - halfLayerRange * 2
+                                + depthLayer;
+            } else {
+                canonicalLayer = depthLayer;
+            }
+
+            int playerFacingDepth =
+                    state.passing()
+                            ? halfLayerRange * 2 - depthLayer
+                            : depthLayer;
+
             renderCloudLayer(
                     matrix,
                     builder,
                     distance,
+                    layerPositionOffset,
                     cloudIntensity,
                     state.gameTime(),
-                    logicalLayer,
+                    canonicalLayer,
+                    playerFacingDepth,
                     halfLayerRange,
-                    halfColumnRange
+                    halfColumnRange,
+                    lightningStrength
             );
         }
 
@@ -328,6 +395,47 @@ public final class StormfrontCloudRenderer {
         return progress
                 * progress
                 * (3.0F - 2.0F * progress);
+    }
+
+    private static float calculateLightningStrength(
+            long gameTime,
+            float cloudIntensity
+    ) {
+        long tickInWindow =
+                Math.floorMod(
+                        gameTime,
+                        LIGHTNING_PERIOD_TICKS
+                );
+
+        float flashStrength;
+
+        /*
+         * Strong initial flash lasting four ticks.
+         */
+        if (tickInWindow <= 3L) {
+            flashStrength =
+                    1.0F
+                            - tickInWindow / 4.0F;
+        }
+
+        /*
+         * A short pause followed by a weaker five-tick flicker.
+         */
+        else if (tickInWindow >= 7L
+                && tickInWindow <= 11L) {
+            flashStrength =
+                    0.75F
+                            * (
+                            1.0F
+                                    - (
+                                    tickInWindow - 7L
+                            ) / 5.0F
+                    );
+        } else {
+            return 0.0F;
+        }
+
+        return flashStrength * cloudIntensity;
     }
 
     private static int selectApproachingLayerRange(
@@ -362,12 +470,65 @@ public final class StormfrontCloudRenderer {
             Matrix4fc matrix,
             VertexConsumer builder,
             float distance,
+            float layerPositionOffset,
             float cloudIntensity,
             long gameTime,
-            int logicalLayer,
+            int canonicalLayer,
+            int playerFacingDepth,
             int halfLayerRange,
-            int halfColumnRange
+            int halfColumnRange,
+            float lightningStrength
     ) {
+
+        /*
+         * Each lightning event selects one area of the storm wall.
+         * These values are calculated once per layer, not once per box.
+         */
+        float lightningColumn = 0.0F;
+        float lightningRow = 0.0F;
+
+        if (lightningStrength > 0.0F) {
+            long flashWindow =
+                    Math.floorDiv(
+                            gameTime,
+                            LIGHTNING_PERIOD_TICKS
+                    );
+
+            int flashSeed =
+                    hash(
+                            (int) (
+                                    flashWindow
+                                            ^ (flashWindow >>> 32)
+                            ),
+                            173,
+                            -91
+                    );
+
+            /*
+             * Keep flashes within the central 60% of the formation so
+             * they are considerably more likely to appear on screen.
+             */
+            lightningColumn =
+                    (
+                            randomFraction(flashSeed)
+                                    * 2.0F
+                                    - 1.0F
+                    ) * halfColumnRange * 0.60F;
+
+            lightningRow =
+                    MIN_ROW
+                            + randomFraction(
+                            hash(
+                                    flashSeed,
+                                    -221,
+                                    347
+                            )
+                    ) * (
+                            MAX_ROW
+                                    - MIN_ROW
+                    ) * 0.70F;
+        }
+
         for (int row = MIN_ROW;
              row <= MAX_ROW;
              row++) {
@@ -378,7 +539,7 @@ public final class StormfrontCloudRenderer {
                         hash(
                                 column,
                                 row,
-                                logicalLayer
+                                canonicalLayer
                         );
 
                 /*
@@ -386,7 +547,7 @@ public final class StormfrontCloudRenderer {
                  * ceiling remains visually solid.
                  */
                 int gapThreshold =
-                        logicalLayer == 0
+                        playerFacingDepth == 0
                                 ? 3
                                 : 5;
 
@@ -404,7 +565,7 @@ public final class StormfrontCloudRenderer {
                                 hash(
                                         column + 83,
                                         row - 29,
-                                        logicalLayer + 7
+                                        canonicalLayer + 7
                                 )
                         ) * 10.0F - 5.0F;
 
@@ -413,7 +574,7 @@ public final class StormfrontCloudRenderer {
                                 hash(
                                         column - 41,
                                         row + 97,
-                                        logicalLayer + 13
+                                        canonicalLayer + 13
                                 )
                         ) * 14.0F - 7.0F;
 
@@ -427,7 +588,7 @@ public final class StormfrontCloudRenderer {
                                 hash(
                                         column + 11,
                                         row + 17,
-                                        logicalLayer + 19
+                                        canonicalLayer + 19
                                 )
                         ) * 20.0F;
 
@@ -437,7 +598,7 @@ public final class StormfrontCloudRenderer {
                                 hash(
                                         column - 23,
                                         row + 31,
-                                        logicalLayer + 37
+                                        canonicalLayer + 37
                                 )
                         ) * 14.0F;
 
@@ -447,7 +608,7 @@ public final class StormfrontCloudRenderer {
                                 hash(
                                         column + 47,
                                         row - 53,
-                                        logicalLayer + 43
+                                        canonicalLayer + 43
                                 )
                         ) * 22.0F;
 
@@ -456,7 +617,7 @@ public final class StormfrontCloudRenderer {
                                 gameTime * 0.045F
                                         + column * 0.38F
                                         + row * 0.27F
-                                        + logicalLayer * 1.7F
+                                        + canonicalLayer * 1.7F
                         ) * (
                                 0.7F
                                         + cloudIntensity * 1.3F
@@ -464,44 +625,115 @@ public final class StormfrontCloudRenderer {
 
                 float centreX =
                         distance
-                                + logicalLayer
-                                * LAYER_SPACING
-                                + xJitter
-                                + turbulence;
+                                + (
+                                canonicalLayer
+                                        - NEAR_HALF_LAYERS
+                        ) * LAYER_SPACING
+                                + layerPositionOffset
+                                + xJitter;
 
                 float centreY =
                         row * 16.0F
                                 + CLOUD_VERTICAL_OFFSET
-                                + yJitter;
+                                + yJitter
+                                + turbulence;
 
                 float centreZ =
                         column
                                 * COLUMN_SPACING
-                                + zJitter;
+                                + zJitter
+                                + turbulence * 1.5F;
 
+                /*
+                 * Very dark charcoal cloud colour. Individual boxes still vary
+                 * slightly, preventing the wall from becoming a flat black shape.
+                 */
                 float baseGrey =
-                        0.25F
+                        0.085F
                                 + randomFraction(
                                 hash(
                                         column + 101,
                                         row + 59,
-                                        logicalLayer + 71
+                                        canonicalLayer + 71
                                 )
-                        ) * 0.13F;
+                        ) * 0.065F;
 
                 /*
-                 * Outer layers remain slightly darker, regardless
-                 * of whether three, five, or seven layers are active.
+                 * Outer layers are slightly darker, helping create depth.
                  */
                 baseGrey -=
-                        Math.abs(logicalLayer)
-                                / (float) Math.max(
-                                1,
-                                halfLayerRange
-                        ) * 0.08F;
+                        Math.abs(
+                                canonicalLayer
+                                        - NEAR_HALF_LAYERS
+                        )
+                                / (float) NEAR_HALF_LAYERS
+                                * 0.035F;
 
                 baseGrey -=
-                        cloudIntensity * 0.035F;
+                        cloudIntensity * 0.015F;
+
+                /*
+                 * Briefly illuminate a local pocket of cloud during lightning.
+                 * The glow fades across columns, rows and depth layers.
+                 */
+                if (lightningStrength > 0.0F) {
+                    float horizontalFalloff =
+                            Math.max(
+                                    0.0F,
+                                    1.0F
+                                            - Math.abs(
+                                            column - lightningColumn
+                                    ) / 16.0F
+                            );
+
+                    float verticalFalloff =
+                            Math.max(
+                                    0.0F,
+                                    1.0F
+                                            - Math.abs(
+                                            row - lightningRow
+                                    ) / 3.5F
+                            );
+
+                    /*
+                     * The negative-X outer layer is the player-facing surface while
+                     * the stormfront approaches from the east. Make that layer the
+                     * brightest, then fade the flash into the cloud's depth.
+                     */
+                    float distanceFromFront =
+                            playerFacingDepth;
+
+                    float depthFalloff =
+                            Math.max(
+                                    0.30F,
+                                    1.0F
+                                            - distanceFromFront
+                                            / Math.max(
+                                            1.0F,
+                                            halfLayerRange * 2.0F
+                                    ) * 0.70F
+                            );
+
+                    baseGrey +=
+                            lightningStrength
+                                    * horizontalFalloff
+                                    * verticalFalloff
+                                    * depthFalloff
+                                    * 0.85F;
+                }
+
+                /*
+                 * Avoid completely black ordinary clouds and excessively white
+                 * lightning flashes.
+                 */
+                baseGrey =
+                        Math.max(
+                                0.035F,
+                                Math.min(
+                                        0.90F,
+                                        baseGrey
+                                )
+                        );
 
                 renderCloudBox(
                         matrix,

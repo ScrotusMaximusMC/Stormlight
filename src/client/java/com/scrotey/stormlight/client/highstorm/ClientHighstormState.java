@@ -7,6 +7,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 
 public final class ClientHighstormState {
+    /*
+     * Full thunder darkness is reached after 70% of the approach.
+     * During departure, darkness remains full for the mirrored
+     * opening 30% before daylight begins returning.
+     */
+    private static final float DARKENING_DURATION = 0.70F;
+    private static final float PASSING_DARKNESS_HOLD =
+            1.0F - DARKENING_DURATION;
+
     private static int phaseOrdinal =
             HighstormPhase.CALM.ordinal();
 
@@ -61,6 +70,47 @@ public final class ClientHighstormState {
         return isApproaching()
                 || isHighstorm()
                 || isPassing();
+    }
+
+    /*
+     * Supplies Minecraft's rendered thunder intensity:
+     *
+     * 0.0 = ordinary daylight
+     * 1.0 = full Highstorm darkness
+     */
+    public static float getStormDarkness() {
+        if (isApproaching()) {
+            float progress =
+                    Mth.clamp(
+                            getApproachProgress()
+                                    / DARKENING_DURATION,
+                            0.0F,
+                            1.0F
+                    );
+
+            return (float) Mth.smoothstep(progress);
+        }
+
+        if (isHighstorm()) {
+            return 1.0F;
+        }
+
+        if (isPassing()) {
+            float progress =
+                    Mth.clamp(
+                            (
+                                    getPassingProgress()
+                                            - PASSING_DARKNESS_HOLD
+                            ) / DARKENING_DURATION,
+                            0.0F,
+                            1.0F
+                    );
+
+            return (float) (1.0F
+                                - Mth.smoothstep(progress));
+        }
+
+        return 0.0F;
     }
 
     public static float getApproachProgress() {

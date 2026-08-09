@@ -46,10 +46,25 @@ public final class HighstormAtmosphere {
     private static final int WITHER_DURATION_TICKS = 100;
     private static final int WITHER_AMPLIFIER = 0;
 
-    private static final int WIND_SOUND_INTERVAL_TICKS = 45;
+    /*
+     * The Elytra sound is a short wind sample rather than a continuous loop.
+     * Replaying the main layer once per second prevents audible gaps, while a
+     * slower, lower-pitched layer gives the active storm some weight.
+     */
+    private static final int HIGHSTORM_WIND_INTERVAL_TICKS = 20;
+    private static final int HIGHSTORM_DEEP_GUST_INTERVAL_TICKS = 65;
+
+    /*
+     * Sparse, drawn-out gusts announce the approaching wall. Departure gusts
+     * are slightly closer together so the gale fades away rather than ending
+     * abruptly at the HIGHSTORM -> PASSING transition.
+     */
+    private static final int APPROACH_GUST_INTERVAL_TICKS = 120;
+    private static final int PASSING_GUST_INTERVAL_TICKS = 90;
+
     private static final int THUNDER_SOUND_INTERVAL_TICKS = 75;
     private static final int RUMBLE_SOUND_INTERVAL_TICKS = 90;
-    private static final int WARNING_SOUND_INTERVAL_TICKS = 90;
+    private static final int WARNING_RUMBLE_INTERVAL_TICKS = 180;
 
     private HighstormAtmosphere() {
     }
@@ -85,8 +100,13 @@ public final class HighstormAtmosphere {
                 spawnRealLightning(level);
             }
 
-            if (gameTime % WIND_SOUND_INTERVAL_TICKS == 0) {
-                playWindSounds(level);
+            if (gameTime % HIGHSTORM_WIND_INTERVAL_TICKS == 0) {
+                playHighstormWindSounds(level);
+            }
+
+            if (gameTime
+                    % HIGHSTORM_DEEP_GUST_INTERVAL_TICKS == 0) {
+                playHighstormDeepGustSounds(level);
             }
 
             if (gameTime % THUNDER_SOUND_INTERVAL_TICKS == 0) {
@@ -96,8 +116,18 @@ public final class HighstormAtmosphere {
             if (gameTime % RUMBLE_SOUND_INTERVAL_TICKS == 0) {
                 playRumbleSounds(level);
             }
-        } else if (gameTime % WARNING_SOUND_INTERVAL_TICKS == 0) {
-            playWarningSounds(level, intensity);
+        } else {
+            int gustInterval = phase == HighstormPhase.APPROACHING
+                    ? APPROACH_GUST_INTERVAL_TICKS
+                    : PASSING_GUST_INTERVAL_TICKS;
+
+            if (gameTime % gustInterval == 0) {
+                playDistantGustSounds(level, phase, intensity);
+            }
+
+            if (gameTime % WARNING_RUMBLE_INTERVAL_TICKS == 0) {
+                playWarningRumbleSounds(level, intensity);
+            }
         }
     }
 
@@ -284,7 +314,7 @@ public final class HighstormAtmosphere {
                 && isExposed(level, player);
     }
 
-    private static void playWindSounds(ServerLevel level) {
+    private static void playHighstormWindSounds(ServerLevel level) {
         for (ServerPlayer player : level.players()) {
             if (!isExposed(level, player)) {
                 continue;
@@ -295,8 +325,27 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.ELYTRA_FLYING,
                     SoundSource.WEATHER,
-                    1.55F,
-                    0.45F + level.getRandom().nextFloat() * 0.12F
+                    2.20F,
+                    0.48F + level.getRandom().nextFloat() * 0.12F
+            );
+        }
+    }
+
+    private static void playHighstormDeepGustSounds(
+            ServerLevel level
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (!isExposed(level, player)) {
+                continue;
+            }
+
+            level.playSound(
+                    null,
+                    player.blockPosition(),
+                    SoundEvents.ELYTRA_FLYING,
+                    SoundSource.WEATHER,
+                    1.65F,
+                    0.27F + level.getRandom().nextFloat() * 0.09F
             );
         }
     }
@@ -335,7 +384,32 @@ public final class HighstormAtmosphere {
         }
     }
 
-    private static void playWarningSounds(
+    private static void playDistantGustSounds(
+            ServerLevel level,
+            HighstormPhase phase,
+            float intensity
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (!isExposed(level, player)) {
+                continue;
+            }
+
+            float phaseMultiplier = phase == HighstormPhase.APPROACHING
+                    ? 0.70F + intensity * 0.75F
+                    : 0.45F + intensity * 0.70F;
+
+            level.playSound(
+                    null,
+                    player.blockPosition(),
+                    SoundEvents.ELYTRA_FLYING,
+                    SoundSource.WEATHER,
+                    phaseMultiplier,
+                    0.24F + level.getRandom().nextFloat() * 0.09F
+            );
+        }
+    }
+
+    private static void playWarningRumbleSounds(
             ServerLevel level,
             float intensity
     ) {
