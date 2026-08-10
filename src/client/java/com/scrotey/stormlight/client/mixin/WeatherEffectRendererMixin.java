@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -30,6 +31,13 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 public abstract class WeatherEffectRendererMixin {
     private static final float APPROACH_MAX_ANGLE_DEGREES = 20.0F;
     private static final float HIGHSTORM_ANGLE_DEGREES = 45.0F;
+
+    /*
+     * Vanilla's rain texture is strongly blue. Multiplying it by this warm
+     * counter-tint balances its RGB channels into a neutral charcoal grey.
+     * Alpha is retained from vanilla so distance and phase opacity still work.
+     */
+    private static final int HIGHSTORM_RAIN_GREY_RGB = 0x00FFAD5C;
 
     @Unique
     private boolean stormlight$buildingRain;
@@ -83,7 +91,7 @@ public abstract class WeatherEffectRendererMixin {
                 stormlight$getRainAngleDegrees();
 
         stormlight$buildingRain =
-                angleDegrees > 0.001F;
+                stormlight$isHighstormWeatherPhase();
 
         stormlight$rainSlope =
                 (float) Math.tan(
@@ -135,6 +143,29 @@ public abstract class WeatherEffectRendererMixin {
                 0,
                 x + y * stormlight$rainSlope
         );
+    }
+
+    /**
+     * Neutralise the blue built into vanilla's rain texture while retaining
+     * Minecraft's calculated alpha for distance and weather intensity.
+     */
+    @ModifyArg(
+            method = "renderInstances",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;setColor(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;"
+            ),
+            index = 0
+    )
+    private int stormlight$greyHighstormRain(
+            int vanillaColor
+    ) {
+        if (!stormlight$buildingRain) {
+            return vanillaColor;
+        }
+
+        return (vanillaColor & 0xFF000000)
+                | HIGHSTORM_RAIN_GREY_RGB;
     }
 
     @Unique

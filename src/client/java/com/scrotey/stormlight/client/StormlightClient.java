@@ -15,6 +15,7 @@ import com.scrotey.stormlight.network.SpherePouchSlotPayload;
 import com.scrotey.stormlight.screen.SpherePouchInventoryLayout;
 import com.scrotey.stormlight.client.highstorm.ApproachingStormfrontEffects;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
+import com.scrotey.stormlight.client.highstorm.ClientHighstormWind;
 import com.scrotey.stormlight.client.highstorm.HighstormLeafParticle;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
@@ -119,6 +120,8 @@ public class StormlightClient implements ClientModInitializer {
     private static void tick(net.minecraft.client.Minecraft client) {
         ClientHighstormState.tick(client);
         ApproachingStormfrontEffects.tick(client);
+        ClientHighstormWind.tick(client);
+
         if (client.player == null) {
             heldTicks = 0;
             holdActivated = false;

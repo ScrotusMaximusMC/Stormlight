@@ -11,15 +11,10 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 
 public final class HighstormAtmosphere {
-
-    // Highstorms blow due west (negative X).
-    private static final double WIND_X = -0.085;
-    private static final double WIND_Z = 0.0;
 
     // Sparse v2-style blue wisps, now spawning in a full circle around players.
     private static final int PARTICLE_INTERVAL_TICKS = 10;
@@ -48,8 +43,6 @@ public final class HighstormAtmosphere {
 
     private static final double LIGHTNING_MIN_DISTANCE = 8.0;
     private static final double LIGHTNING_MAX_DISTANCE = 30.0;
-
-    private static final int WIND_INTERVAL_TICKS = 10;
 
     // Wither I is refreshed outdoors every two seconds during the active storm.
     // Its short duration lets the effect expire soon after reaching shelter.
@@ -97,10 +90,6 @@ public final class HighstormAtmosphere {
 
         if (gameTime % PARTICLE_INTERVAL_TICKS == 0) {
             spawnWindParticles(level, intensity);
-        }
-
-        if (gameTime % WIND_INTERVAL_TICKS == 0) {
-            pushExposedEntities(level, intensity);
         }
 
         if (phase == HighstormPhase.HIGHSTORM
@@ -296,46 +285,6 @@ public final class HighstormAtmosphere {
             );
 
             level.addFreshEntity(lightning);
-        }
-    }
-
-    private static void pushExposedEntities(
-            ServerLevel level,
-            float intensity
-    ) {
-        for (LivingEntity entity : level.getEntities(
-                EntityTypeTest.forClass(LivingEntity.class),
-                entity -> entity.isAlive()
-                        && isExposed(level, entity)
-        )) {
-            if (entity instanceof ServerPlayer player
-                    && (player.isCreative()
-                    || player.isSpectator())) {
-                continue;
-            }
-
-            double resistance = entity.isShiftKeyDown()
-                    ? 0.35
-                    : 1.0;
-
-            double airborneMultiplier = entity.onGround()
-                    ? 1.0
-                    : 1.45;
-
-            boolean strongGust = level.getRandom()
-                    .nextFloat() < 0.12F * intensity;
-
-            double gustMultiplier = strongGust ? 2.6 : 1.0;
-            double strength = intensity
-                    * resistance
-                    * airborneMultiplier
-                    * gustMultiplier;
-
-            entity.push(
-                    WIND_X * strength,
-                    strongGust ? 0.045 * intensity : 0.0,
-                    WIND_Z * strength
-            );
         }
     }
 

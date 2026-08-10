@@ -118,10 +118,15 @@ public final class StormfrontCloudRenderer {
     private static final float STORMFACE_CURVE_DEPTH = 4.0F;
 
     /*
-     * One visible internal lightning event every twelve seconds.
+     * Three independent electrical systems cross the storm at different
+     * rates. Their prime-numbered periods overlap irregularly, producing
+     * frequent local flickers without turning the entire sky into a regular
+     * global strobe. Together they begin roughly one new cluster per second
+     * during the active Highstorm.
      */
-    private static final long LIGHTNING_PERIOD_TICKS =
-            12L * 20L;
+    private static final long LIGHTNING_FAST_PERIOD_TICKS = 43L;
+    private static final long LIGHTNING_MEDIUM_PERIOD_TICKS = 67L;
+    private static final long LIGHTNING_SLOW_PERIOD_TICKS = 97L;
 
     /*
      * Camera-relative position of the approaching and departing cloud mass.
@@ -594,11 +599,12 @@ public final class StormfrontCloudRenderer {
         }
 
         /*
-         * Calculates a single lightning event for the entire cloud mass.
-         * Most frames return zero, meaning no flash is active.
+         * Several independently timed pockets can illuminate different parts
+         * of the formation at once. This makes electrical activity visible
+         * across the enormous storm without flashing the whole sky globally.
          */
-        float lightningStrength =
-                calculateLightningStrength(
+        LightningState lightning =
+                calculateLightningState(
                         state.gameTime(),
                         cloudIntensity
                 );
@@ -641,7 +647,7 @@ public final class StormfrontCloudRenderer {
                     playerFacingDepth,
                     halfLayerRange,
                     halfColumnRange,
-                    lightningStrength,
+                    lightning,
                     worldAnchored,
                     worldCentreLayer,
                     worldCentreColumn,
@@ -659,7 +665,7 @@ public final class StormfrontCloudRenderer {
                     matrix,
                     builder,
                     state.gameTime(),
-                    lightningStrength,
+                    lightning,
                     cameraX,
                     cameraZ
             );
@@ -676,45 +682,332 @@ public final class StormfrontCloudRenderer {
                 * (3.0F - 2.0F * progress);
     }
 
-    private static float calculateLightningStrength(
+    private static LightningState calculateLightningState(
             long gameTime,
             float cloudIntensity
     ) {
+        return new LightningState(
+                calculateFlash(
+                        gameTime,
+                        LIGHTNING_FAST_PERIOD_TICKS,
+                        11L,
+                        173,
+                        cloudIntensity,
+                        1.00F
+                ),
+                calculateFlash(
+                        gameTime,
+                        LIGHTNING_MEDIUM_PERIOD_TICKS,
+                        29L,
+                        -431,
+                        cloudIntensity,
+                        0.90F
+                ),
+                calculateFlash(
+                        gameTime,
+                        LIGHTNING_SLOW_PERIOD_TICKS,
+                        53L,
+                        887,
+                        cloudIntensity,
+                        1.12F
+                )
+        );
+    }
+
+    private static LightningFlash calculateFlash(
+            long gameTime,
+            long period,
+            long timeOffset,
+            int salt,
+            float cloudIntensity,
+            float channelStrength
+    ) {
+        long shiftedTime = gameTime + timeOffset;
+
         long tickInWindow =
                 Math.floorMod(
-                        gameTime,
-                        LIGHTNING_PERIOD_TICKS
+                        shiftedTime,
+                        period
+                );
+
+        long flashWindow =
+                Math.floorDiv(
+                        shiftedTime,
+                        period
+                );
+
+        int flashSeed =
+                hash(
+                        (int) (
+                                flashWindow
+                                        ^ (flashWindow >>> 32)
+                        ),
+                        salt,
+                        salt * 31
                 );
 
         float flashStrength;
 
         /*
-         * Strong initial flash lasting four ticks.
+         * A sharp primary pulse, a second irregular flicker, and an
+         * occasional weak after-flash. The seed varies their strength so
+         * neighbouring clusters do not repeat the same rhythm.
          */
         if (tickInWindow <= 3L) {
             flashStrength =
                     1.0F
                             - tickInWindow / 4.0F;
-        }
-
-        /*
-         * A short pause followed by a weaker five-tick flicker.
-         */
-        else if (tickInWindow >= 7L
-                && tickInWindow <= 11L) {
+        } else if (tickInWindow >= 7L
+                && tickInWindow <= 10L) {
             flashStrength =
-                    0.75F
+                    (0.55F
+                            + randomFraction(
+                            hash(flashSeed, 97, -211)
+                    ) * 0.25F)
                             * (
                             1.0F
                                     - (
                                     tickInWindow - 7L
-                            ) / 5.0F
+                            ) / 4.0F
+                    );
+        } else if (tickInWindow >= 14L
+                && tickInWindow <= 16L
+                && (flashSeed & 3) != 0) {
+            flashStrength =
+                    0.38F
+                            * (
+                            1.0F
+                                    - (
+                                    tickInWindow - 14L
+                            ) / 3.0F
                     );
         } else {
+            flashStrength = 0.0F;
+        }
+
+        /*
+         * Early approach lightning is present but subdued. It grows much
+         * more quickly in the latter half of the approach and fades with the
+         * departing storm.
+         */
+        float phaseStrength =
+                smoothStep(cloudIntensity);
+
+        float strengthVariation =
+                0.78F
+                        + randomFraction(
+                        hash(flashSeed, -337, 619)
+                ) * 0.34F;
+
+        return new LightningFlash(
+                flashStrength
+                        * phaseStrength
+                        * channelStrength
+                        * strengthVariation,
+                randomFraction(
+                        hash(flashSeed, 271, -509)
+                ) * 1.50F - 0.75F,
+                MIN_ROW
+                        + randomFraction(
+                        hash(flashSeed, -221, 347)
+                ) * (MAX_ROW - MIN_ROW) * 0.82F,
+                randomFraction(
+                        hash(flashSeed, 733, -947)
+                )
+        );
+    }
+
+    private static float calculatePocketGlow(
+            LightningFlash flash,
+            int column,
+            int row,
+            int playerFacingDepth,
+            int halfLayerRange,
+            int halfColumnRange
+    ) {
+        if (flash.strength() <= 0.0F) {
             return 0.0F;
         }
 
-        return flashStrength * cloudIntensity;
+        float targetColumn =
+                flash.columnFactor()
+                        * halfColumnRange;
+
+        float horizontalHalo =
+                Math.max(
+                        0.0F,
+                        1.0F
+                                - Math.abs(column - targetColumn)
+                                / 19.0F
+                );
+
+        float verticalHalo =
+                Math.max(
+                        0.0F,
+                        1.0F
+                                - Math.abs(row - flash.row())
+                                / 4.2F
+                );
+
+        float horizontalCore =
+                Math.max(
+                        0.0F,
+                        1.0F
+                                - Math.abs(column - targetColumn)
+                                / 7.0F
+                );
+
+        float verticalCore =
+                Math.max(
+                        0.0F,
+                        1.0F
+                                - Math.abs(row - flash.row())
+                                / 1.7F
+                );
+
+        float targetDepth =
+                flash.depthFactor()
+                        * halfLayerRange
+                        * 2.0F;
+
+        float depthFalloff =
+                Math.max(
+                        0.28F,
+                        1.0F
+                                - Math.abs(
+                                playerFacingDepth - targetDepth
+                        ) / Math.max(
+                                1.0F,
+                                halfLayerRange * 1.35F
+                        )
+                );
+
+        float broadGlow =
+                horizontalHalo
+                        * verticalHalo
+                        * 0.46F;
+
+        float electricCore =
+                horizontalCore
+                        * verticalCore
+                        * 0.68F;
+
+        return flash.strength()
+                * depthFalloff
+                * (broadGlow + electricCore);
+    }
+
+    private static float calculateCanopyGlow(
+            LightningFlash flash,
+            float centreX,
+            float centreZ
+    ) {
+        if (flash.strength() <= 0.0F) {
+            return 0.0F;
+        }
+
+        float targetX =
+                (flash.depthFactor() * 2.0F - 1.0F)
+                        * NEAR_HALF_LAYERS
+                        * LAYER_SPACING;
+
+        float targetZ =
+                flash.columnFactor()
+                        * NEAR_HALF_COLUMNS
+                        * COLUMN_SPACING;
+
+        float deltaX = centreX - targetX;
+        float deltaZ = centreZ - targetZ;
+
+        float distance =
+                Mth.sqrt(
+                        deltaX * deltaX
+                                + deltaZ * deltaZ
+                );
+
+        float halo =
+                Math.max(
+                        0.0F,
+                        1.0F - distance / 900.0F
+                );
+
+        return flash.strength()
+                * halo
+                * 0.16F;
+    }
+
+    private record LightningFlash(
+            float strength,
+            float columnFactor,
+            float row,
+            float depthFactor
+    ) {
+    }
+
+    private record LightningState(
+            LightningFlash fast,
+            LightningFlash medium,
+            LightningFlash slow
+    ) {
+        private float glowAt(
+                int column,
+                int row,
+                int playerFacingDepth,
+                int halfLayerRange,
+                int halfColumnRange
+        ) {
+            return Math.min(
+                    1.0F,
+                    calculatePocketGlow(
+                            fast,
+                            column,
+                            row,
+                            playerFacingDepth,
+                            halfLayerRange,
+                            halfColumnRange
+                    )
+                            + calculatePocketGlow(
+                            medium,
+                            column,
+                            row,
+                            playerFacingDepth,
+                            halfLayerRange,
+                            halfColumnRange
+                    )
+                            + calculatePocketGlow(
+                            slow,
+                            column,
+                            row,
+                            playerFacingDepth,
+                            halfLayerRange,
+                            halfColumnRange
+                    )
+            );
+        }
+
+        private float canopyGlowAt(
+                float centreX,
+                float centreZ
+        ) {
+            return Math.min(
+                    0.28F,
+                    calculateCanopyGlow(
+                            fast,
+                            centreX,
+                            centreZ
+                    )
+                            + calculateCanopyGlow(
+                            medium,
+                            centreX,
+                            centreZ
+                    )
+                            + calculateCanopyGlow(
+                            slow,
+                            centreX,
+                            centreZ
+                    )
+            );
+        }
     }
 
     private static int selectApproachingLayerRange(
@@ -756,7 +1049,7 @@ public final class StormfrontCloudRenderer {
             int playerFacingDepth,
             int halfLayerRange,
             int halfColumnRange,
-            float lightningStrength,
+            LightningState lightning,
             boolean worldAnchored,
             int worldCentreLayer,
             int worldCentreColumn,
@@ -783,55 +1076,6 @@ public final class StormfrontCloudRenderer {
                         NEAR_HALF_LAYERS * 2
                                 - canonicalLayer
                 );
-
-        /*
-         * Each lightning event selects one area of the storm wall.
-         * These values are calculated once per layer, not once per box.
-         */
-        float lightningColumn = 0.0F;
-        float lightningRow = 0.0F;
-
-        if (lightningStrength > 0.0F) {
-            long flashWindow =
-                    Math.floorDiv(
-                            gameTime,
-                            LIGHTNING_PERIOD_TICKS
-                    );
-
-            int flashSeed =
-                    hash(
-                            (int) (
-                                    flashWindow
-                                            ^ (flashWindow >>> 32)
-                            ),
-                            173,
-                            -91
-                    );
-
-            /*
-             * Keep flashes within the central 60% of the formation so
-             * they are considerably more likely to appear on screen.
-             */
-            lightningColumn =
-                    (
-                            randomFraction(flashSeed)
-                                    * 2.0F
-                                    - 1.0F
-                    ) * halfColumnRange * 0.60F;
-
-            lightningRow =
-                    MIN_ROW
-                            + randomFraction(
-                            hash(
-                                    flashSeed,
-                                    -221,
-                                    347
-                            )
-                    ) * (
-                            MAX_ROW
-                                    - MIN_ROW
-                    ) * 0.70F;
-        }
 
         for (int row = MIN_ROW;
              row <= MAX_ROW;
@@ -1076,67 +1320,46 @@ public final class StormfrontCloudRenderer {
                 baseGrey -=
                         cloudIntensity * 0.015F;
 
-                /*
-                 * Briefly illuminate a local pocket of cloud during lightning.
-                 * The glow fades across columns, rows and depth layers.
-                 */
-                if (lightningStrength > 0.0F) {
-                    float horizontalFalloff =
-                            Math.max(
-                                    0.0F,
-                                    1.0F
-                                            - Math.abs(
-                                            column - lightningColumn
-                                    ) / 16.0F
-                            );
-
-                    float verticalFalloff =
-                            Math.max(
-                                    0.0F,
-                                    1.0F
-                                            - Math.abs(
-                                            row - lightningRow
-                                    ) / 3.5F
-                            );
-
-                    /*
-                     * The negative-X outer layer is the player-facing surface while
-                     * the stormfront approaches from the east. Make that layer the
-                     * brightest, then fade the flash into the cloud's depth.
-                     */
-                    float distanceFromFront =
-                            playerFacingDepth;
-
-                    float depthFalloff =
-                            Math.max(
-                                    0.30F,
-                                    1.0F
-                                            - distanceFromFront
-                                            / Math.max(
-                                            1.0F,
-                                            halfLayerRange * 2.0F
-                                    ) * 0.70F
-                            );
-
-                    baseGrey +=
-                            lightningStrength
-                                    * horizontalFalloff
-                                    * verticalFalloff
-                                    * depthFalloff
-                                    * 0.85F;
-                }
+                float lightningGlow =
+                        lightning.glowAt(
+                                column,
+                                row,
+                                playerFacingDepth,
+                                halfLayerRange,
+                                halfColumnRange
+                        );
 
                 /*
-                 * Avoid completely black ordinary clouds and excessively white
-                 * lightning flashes.
+                 * Keep the cloud itself charcoal, then add a restrained
+                 * violet-blue halo and a much brighter electric-blue core.
+                 * Separate RGB channels are essential here: the former code
+                 * could only brighten clouds toward white.
                  */
                 baseGrey =
                         Math.max(
                                 0.035F,
                                 Math.min(
-                                        0.90F,
+                                        0.24F,
                                         baseGrey
                                 )
+                        );
+
+                float red =
+                        clampColour(
+                                baseGrey
+                                        + lightningGlow * 0.22F
+                        );
+
+                float green =
+                        clampColour(
+                                baseGrey
+                                        + lightningGlow * 0.48F
+                        );
+
+                float blue =
+                        clampColour(
+                                baseGrey
+                                        + lightningGlow * 0.98F
                         );
 
                 renderCloudBox(
@@ -1148,7 +1371,9 @@ public final class StormfrontCloudRenderer {
                         centreX + xSize / 2.0F,
                         centreY + ySize / 2.0F,
                         centreZ + zSize / 2.0F,
-                        baseGrey
+                        red,
+                        green,
+                        blue
                 );
 
                 /*
@@ -1174,7 +1399,9 @@ public final class StormfrontCloudRenderer {
                             xSize,
                             ySize,
                             zSize,
-                            baseGrey,
+                            red,
+                            green,
+                            blue,
                             seedColumn,
                             seedLayer
                     );
@@ -1192,7 +1419,9 @@ public final class StormfrontCloudRenderer {
             float parentXSize,
             float parentYSize,
             float parentZSize,
-            float parentGrey,
+            float parentRed,
+            float parentGreen,
+            float parentBlue,
             int seedColumn,
             int seedLayer
     ) {
@@ -1331,18 +1560,15 @@ public final class StormfrontCloudRenderer {
                                 + localZ
                                 + zJitter;
 
-                float grey =
-                        clampColour(
-                                parentGrey
-                                        * (0.76F
-                                        + randomFraction(
-                                        hash(
-                                                subHash,
-                                                193,
-                                                -367
-                                        )
-                                ) * 0.18F)
-                        );
+                float colourScale =
+                        0.76F
+                                + randomFraction(
+                                hash(
+                                        subHash,
+                                        193,
+                                        -367
+                                )
+                        ) * 0.18F;
 
                 renderCloudBox(
                         matrix,
@@ -1353,7 +1579,9 @@ public final class StormfrontCloudRenderer {
                         centreX + xSize / 2.0F,
                         centreY + ySize / 2.0F,
                         centreZ + zSize / 2.0F,
-                        grey
+                        clampColour(parentRed * colourScale),
+                        clampColour(parentGreen * colourScale),
+                        clampColour(parentBlue * colourScale)
                 );
 
             }
@@ -1364,7 +1592,7 @@ public final class StormfrontCloudRenderer {
             Matrix4fc matrix,
             VertexConsumer builder,
             long gameTime,
-            float lightningStrength,
+            LightningState lightning,
             double cameraX,
             double cameraZ
     ) {
@@ -1516,11 +1744,16 @@ public final class StormfrontCloudRenderer {
                         ) * 0.035F;
 
                 /*
-                 * Distant lightning is deliberately subdued; it connects the
-                 * canopy visually to the main storm without turning the whole
-                 * horizon into one simultaneous white flash.
+                 * The sparse distant canopy receives a broad, localised blue
+                 * response. It is intentionally weaker than the detailed
+                 * electric cores and never illuminates the whole horizon at
+                 * once.
                  */
-                grey += lightningStrength * 0.10F;
+                float canopyGlow =
+                        lightning.canopyGlowAt(
+                                centreX,
+                                centreZ
+                        );
 
                 renderCloudBox(
                         matrix,
@@ -1531,7 +1764,15 @@ public final class StormfrontCloudRenderer {
                         centreX + xSize / 2.0F,
                         centreY + ySize / 2.0F,
                         centreZ + zSize / 2.0F,
-                        clampColour(grey)
+                        clampColour(
+                                grey + canopyGlow * 0.18F
+                        ),
+                        clampColour(
+                                grey + canopyGlow * 0.42F
+                        ),
+                        clampColour(
+                                grey + canopyGlow * 0.90F
+                        )
                 );
             }
         }
@@ -1595,15 +1836,57 @@ public final class StormfrontCloudRenderer {
             float maxZ,
             float grey
     ) {
+        renderCloudBox(
+                matrix,
+                builder,
+                minX,
+                minY,
+                minZ,
+                maxX,
+                maxY,
+                maxZ,
+                grey,
+                grey,
+                grey
+        );
+    }
+
+    private static void renderCloudBox(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            float minX,
+            float minY,
+            float minZ,
+            float maxX,
+            float maxY,
+            float maxZ,
+            float red,
+            float green,
+            float blue
+    ) {
         /*
          * Separate face brightness gives each cloud cell
          * the same thick, block-like depth as fancy clouds.
          */
-        float westShade = clampColour(grey * 0.90F);
-        float eastShade = clampColour(grey * 0.58F);
-        float sideShade = clampColour(grey * 0.76F);
-        float topShade = clampColour(grey * 1.12F);
-        float bottomShade = clampColour(grey * 0.45F);
+        float westRed = clampColour(red * 0.90F);
+        float westGreen = clampColour(green * 0.90F);
+        float westBlue = clampColour(blue * 0.90F);
+
+        float eastRed = clampColour(red * 0.58F);
+        float eastGreen = clampColour(green * 0.58F);
+        float eastBlue = clampColour(blue * 0.58F);
+
+        float sideRed = clampColour(red * 0.76F);
+        float sideGreen = clampColour(green * 0.76F);
+        float sideBlue = clampColour(blue * 0.76F);
+
+        float topRed = clampColour(red * 1.12F);
+        float topGreen = clampColour(green * 1.12F);
+        float topBlue = clampColour(blue * 1.12F);
+
+        float bottomRed = clampColour(red * 0.45F);
+        float bottomGreen = clampColour(green * 0.45F);
+        float bottomBlue = clampColour(blue * 0.45F);
 
         // West face, facing the approaching player.
         addVertex(
@@ -1612,7 +1895,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 minZ,
-                westShade
+                westRed,
+                westGreen,
+                westBlue
         );
 
         addVertex(
@@ -1621,7 +1906,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 maxZ,
-                westShade
+                westRed,
+                westGreen,
+                westBlue
         );
 
         addVertex(
@@ -1630,7 +1917,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 maxZ,
-                westShade
+                westRed,
+                westGreen,
+                westBlue
         );
 
         addVertex(
@@ -1639,7 +1928,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 minZ,
-                westShade
+                westRed,
+                westGreen,
+                westBlue
         );
 
         // East face.
@@ -1649,7 +1940,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 maxZ,
-                eastShade
+                eastRed,
+                eastGreen,
+                eastBlue
         );
 
         addVertex(
@@ -1658,7 +1951,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 minZ,
-                eastShade
+                eastRed,
+                eastGreen,
+                eastBlue
         );
 
         addVertex(
@@ -1667,7 +1962,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 minZ,
-                eastShade
+                eastRed,
+                eastGreen,
+                eastBlue
         );
 
         addVertex(
@@ -1676,7 +1973,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 maxZ,
-                eastShade
+                eastRed,
+                eastGreen,
+                eastBlue
         );
 
         // North face.
@@ -1686,7 +1985,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 minZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1695,7 +1996,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 minZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1704,7 +2007,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 minZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1713,7 +2018,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 minZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         // South face.
@@ -1723,7 +2030,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 maxZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1732,7 +2041,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 maxZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1741,7 +2052,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 maxZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         addVertex(
@@ -1750,7 +2063,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 maxZ,
-                sideShade
+                sideRed,
+                sideGreen,
+                sideBlue
         );
 
         // Top face.
@@ -1760,7 +2075,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 maxZ,
-                topShade
+                topRed,
+                topGreen,
+                topBlue
         );
 
         addVertex(
@@ -1769,7 +2086,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 maxZ,
-                topShade
+                topRed,
+                topGreen,
+                topBlue
         );
 
         addVertex(
@@ -1778,7 +2097,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 maxY,
                 minZ,
-                topShade
+                topRed,
+                topGreen,
+                topBlue
         );
 
         addVertex(
@@ -1787,7 +2108,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 maxY,
                 minZ,
-                topShade
+                topRed,
+                topGreen,
+                topBlue
         );
 
         // Bottom face.
@@ -1797,7 +2120,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 minZ,
-                bottomShade
+                bottomRed,
+                bottomGreen,
+                bottomBlue
         );
 
         addVertex(
@@ -1806,7 +2131,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 minZ,
-                bottomShade
+                bottomRed,
+                bottomGreen,
+                bottomBlue
         );
 
         addVertex(
@@ -1815,7 +2142,9 @@ public final class StormfrontCloudRenderer {
                 maxX,
                 minY,
                 maxZ,
-                bottomShade
+                bottomRed,
+                bottomGreen,
+                bottomBlue
         );
 
         addVertex(
@@ -1824,7 +2153,9 @@ public final class StormfrontCloudRenderer {
                 minX,
                 minY,
                 maxZ,
-                bottomShade
+                bottomRed,
+                bottomGreen,
+                bottomBlue
         );
     }
 
@@ -1834,7 +2165,9 @@ public final class StormfrontCloudRenderer {
             float x,
             float y,
             float z,
-            float grey
+            float red,
+            float green,
+            float blue
     ) {
         builder.addVertex(
                         matrix,
@@ -1843,9 +2176,9 @@ public final class StormfrontCloudRenderer {
                         z
                 )
                 .setColor(
-                        grey,
-                        grey,
-                        grey,
+                        red,
+                        green,
+                        blue,
                         1.0F
                 );
     }
