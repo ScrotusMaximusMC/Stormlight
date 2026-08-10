@@ -22,21 +22,6 @@ public class ModRecipes {
                     SphereUpgradeRecipe.DIAMOND_MARK_TO_BROAM_STREAM_CODEC
             );
 
-    public static final RecipeSerializer<SphereUpgradeRecipe> EMERALD_CHIP_TO_MARK =
-            register(
-                    "emerald_chip_to_mark",
-                    SphereUpgradeRecipe.EMERALD_CHIP_TO_MARK_CODEC,
-                    SphereUpgradeRecipe.EMERALD_CHIP_TO_MARK_STREAM_CODEC
-            );
-
-    public static final RecipeSerializer<SphereUpgradeRecipe> EMERALD_MARK_TO_BROAM =
-            register(
-                    "emerald_mark_to_broam",
-                    SphereUpgradeRecipe.EMERALD_MARK_TO_BROAM_CODEC,
-                    SphereUpgradeRecipe.EMERALD_MARK_TO_BROAM_STREAM_CODEC
-            );
-
-
     public static final RecipeSerializer<SphereUpgradeRecipe> GARNET_CHIP_TO_MARK =
             register(
                     "garnet_chip_to_mark",
@@ -80,6 +65,30 @@ public class ModRecipes {
                     "sapphire_mark_to_broam",
                     SphereUpgradeRecipe.SAPPHIRE_MARK_TO_BROAM_CODEC,
                     SphereUpgradeRecipe.SAPPHIRE_MARK_TO_BROAM_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            EMERALD_CHIP_CRAFTING =
+            register(
+                    "emerald_chip_crafting",
+                    SphereUpgradeRecipe.EMERALD_CHIP_CRAFTING_CODEC,
+                    SphereUpgradeRecipe.EMERALD_CHIP_CRAFTING_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            EMERALD_MARK_CRAFTING =
+            register(
+                    "emerald_mark_crafting",
+                    SphereUpgradeRecipe.EMERALD_MARK_CRAFTING_CODEC,
+                    SphereUpgradeRecipe.EMERALD_MARK_CRAFTING_STREAM_CODEC
+            );
+
+    public static final RecipeSerializer<SphereUpgradeRecipe>
+            EMERALD_BROAM_CRAFTING =
+            register(
+                    "emerald_broam_crafting",
+                    SphereUpgradeRecipe.EMERALD_BROAM_CRAFTING_CODEC,
+                    SphereUpgradeRecipe.EMERALD_BROAM_CRAFTING_STREAM_CODEC
             );
 
     private static RecipeSerializer<SphereUpgradeRecipe> register(

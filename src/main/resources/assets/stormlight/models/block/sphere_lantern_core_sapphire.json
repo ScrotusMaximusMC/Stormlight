@@ -1,0 +1,6 @@
+{
+  "parent": "stormlight:block/sphere_lantern_core",
+  "textures": {
+    "core": "stormlight:block/sphere_jar_sapphire"
+  }
+}

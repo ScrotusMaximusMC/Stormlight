@@ -24,6 +24,20 @@ public final class ModBlockEntities {
                     ).build()
             );
 
+    public static final BlockEntityType<SphereLanternBlockEntity>
+            SPHERE_LANTERN_BLOCK_ENTITY =
+            Registry.register(
+                    BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath(
+                            Stormlight.MOD_ID,
+                            "sphere_lantern"
+                    ),
+                    FabricBlockEntityTypeBuilder.create(
+                            SphereLanternBlockEntity::new,
+                            ModBlocks.SPHERE_LANTERN
+                    ).build()
+            );
+
     private ModBlockEntities() {
     }
 

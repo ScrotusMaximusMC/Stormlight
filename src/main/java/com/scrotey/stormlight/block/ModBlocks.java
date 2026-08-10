@@ -2,6 +2,7 @@ package com.scrotey.stormlight.block;
 
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.block.custom.SphereJarBlock;
+import com.scrotey.stormlight.block.custom.SphereLanternBlock;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
@@ -117,6 +118,63 @@ public final class ModBlocks {
                     )
             );
 
+    /*
+     * Sphere Lantern.
+     */
+    private static final Identifier SPHERE_LANTERN_ID =
+            Identifier.fromNamespaceAndPath(
+                    Stormlight.MOD_ID,
+                    "sphere_lantern"
+            );
+
+    private static final ResourceKey<Block>
+            SPHERE_LANTERN_BLOCK_KEY =
+            ResourceKey.create(
+                    Registries.BLOCK,
+                    SPHERE_LANTERN_ID
+            );
+
+    private static final ResourceKey<Item>
+            SPHERE_LANTERN_ITEM_KEY =
+            ResourceKey.create(
+                    Registries.ITEM,
+                    SPHERE_LANTERN_ID
+            );
+
+    public static final Block SPHERE_LANTERN =
+            Registry.register(
+                    BuiltInRegistries.BLOCK,
+                    SPHERE_LANTERN_BLOCK_KEY,
+                    new SphereLanternBlock(
+                            BlockBehaviour.Properties.of()
+                                    .setId(
+                                            SPHERE_LANTERN_BLOCK_KEY
+                                    )
+                                    .strength(1.5F)
+                                    .sound(SoundType.LANTERN)
+                                    .noOcclusion()
+                                    .lightLevel(state ->
+                                            state.getValue(
+                                                    SphereLanternBlock.LIGHT_LEVEL
+                                            )
+                                    )
+                    )
+            );
+
+    public static final Item SPHERE_LANTERN_ITEM =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    SPHERE_LANTERN_ITEM_KEY,
+                    new BlockItem(
+                            SPHERE_LANTERN,
+                            new Item.Properties()
+                                    .setId(
+                                            SPHERE_LANTERN_ITEM_KEY
+                                    )
+                                    .useBlockDescriptionPrefix()
+                    )
+            );
+
 
     /*
      * Registers an ore block and its matching inventory item.
@@ -177,9 +235,10 @@ public final class ModBlocks {
     public static void initialize() {
         CreativeModeTabEvents.modifyOutputEvent(
                 CreativeModeTabs.FUNCTIONAL_BLOCKS
-        ).register(entries ->
-                entries.accept(SPHERE_JAR_ITEM)
-        );
+        ).register(entries -> {
+            entries.accept(SPHERE_JAR_ITEM);
+            entries.accept(SPHERE_LANTERN_ITEM);
+        });
 
         CreativeModeTabEvents.modifyOutputEvent(
                 CreativeModeTabs.NATURAL_BLOCKS

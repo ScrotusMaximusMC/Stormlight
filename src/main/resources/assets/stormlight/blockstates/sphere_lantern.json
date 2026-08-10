@@ -1,0 +1,96 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_body"
+      }
+    },
+    {
+      "when": {
+        "hanging": "true"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_ceiling_mount"
+      }
+    },
+    {
+      "when": {
+        "hanging": "false",
+        "facing": "south"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_wall_mount"
+      }
+    },
+    {
+      "when": {
+        "hanging": "false",
+        "facing": "west"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_wall_mount",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "hanging": "false",
+        "facing": "north"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_wall_mount",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "hanging": "false",
+        "facing": "east"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_wall_mount",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "gemstone": "1"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_core_diamond"
+      }
+    },
+    {
+      "when": {
+        "gemstone": "2"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_core_garnet"
+      }
+    },
+    {
+      "when": {
+        "gemstone": "3"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_core_ruby"
+      }
+    },
+    {
+      "when": {
+        "gemstone": "4"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_core_sapphire"
+      }
+    },
+    {
+      "when": {
+        "gemstone": "5"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_lantern_core_emerald"
+      }
+    }
+  ]
+}

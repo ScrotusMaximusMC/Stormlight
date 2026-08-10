@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LSL",
+    "LAL",
+    "LLL"
+  ],
+  "key": {
+    "L": "minecraft:leather",
+    "S": "minecraft:string",
+    "A": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "stormlight:sphere_pouch",
+    "count": 1
+  }
+}
