@@ -1,5 +1,6 @@
 package com.scrotey.stormlight.client.highstorm;
 
+import com.scrotey.stormlight.particle.ModParticles;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -36,6 +37,17 @@ public final class ApproachingStormfrontEffects {
     private static final double HIGHSTORM_SPAWN_DEPTH = 52.0;
     private static final double HIGHSTORM_HALF_WIDTH = 58.0;
     private static final double HIGHSTORM_HEIGHT = 48.0;
+
+    /*
+     * Windblown leaves are kept separate from the smoke count so their
+     * density and turbulence can be tuned without changing the storm wall.
+     */
+    private static final int HIGHSTORM_LEAVES_PER_TICK = 5;
+    private static final double LEAF_MIN_EAST_DISTANCE = 9.0;
+    private static final double LEAF_SPAWN_DEPTH = 38.0;
+    private static final double LEAF_HALF_WIDTH = 28.0;
+    private static final double LEAF_MIN_HEIGHT = 1.5;
+    private static final double LEAF_HEIGHT = 15.0;
 
     private static final RandomSource RANDOM =
             RandomSource.create();
@@ -260,6 +272,50 @@ public final class ApproachingStormfrontEffects {
 
             client.level.addAlwaysVisibleParticle(
                     selectCloudParticle(),
+                    x,
+                    y,
+                    z,
+                    westSpeed,
+                    verticalMovement,
+                    sidewaysMovement
+            );
+        }
+
+        spawnHighstormLeaves(client);
+    }
+
+    private static void spawnHighstormLeaves(
+            Minecraft client
+    ) {
+        for (int i = 0; i < HIGHSTORM_LEAVES_PER_TICK; i++) {
+            double x = client.player.getX()
+                    + LEAF_MIN_EAST_DISTANCE
+                    + RANDOM.nextDouble() * LEAF_SPAWN_DEPTH;
+
+            double z = client.player.getZ()
+                    + (RANDOM.nextDouble() - 0.5)
+                    * LEAF_HALF_WIDTH * 2.0;
+
+            int groundY = client.level.getHeight(
+                    Heightmap.Types.MOTION_BLOCKING,
+                    Mth.floor(x),
+                    Mth.floor(z)
+            );
+
+            double y = groundY
+                    + LEAF_MIN_HEIGHT
+                    + RANDOM.nextDouble() * LEAF_HEIGHT;
+
+            // Every leaf heads west, but no two receive quite the same gust.
+            double westSpeed = -0.48
+                    - RANDOM.nextDouble() * 0.46;
+            double verticalMovement = -0.04
+                    + RANDOM.nextDouble() * 0.16;
+            double sidewaysMovement =
+                    (RANDOM.nextDouble() - 0.5) * 0.34;
+
+            client.level.addAlwaysVisibleParticle(
+                    ModParticles.HIGHSTORM_LEAF,
                     x,
                     y,
                     z,

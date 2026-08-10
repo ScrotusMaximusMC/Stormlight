@@ -21,6 +21,13 @@ public final class ModParticles {
                     FabricParticleTypes.simple()
             );
 
+    public static final SimpleParticleType HIGHSTORM_LEAF =
+            Registry.register(
+                    BuiltInRegistries.PARTICLE_TYPE,
+                    Stormlight.id("highstorm_leaf"),
+                    FabricParticleTypes.simple()
+            );
+
     private ModParticles() {
     }
 

@@ -18,7 +18,9 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.StagedVertexBuffer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
@@ -46,6 +48,37 @@ public final class StormfrontCloudRenderer {
      * complete row directly over the player.
      */
     private static final float CLOUD_VERTICAL_OFFSET = -1.0F;
+
+    /*
+     * Above sea level the clouds retain their original camera-relative
+     * behaviour. Below this height, the formation is raised by exactly the
+     * distance the player has descended, keeping it fixed above Y=64 instead
+     * of allowing it to enter caves. Unlike a heightmap lookup, this cannot
+     * react to trees, overhangs, mountains, or individual roof blocks.
+     */
+    private static final float CLOUD_ANCHOR_Y = 64.0F;
+
+    /*
+     * The centre heightmap column supplies the actual mountain surface used
+     * to anchor the clouds. The eight surrounding columns only confirm that
+     * the player is genuinely buried beneath broad terrain rather than below
+     * a tree trunk, roof, or narrow overhang. MOTION_BLOCKING_NO_LEAVES keeps
+     * leaf canopies out of the calculation.
+     *
+     * Entering cave mode needs three supporting neighbours. Once active, two
+     * are sufficient until the shallower leave depth is reached. This small
+     * amount of hysteresis prevents flickering around cave entrances.
+     */
+    private static final int CAVE_SAMPLE_RADIUS = 8;
+    private static final float CAVE_ENTER_DEPTH = 12.0F;
+    private static final float CAVE_LEAVE_DEPTH = 7.0F;
+    private static final int CAVE_ENTER_SUPPORTS = 3;
+    private static final int CAVE_LEAVE_SUPPORTS = 2;
+    private static final float CAVE_OFFSET_SMOOTHING = 0.18F;
+
+    private static boolean caveAnchoring;
+    private static float smoothedCaveExtraOffset;
+    private static long lastOffsetUpdateTick = Long.MIN_VALUE;
 
     private static final float COLUMN_SPACING = 28.0F;
     private static final float LAYER_SPACING = 32.0F;
@@ -140,8 +173,93 @@ public final class StormfrontCloudRenderer {
                 || !client.level.dimension()
                 .equals(Level.OVERWORLD)) {
             renderState = null;
+            resetCaveAnchor();
             return;
         }
+
+        float playerY = (float) client.player.getY();
+
+        float seaLevelOffset =
+                Math.max(
+                        0.0F,
+                        CLOUD_ANCHOR_Y
+                                - playerY
+                );
+
+        int playerX = Mth.floor(client.player.getX());
+        int playerZ = Mth.floor(client.player.getZ());
+
+        int[] surfaceHeights = sampleSurfaceHeights(
+                client,
+                playerX,
+                playerZ
+        );
+
+        int centreSurface = surfaceHeights[4];
+        float centreDepth = centreSurface - playerY;
+
+        int enterSupports = countBuriedNeighbours(
+                surfaceHeights,
+                playerY,
+                CAVE_ENTER_DEPTH
+        );
+
+        int leaveSupports = countBuriedNeighbours(
+                surfaceHeights,
+                playerY,
+                CAVE_LEAVE_DEPTH
+        );
+
+        if (caveAnchoring) {
+            if (centreDepth <= CAVE_LEAVE_DEPTH
+                    || leaveSupports
+                    < CAVE_LEAVE_SUPPORTS) {
+                caveAnchoring = false;
+            }
+        } else if (centreDepth >= CAVE_ENTER_DEPTH
+                && enterSupports
+                >= CAVE_ENTER_SUPPORTS) {
+            caveAnchoring = true;
+        }
+
+        float targetCaveExtraOffset = 0.0F;
+
+        if (caveAnchoring) {
+            float caveSurfaceOffset =
+                    Math.max(
+                            0.0F,
+                            centreSurface - playerY
+                    );
+
+            targetCaveExtraOffset =
+                    Math.max(
+                            0.0F,
+                            caveSurfaceOffset - seaLevelOffset
+                    );
+        }
+
+        long gameTime = client.level.getGameTime();
+
+        if (gameTime != lastOffsetUpdateTick) {
+            smoothedCaveExtraOffset +=
+                    (targetCaveExtraOffset
+                            - smoothedCaveExtraOffset)
+                            * CAVE_OFFSET_SMOOTHING;
+
+            if (Math.abs(
+                    targetCaveExtraOffset
+                            - smoothedCaveExtraOffset
+            ) < 0.01F) {
+                smoothedCaveExtraOffset =
+                        targetCaveExtraOffset;
+            }
+
+            lastOffsetUpdateTick = gameTime;
+        }
+
+        float verticalOffset =
+                seaLevelOffset
+                        + smoothedCaveExtraOffset;
 
         renderState =
                 new StormfrontRenderState(
@@ -153,8 +271,66 @@ public final class StormfrontCloudRenderer {
                                 .isHighstorm(),
                         ClientHighstormState
                                 .isPassing(),
-                        client.level.getGameTime()
+                        gameTime,
+                        verticalOffset
                 );
+    }
+
+    private static int[] sampleSurfaceHeights(
+            Minecraft client,
+            int centreX,
+            int centreZ
+    ) {
+        int[] heights = new int[9];
+        int index = 0;
+
+        for (int zOffset = -CAVE_SAMPLE_RADIUS;
+             zOffset <= CAVE_SAMPLE_RADIUS;
+             zOffset += CAVE_SAMPLE_RADIUS) {
+            for (int xOffset = -CAVE_SAMPLE_RADIUS;
+                 xOffset <= CAVE_SAMPLE_RADIUS;
+                 xOffset += CAVE_SAMPLE_RADIUS) {
+                heights[index++] =
+                        client.level.getHeight(
+                                Heightmap.Types
+                                        .MOTION_BLOCKING_NO_LEAVES,
+                                centreX + xOffset,
+                                centreZ + zOffset
+                        );
+            }
+        }
+
+        return heights;
+    }
+
+    private static int countBuriedNeighbours(
+            int[] surfaceHeights,
+            float playerY,
+            float minimumDepth
+    ) {
+        int buriedNeighbours = 0;
+
+        for (int index = 0;
+             index < surfaceHeights.length;
+             index++) {
+            // Index four is the centre column and is tested separately.
+            if (index == 4) {
+                continue;
+            }
+
+            if (surfaceHeights[index] - playerY
+                    >= minimumDepth) {
+                buriedNeighbours++;
+            }
+        }
+
+        return buriedNeighbours;
+    }
+
+    private static void resetCaveAnchor() {
+        caveAnchoring = false;
+        smoothedCaveExtraOffset = 0.0F;
+        lastOffsetUpdateTick = Long.MIN_VALUE;
     }
 
     private static void renderAndDraw(
@@ -219,6 +395,16 @@ public final class StormfrontCloudRenderer {
         PoseStack poseStack = context.poseStack();
 
         poseStack.pushPose();
+
+        /*
+         * Below Y=64, counteract the player's descent. In a genuine cave
+         * above sea level, add the smoothed terrain-surface adjustment.
+         */
+        poseStack.translate(
+                0.0F,
+                state.verticalOffset(),
+                0.0F
+        );
 
         VertexConsumer builder =
                 STAGED_BUFFER.getVertexBuilder(draw);
@@ -1220,7 +1406,8 @@ public final class StormfrontCloudRenderer {
             float passingProgress,
             boolean highstorm,
             boolean passing,
-            long gameTime
+            long gameTime,
+            float verticalOffset
     ) {
     }
 }
