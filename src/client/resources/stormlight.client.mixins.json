@@ -8,7 +8,8 @@
 		"InventoryScreenMixin",
 		"SpherePouchClickBoundsMixin",
 		"CloudRendererMixin",
-		"DaylightDarkeningMixin"
+		"DaylightDarkeningMixin",
+		"WeatherEffectRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
