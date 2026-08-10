@@ -47,7 +47,7 @@ public final class StormfrontCloudRenderer {
      * Lowers the entire cloud formation without adding another
      * complete row directly over the player.
      */
-    private static final float CLOUD_VERTICAL_OFFSET = -1.0F;
+    private static final float CLOUD_VERTICAL_OFFSET = 16.0F;
 
     /*
      * Above sea level the clouds retain their original camera-relative
@@ -82,6 +82,30 @@ public final class StormfrontCloudRenderer {
 
     private static final float COLUMN_SPACING = 28.0F;
     private static final float LAYER_SPACING = 32.0F;
+
+    /*
+     * Extra geometry is reserved for the active storm's lowest row. Rather
+     * than shrinking every cloud cell, selected cells grow a handful of
+     * smaller, darker fragments beneath them. This breaks up the large-box
+     * silhouette at a fraction of the cost of subdividing the whole mass.
+     */
+    private static final int UNDERBELLY_CHANCE_OUT_OF_16 = 9;
+    private static final int UNDERBELLY_EDGE_MARGIN = 2;
+    private static final int UNDERBELLY_SUBDIVISIONS = 2;
+
+    /*
+     * The detailed cloud field is deliberately finite, but raising its
+     * underside makes that edge easier to see. During the active Highstorm,
+     * a second, extremely sparse canopy of enormous slabs continues far past
+     * it. The canopy bends downward toward the horizon like a shallow bowl,
+     * hiding the clear sky beyond the detailed formation without paying for
+     * thousands more ordinary cloud cells.
+     */
+    private static final int FAR_CANOPY_HALF_CELLS = 6;
+    private static final float FAR_CANOPY_SPACING = 250.0F;
+    private static final float FAR_CANOPY_INNER_RADIUS = 390.0F;
+    private static final float FAR_CANOPY_CENTRE_Y = 66.0F;
+    private static final float FAR_CANOPY_MAX_DROP = 54.0F;
 
     /*
      * Gives both outer faces of the stormwall a rounded profile.
@@ -626,6 +650,21 @@ public final class StormfrontCloudRenderer {
             );
         }
 
+        /*
+         * The far canopy belongs only to the world-anchored active storm.
+         * Approach and departure keep their existing cinematic silhouettes.
+         */
+        if (worldAnchored) {
+            renderFarCanopy(
+                    matrix,
+                    builder,
+                    state.gameTime(),
+                    lightningStrength,
+                    cameraX,
+                    cameraZ
+            );
+        }
+
         poseStack.popPose();
     }
 
@@ -1110,6 +1149,389 @@ public final class StormfrontCloudRenderer {
                         centreY + ySize / 2.0F,
                         centreZ + zSize / 2.0F,
                         baseGrey
+                );
+
+                /*
+                 * Give the active storm a finer, ragged underside without
+                 * multiplying the resolution of all six cloud rows. Detail is
+                 * omitted from the fading edge rings, where small geometry
+                 * would be expensive and visually prone to popping.
+                 */
+                if (worldAnchored
+                        && row == MIN_ROW
+                        && Math.abs(column)
+                        <= halfColumnRange
+                        - UNDERBELLY_EDGE_MARGIN
+                        && Math.abs(logicalLayer)
+                        <= halfLayerRange
+                        - UNDERBELLY_EDGE_MARGIN) {
+                    renderUnderbellyDetail(
+                            matrix,
+                            builder,
+                            centreX,
+                            centreY,
+                            centreZ,
+                            xSize,
+                            ySize,
+                            zSize,
+                            baseGrey,
+                            seedColumn,
+                            seedLayer
+                    );
+                }
+            }
+        }
+    }
+
+    private static void renderUnderbellyDetail(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            float parentCentreX,
+            float parentCentreY,
+            float parentCentreZ,
+            float parentXSize,
+            float parentYSize,
+            float parentZSize,
+            float parentGrey,
+            int seedColumn,
+            int seedLayer
+    ) {
+        int detailHash =
+                hash(
+                        seedColumn + 419,
+                        MIN_ROW - 211,
+                        seedLayer + 733
+                );
+
+        if ((detailHash & 15)
+                >= UNDERBELLY_CHANCE_OUT_OF_16) {
+            return;
+        }
+
+        float parentBottom =
+                parentCentreY
+                        - parentYSize / 2.0F;
+
+        float sectionX =
+                parentXSize
+                        / UNDERBELLY_SUBDIVISIONS;
+
+        float sectionZ =
+                parentZSize
+                        / UNDERBELLY_SUBDIVISIONS;
+
+        for (int subZ = 0;
+             subZ < UNDERBELLY_SUBDIVISIONS;
+             subZ++) {
+            for (int subX = 0;
+                 subX < UNDERBELLY_SUBDIVISIONS;
+                 subX++) {
+                int subHash =
+                        hash(
+                                seedColumn
+                                        * UNDERBELLY_SUBDIVISIONS
+                                        + subX,
+                                1_007 + subZ,
+                                seedLayer
+                                        * UNDERBELLY_SUBDIVISIONS
+                                        + subZ
+                        );
+
+                /*
+                 * Each detailed parent produces two to four fragments. The
+                 * missing quarters create broken edges rather than a regular
+                 * checkerboard beneath every large cloud cell.
+                 */
+                if ((subHash & 7) < 2) {
+                    continue;
+                }
+
+                float xSize =
+                        sectionX
+                                * (0.72F
+                                + randomFraction(
+                                subHash
+                        ) * 0.42F);
+
+                float zSize =
+                        sectionZ
+                                * (0.72F
+                                + randomFraction(
+                                hash(
+                                        subHash,
+                                        337,
+                                        -149
+                                )
+                        ) * 0.42F);
+
+                float ySize =
+                        5.0F
+                                + randomFraction(
+                                hash(
+                                        subHash,
+                                        -613,
+                                        271
+                                )
+                        ) * 8.0F;
+
+                float localX =
+                        (subX + 0.5F)
+                                * sectionX
+                                - parentXSize / 2.0F;
+
+                float localZ =
+                        (subZ + 0.5F)
+                                * sectionZ
+                                - parentZSize / 2.0F;
+
+                float xJitter =
+                        (randomFraction(
+                                hash(
+                                        subHash,
+                                        71,
+                                        881
+                                )
+                        ) - 0.5F) * sectionX * 0.42F;
+
+                float zJitter =
+                        (randomFraction(
+                                hash(
+                                        subHash,
+                                        -457,
+                                        503
+                                )
+                        ) - 0.5F) * sectionZ * 0.42F;
+
+                /*
+                 * Sink each fragment by a different amount, while leaving its
+                 * top slightly embedded in the parent to avoid visible seams.
+                 */
+                float overlap =
+                        1.5F
+                                + randomFraction(
+                                hash(
+                                        subHash,
+                                        947,
+                                        -829
+                                )
+                        ) * 2.5F;
+
+                float centreX =
+                        parentCentreX
+                                + localX
+                                + xJitter;
+
+                float centreY =
+                        parentBottom
+                                - ySize / 2.0F
+                                + overlap;
+
+                float centreZ =
+                        parentCentreZ
+                                + localZ
+                                + zJitter;
+
+                float grey =
+                        clampColour(
+                                parentGrey
+                                        * (0.76F
+                                        + randomFraction(
+                                        hash(
+                                                subHash,
+                                                193,
+                                                -367
+                                        )
+                                ) * 0.18F)
+                        );
+
+                renderCloudBox(
+                        matrix,
+                        builder,
+                        centreX - xSize / 2.0F,
+                        centreY - ySize / 2.0F,
+                        centreZ - zSize / 2.0F,
+                        centreX + xSize / 2.0F,
+                        centreY + ySize / 2.0F,
+                        centreZ + zSize / 2.0F,
+                        grey
+                );
+
+            }
+        }
+    }
+
+    private static void renderFarCanopy(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            long gameTime,
+            float lightningStrength,
+            double cameraX,
+            double cameraZ
+    ) {
+        int centreCellX =
+                Mth.floor(
+                        cameraX / FAR_CANOPY_SPACING
+                );
+
+        int centreCellZ =
+                Mth.floor(
+                        cameraZ / FAR_CANOPY_SPACING
+                );
+
+        float maximumRadius =
+                FAR_CANOPY_HALF_CELLS
+                        * FAR_CANOPY_SPACING;
+
+        for (int localZ = -FAR_CANOPY_HALF_CELLS;
+             localZ <= FAR_CANOPY_HALF_CELLS;
+             localZ++) {
+            for (int localX = -FAR_CANOPY_HALF_CELLS;
+                 localX <= FAR_CANOPY_HALF_CELLS;
+                 localX++) {
+                int worldCellX = centreCellX + localX;
+                int worldCellZ = centreCellZ + localZ;
+
+                float centreX =
+                        (float) (
+                                worldCellX
+                                        * (double) FAR_CANOPY_SPACING
+                                        - cameraX
+                        );
+
+                float centreZ =
+                        (float) (
+                                worldCellZ
+                                        * (double) FAR_CANOPY_SPACING
+                                        - cameraZ
+                        );
+
+                float horizontalDistance =
+                        Mth.sqrt(
+                                centreX * centreX
+                                        + centreZ * centreZ
+                        );
+
+                /*
+                 * Leave the inner field to the detailed cloud cells. The
+                 * oversized slabs overlap this boundary generously, so no
+                 * circular seam is exposed while the player moves.
+                 */
+                if (horizontalDistance
+                        < FAR_CANOPY_INNER_RADIUS) {
+                    continue;
+                }
+
+                int canopyHash =
+                        hash(
+                                worldCellX,
+                                2_003,
+                                worldCellZ
+                        );
+
+                float radialProgress =
+                        Mth.clamp(
+                                (horizontalDistance
+                                        - FAR_CANOPY_INNER_RADIUS)
+                                        / (maximumRadius
+                                        - FAR_CANOPY_INNER_RADIUS),
+                                0.0F,
+                                1.0F
+                        );
+
+                /*
+                 * Smooth bowl profile: nearly level beside the detailed
+                 * field, then increasingly low toward the distant horizon.
+                 */
+                float bowlProgress =
+                        smoothStep(radialProgress);
+
+                float yJitter =
+                        (randomFraction(
+                                hash(
+                                        worldCellX + 307,
+                                        -1_117,
+                                        worldCellZ - 461
+                                )
+                        ) - 0.5F) * 10.0F;
+
+                float turbulence =
+                        (float) Math.sin(
+                                gameTime * 0.018F
+                                        + worldCellX * 0.73F
+                                        + worldCellZ * 1.19F
+                        ) * 1.5F;
+
+                float centreY =
+                        FAR_CANOPY_CENTRE_Y
+                                - bowlProgress
+                                * FAR_CANOPY_MAX_DROP
+                                + yJitter
+                                + turbulence;
+
+                /*
+                 * Broad overlap makes this a continuous ceiling despite its
+                 * very low cell count. Small deterministic variation keeps
+                 * the underside from reading as one perfectly flat plane.
+                 */
+                float xSize =
+                        FAR_CANOPY_SPACING
+                                * (1.28F
+                                + randomFraction(
+                                hash(
+                                        canopyHash,
+                                        811,
+                                        -277
+                                )
+                        ) * 0.18F);
+
+                float zSize =
+                        FAR_CANOPY_SPACING
+                                * (1.28F
+                                + randomFraction(
+                                hash(
+                                        canopyHash,
+                                        -569,
+                                        983
+                                )
+                        ) * 0.18F);
+
+                float ySize =
+                        30.0F
+                                + randomFraction(
+                                hash(
+                                        canopyHash,
+                                        1_243,
+                                        -719
+                                )
+                        ) * 18.0F;
+
+                float grey =
+                        0.055F
+                                + randomFraction(
+                                hash(
+                                        canopyHash,
+                                        -1_409,
+                                        1_607
+                                )
+                        ) * 0.035F;
+
+                /*
+                 * Distant lightning is deliberately subdued; it connects the
+                 * canopy visually to the main storm without turning the whole
+                 * horizon into one simultaneous white flash.
+                 */
+                grey += lightningStrength * 0.10F;
+
+                renderCloudBox(
+                        matrix,
+                        builder,
+                        centreX - xSize / 2.0F,
+                        centreY - ySize / 2.0F,
+                        centreZ - zSize / 2.0F,
+                        centreX + xSize / 2.0F,
+                        centreY + ySize / 2.0F,
+                        centreZ + zSize / 2.0F,
+                        clampColour(grey)
                 );
             }
         }

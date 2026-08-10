@@ -42,7 +42,7 @@ public final class ApproachingStormfrontEffects {
      * Windblown leaves are kept separate from the smoke count so their
      * density and turbulence can be tuned without changing the storm wall.
      */
-    private static final int HIGHSTORM_LEAVES_PER_TICK = 5;
+    private static final int HIGHSTORM_LEAVES_PER_TICK = 15;
     private static final double LEAF_MIN_EAST_DISTANCE = 9.0;
     private static final double LEAF_SPAWN_DEPTH = 38.0;
     private static final double LEAF_HALF_WIDTH = 28.0;
@@ -196,11 +196,11 @@ public final class ApproachingStormfrontEffects {
     private static ParticleOptions selectCloudParticle() {
         float choice = RANDOM.nextFloat();
 
-        if (choice < 0.48F) {
+        if (choice < 0.25F) {
             return ParticleTypes.CAMPFIRE_SIGNAL_SMOKE;
         }
 
-        if (choice < 0.88F) {
+        if (choice < 0.50F) {
             return ParticleTypes.LARGE_SMOKE;
         }
 
