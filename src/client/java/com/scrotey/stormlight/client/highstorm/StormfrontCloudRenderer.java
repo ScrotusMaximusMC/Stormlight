@@ -100,8 +100,9 @@ public final class StormfrontCloudRenderer {
             12L * 20L;
 
     /*
-     * Camera-relative position of the cloud mass.
-     * Positive X is east; negative X is west.
+     * Camera-relative position of the approaching and departing cloud mass.
+     * Positive X is east; negative X is west. During the active Highstorm,
+     * X and Z instead come from a permanent world-aligned procedural grid.
      */
     private static final float START_DISTANCE = 800.0F;
     private static final float IMPACT_DISTANCE = 0.0F;
@@ -419,6 +420,44 @@ public final class StormfrontCloudRenderer {
         int halfLayerRange;
         float layerPositionOffset;
 
+        /*
+         * The cinematic approach and departure remain camera-relative. Only
+         * the fully active storm becomes world-anchored, so walking beneath it
+         * reveals new formations instead of carrying the whole ceiling along.
+         */
+        boolean worldAnchored =
+                state.highstorm()
+                        && !state.passing();
+
+        /*
+         * Use the interpolated render camera rather than the tick-position of
+         * the player. This keeps world-fixed clouds perfectly smooth while
+         * walking, sprinting, flying, or using third-person view.
+         */
+        double cameraX =
+                context.levelState()
+                        .cameraRenderState
+                        .pos
+                        .x;
+
+        double cameraZ =
+                context.levelState()
+                        .cameraRenderState
+                        .pos
+                        .z;
+
+        int worldCentreLayer =
+                Mth.floor(
+                        cameraX
+                                / LAYER_SPACING
+                );
+
+        int worldCentreColumn =
+                Mth.floor(
+                        cameraZ
+                                / COLUMN_SPACING
+                );
+
         if (state.passing()) {
             float passingProgress =
                     state.passingProgress();
@@ -578,7 +617,12 @@ public final class StormfrontCloudRenderer {
                     playerFacingDepth,
                     halfLayerRange,
                     halfColumnRange,
-                    lightningStrength
+                    lightningStrength,
+                    worldAnchored,
+                    worldCentreLayer,
+                    worldCentreColumn,
+                    cameraX,
+                    cameraZ
             );
         }
 
@@ -673,7 +717,12 @@ public final class StormfrontCloudRenderer {
             int playerFacingDepth,
             int halfLayerRange,
             int halfColumnRange,
-            float lightningStrength
+            float lightningStrength,
+            boolean worldAnchored,
+            int worldCentreLayer,
+            int worldCentreColumn,
+            double cameraX,
+            double cameraZ
     ) {
 
         /*
@@ -783,17 +832,39 @@ public final class StormfrontCloudRenderer {
              * The eastern face curves towards positive X.
              */
             float stormfaceOffset =
-                    -rowBulge * westSurfaceStrength
+                    worldAnchored
+                            ? 0.0F
+                            : -rowBulge * westSurfaceStrength
                             + rowBulge * eastSurfaceStrength;
 
             for (int column = -halfColumnRange;
                  column <= halfColumnRange;
                  column++) {
+                int logicalLayer =
+                        canonicalLayer
+                                - NEAR_HALF_LAYERS;
+
+                /*
+                 * These are permanent procedural addresses during the active
+                 * storm. Their hashes and world positions do not change as the
+                 * player moves; only the nearby render window changes.
+                 */
+                int seedColumn =
+                        worldAnchored
+                                ? worldCentreColumn + column
+                                : column;
+
+                int seedLayer =
+                        worldAnchored
+                                ? worldCentreLayer
+                                + logicalLayer
+                                : canonicalLayer;
+
                 int mainHash =
                         hash(
-                                column,
+                                seedColumn,
                                 row,
-                                canonicalLayer
+                                seedLayer
                         );
 
                 /*
@@ -801,7 +872,9 @@ public final class StormfrontCloudRenderer {
                  * ceiling remains visually solid.
                  */
                 int gapThreshold =
-                        playerFacingDepth == 0
+                        worldAnchored
+                                ? 4
+                                : playerFacingDepth == 0
                                 ? 3
                                 : 5;
 
@@ -817,18 +890,18 @@ public final class StormfrontCloudRenderer {
                 float yJitter =
                         randomFraction(
                                 hash(
-                                        column + 83,
+                                        seedColumn + 83,
                                         row - 29,
-                                        canonicalLayer + 7
+                                        seedLayer + 7
                                 )
                         ) * 10.0F - 5.0F;
 
                 float zJitter =
                         randomFraction(
                                 hash(
-                                        column - 41,
+                                        seedColumn - 41,
                                         row + 97,
-                                        canonicalLayer + 13
+                                        seedLayer + 13
                                 )
                         ) * 14.0F - 7.0F;
 
@@ -840,9 +913,9 @@ public final class StormfrontCloudRenderer {
                         36.0F
                                 + randomFraction(
                                 hash(
-                                        column + 11,
+                                        seedColumn + 11,
                                         row + 17,
-                                        canonicalLayer + 19
+                                        seedLayer + 19
                                 )
                         ) * 20.0F;
 
@@ -850,9 +923,9 @@ public final class StormfrontCloudRenderer {
                         22.0F
                                 + randomFraction(
                                 hash(
-                                        column - 23,
+                                        seedColumn - 23,
                                         row + 31,
-                                        canonicalLayer + 37
+                                        seedLayer + 37
                                 )
                         ) * 14.0F;
 
@@ -860,30 +933,56 @@ public final class StormfrontCloudRenderer {
                         38.0F
                                 + randomFraction(
                                 hash(
-                                        column + 47,
+                                        seedColumn + 47,
                                         row - 53,
-                                        canonicalLayer + 43
+                                        seedLayer + 43
                                 )
                         ) * 22.0F;
+
+                /*
+                 * Two reduced outer rings conceal cells entering and leaving
+                 * the finite render window. Everything inside those rings is
+                 * full-sized and remains visually unchanged while travelling.
+                 */
+                float windowEdgeScale =
+                        worldAnchored
+                                ? calculateWindowEdgeScale(
+                                column,
+                                logicalLayer,
+                                halfColumnRange,
+                                halfLayerRange
+                        )
+                                : 1.0F;
+
+                xSize *= windowEdgeScale;
+                ySize *= windowEdgeScale;
+                zSize *= windowEdgeScale;
 
                 float turbulence =
                         (float) Math.sin(
                                 gameTime * 0.045F
-                                        + column * 0.38F
+                                        + seedColumn * 0.38F
                                         + row * 0.27F
-                                        + canonicalLayer * 1.7F
+                                        + seedLayer * 1.7F
                         ) * (
                                 0.7F
                                         + cloudIntensity * 1.3F
                         );
 
+                float gridX =
+                        worldAnchored
+                                ? (float) (
+                                seedLayer
+                                        * (double) LAYER_SPACING
+                                        - cameraX
+                        )
+                                : distance
+                                + logicalLayer
+                                * LAYER_SPACING
+                                + layerPositionOffset;
+
                 float centreX =
-                        distance
-                                + (
-                                canonicalLayer
-                                        - NEAR_HALF_LAYERS
-                        ) * LAYER_SPACING
-                                + layerPositionOffset
+                        gridX
                                 + stormfaceOffset
                                 + xJitter;
 
@@ -893,9 +992,18 @@ public final class StormfrontCloudRenderer {
                                 + yJitter
                                 + turbulence;
 
+                float gridZ =
+                        worldAnchored
+                                ? (float) (
+                                seedColumn
+                                        * (double) COLUMN_SPACING
+                                        - cameraZ
+                        )
+                                : column
+                                * COLUMN_SPACING;
+
                 float centreZ =
-                        column
-                                * COLUMN_SPACING
+                        gridZ
                                 + zJitter
                                 + turbulence * 1.5F;
 
@@ -907,22 +1015,24 @@ public final class StormfrontCloudRenderer {
                         0.085F
                                 + randomFraction(
                                 hash(
-                                        column + 101,
+                                        seedColumn + 101,
                                         row + 59,
-                                        canonicalLayer + 71
+                                        seedLayer + 71
                                 )
                         ) * 0.065F;
 
                 /*
                  * Outer layers are slightly darker, helping create depth.
                  */
-                baseGrey -=
-                        Math.abs(
-                                canonicalLayer
-                                        - NEAR_HALF_LAYERS
-                        )
-                                / (float) NEAR_HALF_LAYERS
-                                * 0.035F;
+                if (!worldAnchored) {
+                    baseGrey -=
+                            Math.abs(
+                                    canonicalLayer
+                                            - NEAR_HALF_LAYERS
+                            )
+                                    / (float) NEAR_HALF_LAYERS
+                                    * 0.035F;
+                }
 
                 baseGrey -=
                         cloudIntensity * 0.015F;
@@ -1023,6 +1133,33 @@ public final class StormfrontCloudRenderer {
         return strength
                 * strength
                 * (3.0F - 2.0F * strength);
+    }
+
+    private static float calculateWindowEdgeScale(
+            int column,
+            int logicalLayer,
+            int halfColumnRange,
+            int halfLayerRange
+    ) {
+        int columnsFromEdge =
+                halfColumnRange
+                        - Math.abs(column);
+
+        int layersFromEdge =
+                halfLayerRange
+                        - Math.abs(logicalLayer);
+
+        int cellsFromEdge =
+                Math.min(
+                        columnsFromEdge,
+                        layersFromEdge
+                );
+
+        return Mth.clamp(
+                (cellsFromEdge + 1.0F) / 3.0F,
+                0.0F,
+                1.0F
+        );
     }
 
     private static void renderCloudBox(
