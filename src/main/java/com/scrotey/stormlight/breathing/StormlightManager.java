@@ -3,6 +3,8 @@ package com.scrotey.stormlight.breathing;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.particle.ModParticles;
+import com.scrotey.stormlight.progression.RadiantLevel;
+import com.scrotey.stormlight.progression.RadiantProgression;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -69,6 +71,7 @@ public final class StormlightManager {
                     ServerPlayer player = handler.getPlayer();
 
                     LAST_SENT_STATUS.remove(player.getUUID());
+                    RadiantProgression.clampReserve(player);
                     sendStatus(player);
                 }
         );
@@ -89,6 +92,18 @@ public final class StormlightManager {
             return;
         }
 
+        int capacity = RadiantProgression.getStormlightCapacity(player);
+
+        if (capacity <= 0) {
+            sendBreatheWarning(
+                    player,
+                    Component.translatable(
+                            "message.stormlight.breathe.no_order"
+                    )
+            );
+            return;
+        }
+
         if (!ModAttachments.hasEquippedPouch(player)) {
             sendBreatheWarning(
                     player,
@@ -99,7 +114,7 @@ public final class StormlightManager {
             return;
         }
 
-        int room = ModAttachments.MAX_PERSONAL_STORMLIGHT
+        int room = capacity
                 - ModAttachments.getPersonalStormlight(player);
 
         if (room <= 0) {
@@ -144,7 +159,7 @@ public final class StormlightManager {
         boolean syncNow = gameTime % STATUS_SYNC_INTERVAL_TICKS == 0L;
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            int reserve = ModAttachments.getPersonalStormlight(player);
+            int reserve = RadiantProgression.clampReserve(player);
 
             if (reserve > 0 && player.isAlive() && !player.isSpectator()) {
                 if (gameTime % EFFECT_REFRESH_INTERVAL_TICKS == 0L) {
@@ -186,19 +201,36 @@ public final class StormlightManager {
     }
 
     private static void applyEffects(ServerPlayer player) {
-        addHiddenEffect(player, MobEffects.SPEED);
-        addHiddenEffect(player, MobEffects.STRENGTH);
+        RadiantProgression.getLevelDefinition(player)
+                .ifPresent(level -> applyLevelEffects(player, level));
+    }
+
+    private static void applyLevelEffects(
+            ServerPlayer player,
+            RadiantLevel level
+    ) {
+        addHiddenEffect(
+                player,
+                MobEffects.SPEED,
+                level.speedAmplifier()
+        );
+        addHiddenEffect(
+                player,
+                MobEffects.STRENGTH,
+                level.strengthAmplifier()
+        );
     }
 
     private static void addHiddenEffect(
             ServerPlayer player,
-            Holder<MobEffect> effect
+            Holder<MobEffect> effect,
+            int amplifier
     ) {
         player.addEffect(
                 new MobEffectInstance(
                         effect,
                         EFFECT_DURATION_TICKS,
-                        1,
+                        amplifier,
                         true,
                         false,
                         false
@@ -288,6 +320,11 @@ public final class StormlightManager {
         LAST_SENT_STATUS.put(player.getUUID(), payload);
     }
 
+    public static void refreshStatus(ServerPlayer player) {
+        RadiantProgression.clampReserve(player);
+        sendStatus(player);
+    }
+
     private static void syncStatusIfChanged(ServerPlayer player) {
         StormlightStatusPayload payload = createStatus(player);
         StormlightStatusPayload previous =
@@ -304,7 +341,7 @@ public final class StormlightManager {
     ) {
         return new StormlightStatusPayload(
                 ModAttachments.getPersonalStormlight(player),
-                ModAttachments.MAX_PERSONAL_STORMLIGHT
+                RadiantProgression.getStormlightCapacity(player)
         );
     }
 }

@@ -12,6 +12,8 @@ import com.scrotey.stormlight.network.ModNetworking;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.particle.ModParticles;
+import com.scrotey.stormlight.progression.RadiantLecternInteraction;
+import com.scrotey.stormlight.progression.RadiantProgression;
 import com.scrotey.stormlight.highstorm.SphereDecayManager;
 import com.scrotey.stormlight.worldgen.ModWorldGeneration;
 
@@ -28,6 +30,7 @@ public class Stormlight implements ModInitializer {
     public void onInitialize() {
         ModComponents.initialize();
         ModItems.initialize();
+        RadiantProgression.initialize();
         ModAttachments.initialize();
         ModBlocks.initialize();
         ModWorldGeneration.initialize();
@@ -35,6 +38,7 @@ public class Stormlight implements ModInitializer {
         ModMenuTypes.initialize();
         ModRecipes.initialize();
         ModNetworking.initialize();
+        RadiantLecternInteraction.initialize();
         ModParticles.initialize();
         HighstormManager.initialize();
         SphereDecayManager.initialize();

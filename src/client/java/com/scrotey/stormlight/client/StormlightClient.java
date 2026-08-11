@@ -18,6 +18,8 @@ import com.scrotey.stormlight.client.highstorm.ClientHighstormWind;
 import com.scrotey.stormlight.client.highstorm.HighstormLeafParticle;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
+import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
+import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
 
 import java.util.function.Supplier;
 
@@ -93,6 +95,14 @@ public class StormlightClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(
                 StormlightStatusPayload.TYPE,
                 (payload, context) -> StormlightHud.update(payload)
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                OpenRadiantProgressionPayload.TYPE,
+                (payload, context) ->
+                        context.client().gui.setScreen(
+                                new RadiantProgressionScreen(payload)
+                        )
         );
 
         ClientPlayNetworking.registerGlobalReceiver(

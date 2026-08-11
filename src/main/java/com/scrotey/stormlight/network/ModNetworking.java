@@ -3,6 +3,7 @@ package com.scrotey.stormlight.network;
 import com.scrotey.stormlight.breathing.StormlightManager;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.item.SpherePouchItem;
+import com.scrotey.stormlight.progression.RadiantLecternInteraction;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +26,16 @@ public final class ModNetworking {
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
+                OpenRadiantProgressionPayload.TYPE,
+                OpenRadiantProgressionPayload.CODEC
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                ChooseRadiantOrderPayload.TYPE,
+                ChooseRadiantOrderPayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
                 HighstormVisualPayload.TYPE,
                 HighstormVisualPayload.CODEC
         );
@@ -39,6 +50,15 @@ public final class ModNetworking {
                 (payload, context) ->
                         StormlightManager.breathe(
                                 context.player()
+                        )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                ChooseRadiantOrderPayload.TYPE,
+                (payload, context) ->
+                        RadiantLecternInteraction.chooseOrder(
+                                context.player(),
+                                payload
                         )
         );
 

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:amethyst_shard"
+  ],
+  "result": {
+    "id": "stormlight:words_of_radiance",
+    "count": 1
+  }
+}

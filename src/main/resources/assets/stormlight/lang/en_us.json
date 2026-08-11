@@ -7,6 +7,8 @@
   "message.stormlight.breathe.no_charge": "Your pouch contains no Stormlight",
   "message.stormlight.breathe.full": "You are already full of Stormlight",
   "message.stormlight.breathe.success": "Breathed in %s Stormlight",
+  "message.stormlight.breathe.no_order": "Begin your Radiant journey at The Words of Radiance",
+  "message.stormlight.order.chosen": "You have chosen the order of the %s",
 
   "container.stormlight.sphere_pouch": "Sphere Pouch",
 
@@ -14,6 +16,18 @@
   "button.stormlight.inventory": "Inventory",
 
   "item.stormlight.sphere_pouch": "Sphere Pouch",
+  "item.stormlight.words_of_radiance": "The Words of Radiance",
+
+  "order.stormlight.windrunner": "Windrunner",
+  "screen.stormlight.radiant.title": "The Words of Radiance",
+  "screen.stormlight.radiant.choose_order": "Choose Your Order",
+  "screen.stormlight.radiant.choice_warning": "Your choice is permanent",
+  "screen.stormlight.radiant.windrunner_preview": "Speed, strength and a deeper bond with Stormlight",
+  "screen.stormlight.radiant.level": "Order Level %s",
+  "screen.stormlight.radiant.level_one_bonuses": "100 Stormlight capacity  •  Speed I  •  Strength I",
+  "screen.stormlight.radiant.future_levels": "Further levels are not yet unlocked",
+  "button.stormlight.choose_windrunner": "Choose Windrunner",
+  "button.stormlight.choosing": "Choosing...",
 
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",

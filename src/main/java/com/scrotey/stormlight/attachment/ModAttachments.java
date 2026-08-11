@@ -22,7 +22,11 @@ import net.minecraft.world.level.gamerules.GameRules;
 import java.util.List;
 
 public final class ModAttachments {
-    public static final int MAX_PERSONAL_STORMLIGHT = 1000;
+    /**
+     * Serialization safety ceiling. The player's real capacity is supplied
+     * by their current Radiant order level.
+     */
+    public static final int PERSONAL_STORMLIGHT_STORAGE_LIMIT = 1_000_000;
 
     public static final AttachmentType<ItemStack>
             EQUIPPED_SPHERE_POUCH =
@@ -65,7 +69,7 @@ public final class ModAttachments {
                             .persistent(
                                     Codec.intRange(
                                             0,
-                                            MAX_PERSONAL_STORMLIGHT
+                                            PERSONAL_STORMLIGHT_STORAGE_LIMIT
                                     )
                             )
             );
@@ -212,7 +216,7 @@ public final class ModAttachments {
                                 PERSONAL_STORMLIGHT,
                                 0
                         ),
-                        MAX_PERSONAL_STORMLIGHT
+                        PERSONAL_STORMLIGHT_STORAGE_LIMIT
                 )
         );
     }
@@ -227,7 +231,7 @@ public final class ModAttachments {
                         0,
                         Math.min(
                                 amount,
-                                MAX_PERSONAL_STORMLIGHT
+                                PERSONAL_STORMLIGHT_STORAGE_LIMIT
                         )
                 )
         );
