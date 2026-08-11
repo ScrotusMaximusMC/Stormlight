@@ -187,7 +187,7 @@ public final class StormfrontCloudRenderer {
                 StormfrontCloudRenderer::extract
         );
 
-        LevelRenderEvents.AFTER_TRANSLUCENT_TERRAIN.register(
+        LevelRenderEvents.BEFORE_TRANSLUCENT_TERRAIN.register(
                 StormfrontCloudRenderer::renderAndDraw
         );
     }
