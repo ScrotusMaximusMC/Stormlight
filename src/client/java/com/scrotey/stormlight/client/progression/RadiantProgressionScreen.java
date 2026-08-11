@@ -12,19 +12,33 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public final class RadiantProgressionScreen extends Screen {
-    private static final int PANEL_WIDTH = 320;
-    private static final int PANEL_HEIGHT = 210;
+    private static final int MIN_PANEL_WIDTH = 390;
+    private static final int MAX_PANEL_WIDTH = 680;
+    private static final int MIN_PANEL_HEIGHT = 250;
+    private static final int MAX_PANEL_HEIGHT = 410;
 
-    private static final int BACKDROP = 0xD806101B;
-    private static final int PANEL_EDGE = 0xFF17384A;
-    private static final int PANEL_INNER = 0xF00A1E2C;
-    private static final int CYAN = 0xFF8DEBFF;
-    private static final int WHITE = 0xFFF1FCFF;
-    private static final int MUTED = 0xFF8DA8B5;
-    private static final int LOCKED = 0xFF40515A;
+    private static final int BACKDROP = 0xD80A0806;
+    private static final int SHADOW = 0xB0000000;
+    private static final int LEATHER_DARK = 0xFF3A2418;
+    private static final int LEATHER = 0xFF62402A;
+    private static final int PAGE_EDGE = 0xFF8A673D;
+    private static final int PARCHMENT_DARK = 0xFFD0AD70;
+    private static final int PARCHMENT = 0xFFE4C98E;
+    private static final int PARCHMENT_LIGHT = 0xFFF0DBA6;
+    private static final int STAIN = 0x39734A25;
+    private static final int INK = 0xFF302219;
+    private static final int MUTED_INK = 0xFF705B42;
+    private static final int WINDRUNNER_BLUE = 0xFF276E83;
+    private static final int WINDRUNNER_PALE = 0xFF8FC6CF;
+    private static final int LOCKED = 0xFF8B775B;
 
     private final OpenRadiantProgressionPayload state;
     private boolean choosing;
+
+    private int panelWidth;
+    private int panelHeight;
+    private int panelLeft;
+    private int panelTop;
 
     public RadiantProgressionScreen(
             OpenRadiantProgressionPayload state
@@ -35,8 +49,16 @@ public final class RadiantProgressionScreen extends Screen {
 
     @Override
     protected void init() {
+        panelWidth = clamp((int) (width * 0.62F), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH);
+        panelHeight = clamp((int) (height * 0.62F), MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT);
+
+        // Leave a small safety margin for low resolutions and large GUI scales.
+        panelWidth = Math.min(panelWidth, width - 24);
+        panelHeight = Math.min(panelHeight, height - 20);
+        panelLeft = (width - panelWidth) / 2;
+        panelTop = (height - panelHeight) / 2;
+
         int centreX = width / 2;
-        int panelTop = (height - PANEL_HEIGHT) / 2;
 
         if (state.orderNetworkId()
                 == RadiantOrderRegistry.NO_ORDER_NETWORK_ID) {
@@ -45,12 +67,12 @@ public final class RadiantProgressionScreen extends Screen {
                             Component.translatable(
                                     "button.stormlight.choose_windrunner"
                             ),
-                            button -> chooseWindrunner(button)
+                            this::chooseWindrunner
                     ).bounds(
-                            centreX - 80,
-                            panelTop + 122,
-                            160,
-                            20
+                            centreX - 105,
+                            panelTop + panelHeight - 73,
+                            210,
+                            24
                     ).build()
             );
         }
@@ -60,9 +82,9 @@ public final class RadiantProgressionScreen extends Screen {
                         Component.translatable("gui.done"),
                         button -> onClose()
                 ).bounds(
-                        centreX - 40,
-                        panelTop + PANEL_HEIGHT - 28,
-                        80,
+                        centreX - 45,
+                        panelTop + panelHeight - 35,
+                        90,
                         20
                 ).build()
         );
@@ -94,144 +116,213 @@ public final class RadiantProgressionScreen extends Screen {
             int mouseY,
             float delta
     ) {
-        int left = (width - PANEL_WIDTH) / 2;
-        int top = (height - PANEL_HEIGHT) / 2;
-
-        graphics.fill(0, 0, width, height, BACKDROP);
-        graphics.fill(
-                left - 2,
-                top - 2,
-                left + PANEL_WIDTH + 2,
-                top + PANEL_HEIGHT + 2,
-                0xFF02080D
-        );
-        graphics.fill(
-                left,
-                top,
-                left + PANEL_WIDTH,
-                top + PANEL_HEIGHT,
-                PANEL_EDGE
-        );
-        graphics.fill(
-                left + 3,
-                top + 3,
-                left + PANEL_WIDTH - 3,
-                top + PANEL_HEIGHT - 3,
-                PANEL_INNER
-        );
-
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        drawParchmentBook(graphics);
 
         drawCentered(
                 graphics,
                 Component.translatable("screen.stormlight.radiant.title"),
                 width / 2,
-                top + 13,
-                WHITE
+                panelTop + 18,
+                INK
         );
 
-        graphics.fill(
-                left + 42,
-                top + 29,
-                left + PANEL_WIDTH - 42,
-                top + 30,
-                CYAN
-        );
+        drawOrnament(graphics, panelTop + 34);
 
         if (state.orderNetworkId()
                 == RadiantOrderRegistry.NO_ORDER_NETWORK_ID) {
-            drawOrderSelection(graphics, left, top);
+            drawOrderSelection(graphics, mouseX, mouseY);
         } else {
-            drawSkillTree(graphics, left, top);
+            drawSkillTree(graphics);
         }
+
+        // Widgets must be extracted last. Previously the parchment card was
+        // painted over the Windrunner button, leaving an invisible hitbox.
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    }
+
+    private void drawParchmentBook(GuiGraphicsExtractor graphics) {
+        graphics.fill(0, 0, width, height, BACKDROP);
+
+        graphics.fill(
+                panelLeft + 7,
+                panelTop + 8,
+                panelLeft + panelWidth + 9,
+                panelTop + panelHeight + 10,
+                SHADOW
+        );
+        graphics.fill(
+                panelLeft - 5,
+                panelTop - 5,
+                panelLeft + panelWidth + 5,
+                panelTop + panelHeight + 5,
+                LEATHER_DARK
+        );
+        graphics.fill(
+                panelLeft - 2,
+                panelTop - 2,
+                panelLeft + panelWidth + 2,
+                panelTop + panelHeight + 2,
+                LEATHER
+        );
+        graphics.fill(
+                panelLeft,
+                panelTop,
+                panelLeft + panelWidth,
+                panelTop + panelHeight,
+                PAGE_EDGE
+        );
+        graphics.fill(
+                panelLeft + 4,
+                panelTop + 4,
+                panelLeft + panelWidth - 4,
+                panelTop + panelHeight - 4,
+                PARCHMENT
+        );
+        graphics.fill(
+                panelLeft + 11,
+                panelTop + 9,
+                panelLeft + panelWidth - 11,
+                panelTop + panelHeight - 9,
+                PARCHMENT_LIGHT
+        );
+
+        // Uneven aged edges and faded stains make the panel read as paper
+        // without requiring a large screen texture.
+        graphics.fill(panelLeft + 11, panelTop + 9,
+                panelLeft + 15, panelTop + panelHeight - 9, PARCHMENT_DARK);
+        graphics.fill(panelLeft + panelWidth - 15, panelTop + 9,
+                panelLeft + panelWidth - 11, panelTop + panelHeight - 9, PARCHMENT_DARK);
+        graphics.fill(panelLeft + 15, panelTop + 9,
+                panelLeft + panelWidth - 15, panelTop + 12, PARCHMENT_DARK);
+        graphics.fill(panelLeft + 15, panelTop + panelHeight - 12,
+                panelLeft + panelWidth - 15, panelTop + panelHeight - 9, PARCHMENT_DARK);
+
+        graphics.fill(panelLeft + 17, panelTop + 15,
+                panelLeft + 55, panelTop + 19, STAIN);
+        graphics.fill(panelLeft + 21, panelTop + 19,
+                panelLeft + 42, panelTop + 22, STAIN);
+        graphics.fill(panelLeft + panelWidth - 61, panelTop + panelHeight - 22,
+                panelLeft + panelWidth - 18, panelTop + panelHeight - 16, STAIN);
+
+        int bindingX = width / 2;
+        graphics.fill(bindingX - 3, panelTop + 5,
+                bindingX + 3, panelTop + panelHeight - 5, 0x50553A24);
+        graphics.fill(bindingX - 1, panelTop + 7,
+                bindingX + 1, panelTop + panelHeight - 7, 0x606F5030);
+    }
+
+    private void drawOrnament(
+            GuiGraphicsExtractor graphics,
+            int y
+    ) {
+        int centreX = width / 2;
+        int halfWidth = Math.min(135, panelWidth / 3);
+        graphics.fill(centreX - halfWidth, y,
+                centreX - 8, y + 1, MUTED_INK);
+        graphics.fill(centreX + 8, y,
+                centreX + halfWidth, y + 1, MUTED_INK);
+        graphics.fill(centreX - 3, y - 2,
+                centreX + 3, y + 4, WINDRUNNER_BLUE);
+        graphics.fill(centreX - 1, y,
+                centreX + 1, y + 2, PARCHMENT_LIGHT);
     }
 
     private void drawOrderSelection(
             GuiGraphicsExtractor graphics,
-            int left,
-            int top
+            int mouseX,
+            int mouseY
     ) {
+        int centreX = width / 2;
         drawCentered(
                 graphics,
                 Component.translatable(
                         "screen.stormlight.radiant.choose_order"
                 ),
-                width / 2,
-                top + 43,
-                CYAN
+                centreX,
+                panelTop + 50,
+                WINDRUNNER_BLUE
         );
         drawCentered(
                 graphics,
                 Component.translatable(
                         "screen.stormlight.radiant.choice_warning"
                 ),
-                width / 2,
-                top + 61,
-                MUTED
+                centreX,
+                panelTop + 68,
+                MUTED_INK
         );
 
-        int cardLeft = left + 74;
-        int cardTop = top + 78;
-        int cardRight = left + PANEL_WIDTH - 74;
-        int cardBottom = top + 150;
+        int cardWidth = Math.min(330, panelWidth - 90);
+        int cardHeight = Math.max(92, panelHeight - 150);
+        int cardLeft = centreX - cardWidth / 2;
+        int cardTop = panelTop + 84;
+        int cardRight = cardLeft + cardWidth;
+        int cardBottom = Math.min(
+                cardTop + cardHeight,
+                panelTop + panelHeight - 82
+        );
+        boolean hovered = mouseX >= cardLeft && mouseX < cardRight
+                && mouseY >= cardTop && mouseY < cardBottom;
 
-        graphics.fill(
-                cardLeft,
-                cardTop,
-                cardRight,
-                cardBottom,
-                0xFF071722
-        );
-        graphics.fill(
-                cardLeft + 1,
-                cardTop + 1,
-                cardRight - 1,
-                cardTop + 3,
-                CYAN
-        );
+        graphics.fill(cardLeft - 2, cardTop - 2,
+                cardRight + 2, cardBottom + 2, WINDRUNNER_BLUE);
+        graphics.fill(cardLeft, cardTop,
+                cardRight, cardBottom,
+                hovered ? 0xFFE0CEA0 : 0xFFD6BE88);
+        graphics.fill(cardLeft + 5, cardTop + 5,
+                cardRight - 5, cardBottom - 5, 0x55FFF0C6);
+
+        // Simple windswept glyph, kept abstract and spoiler-safe.
+        int glyphY = cardTop + 16;
+        graphics.fill(centreX - 29, glyphY,
+                centreX + 29, glyphY + 2, WINDRUNNER_BLUE);
+        graphics.fill(centreX - 20, glyphY + 6,
+                centreX + 20, glyphY + 8, WINDRUNNER_BLUE);
+        graphics.fill(centreX - 10, glyphY + 12,
+                centreX + 10, glyphY + 14, WINDRUNNER_BLUE);
 
         drawCentered(
                 graphics,
                 Component.translatable("order.stormlight.windrunner"),
-                width / 2,
-                cardTop + 14,
-                WHITE
+                centreX,
+                glyphY + 25,
+                INK
         );
         drawCentered(
                 graphics,
                 Component.translatable(
                         "screen.stormlight.radiant.windrunner_preview"
                 ),
-                width / 2,
-                cardTop + 30,
-                MUTED
+                centreX,
+                glyphY + 43,
+                MUTED_INK
         );
     }
 
-    private void drawSkillTree(
-            GuiGraphicsExtractor graphics,
-            int left,
-            int top
-    ) {
+    private void drawSkillTree(GuiGraphicsExtractor graphics) {
         RadiantOrder order = RadiantOrderRegistry
                 .byNetworkId(state.orderNetworkId())
                 .orElse(RadiantOrderRegistry.WINDRUNNER);
+        int centreX = width / 2;
 
         drawCentered(
                 graphics,
                 Component.translatable(order.translationKey()),
-                width / 2,
-                top + 41,
-                order.colour()
+                centreX,
+                panelTop + 51,
+                WINDRUNNER_BLUE
         );
 
-        int lineY = top + 94;
-        graphics.fill(left + 66, lineY, left + 254, lineY + 2, LOCKED);
-        graphics.fill(left + 66, lineY, left + 160, lineY + 2, CYAN);
+        int nodeY = panelTop + Math.max(105, panelHeight / 2 - 18);
+        int spacing = Math.min(120, panelWidth / 5);
+        graphics.fill(centreX - spacing, nodeY - 1,
+                centreX + spacing, nodeY + 2, LOCKED);
+        graphics.fill(centreX - spacing, nodeY - 1,
+                centreX, nodeY + 2, WINDRUNNER_BLUE);
 
-        drawNode(graphics, left + 63, top + 77, true, "1");
-        drawNode(graphics, left + 151, top + 77, false, "2");
-        drawNode(graphics, left + 239, top + 77, false, "3");
+        drawNode(graphics, centreX - spacing, nodeY, true, "1");
+        drawNode(graphics, centreX, nodeY, false, "2");
+        drawNode(graphics, centreX + spacing, nodeY, false, "3");
 
         drawCentered(
                 graphics,
@@ -239,27 +330,27 @@ public final class RadiantProgressionScreen extends Screen {
                         "screen.stormlight.radiant.level",
                         state.level()
                 ),
-                width / 2,
-                top + 114,
-                WHITE
+                centreX,
+                nodeY + 35,
+                INK
         );
         drawCentered(
                 graphics,
                 Component.translatable(
                         "screen.stormlight.radiant.level_one_bonuses"
                 ),
-                width / 2,
-                top + 132,
-                CYAN
+                centreX,
+                nodeY + 54,
+                WINDRUNNER_BLUE
         );
         drawCentered(
                 graphics,
                 Component.translatable(
                         "screen.stormlight.radiant.future_levels"
                 ),
-                width / 2,
-                top + 150,
-                MUTED
+                centreX,
+                nodeY + 72,
+                MUTED_INK
         );
     }
 
@@ -270,30 +361,22 @@ public final class RadiantProgressionScreen extends Screen {
             boolean unlocked,
             String label
     ) {
-        int outer = unlocked ? CYAN : LOCKED;
-        int inner = unlocked ? 0xFF17465D : 0xFF152029;
+        int outer = unlocked ? WINDRUNNER_BLUE : LOCKED;
+        int inner = unlocked ? WINDRUNNER_PALE : PARCHMENT_DARK;
 
-        graphics.fill(
-                centreX - 13,
-                centreY - 13,
-                centreX + 13,
-                centreY + 13,
-                outer
-        );
-        graphics.fill(
-                centreX - 10,
-                centreY - 10,
-                centreX + 10,
-                centreY + 10,
-                inner
-        );
+        graphics.fill(centreX - 16, centreY - 16,
+                centreX + 16, centreY + 16, outer);
+        graphics.fill(centreX - 12, centreY - 12,
+                centreX + 12, centreY + 12, inner);
+        graphics.fill(centreX - 9, centreY - 9,
+                centreX + 9, centreY + 9, PARCHMENT_LIGHT);
 
         drawCentered(
                 graphics,
                 Component.literal(label),
                 centreX,
                 centreY - 4,
-                unlocked ? WHITE : MUTED
+                unlocked ? INK : MUTED_INK
         );
     }
 
@@ -310,8 +393,12 @@ public final class RadiantProgressionScreen extends Screen {
                 centreX - font.width(text) / 2,
                 y,
                 colour,
-                true
+                false
         );
+    }
+
+    private static int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     @Override
