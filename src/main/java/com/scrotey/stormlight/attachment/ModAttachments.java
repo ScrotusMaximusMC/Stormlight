@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -21,6 +22,8 @@ import net.minecraft.world.level.gamerules.GameRules;
 import java.util.List;
 
 public final class ModAttachments {
+    public static final int MAX_PERSONAL_STORMLIGHT = 1000;
+
     public static final AttachmentType<ItemStack>
             EQUIPPED_SPHERE_POUCH =
             AttachmentRegistry.<ItemStack>create(
@@ -50,6 +53,20 @@ public final class ModAttachments {
                             .syncWith(
                                     ItemContainerContents.STREAM_CODEC,
                                     AttachmentSyncPredicate.targetOnly()
+                            )
+            );
+
+    public static final AttachmentType<Integer>
+            PERSONAL_STORMLIGHT =
+            AttachmentRegistry.<Integer>create(
+                    Stormlight.id("personal_stormlight"),
+                    builder -> builder
+                            .initializer(() -> 0)
+                            .persistent(
+                                    Codec.intRange(
+                                            0,
+                                            MAX_PERSONAL_STORMLIGHT
+                                    )
                             )
             );
 
@@ -185,12 +202,45 @@ public final class ModAttachments {
         }
     }
 
+    public static int getPersonalStormlight(
+            Player player
+    ) {
+        return Math.max(
+                0,
+                Math.min(
+                        player.getAttachedOrElse(
+                                PERSONAL_STORMLIGHT,
+                                0
+                        ),
+                        MAX_PERSONAL_STORMLIGHT
+                )
+        );
+    }
+
+    public static void setPersonalStormlight(
+            Player player,
+            int amount
+    ) {
+        player.setAttached(
+                PERSONAL_STORMLIGHT,
+                Math.max(
+                        0,
+                        Math.min(
+                                amount,
+                                MAX_PERSONAL_STORMLIGHT
+                        )
+                )
+        );
+    }
+
     public static void initialize() {
         ServerLivingEntityEvents.AFTER_DEATH.register(
                 (entity, damageSource) -> {
                     if (!(entity instanceof ServerPlayer player)) {
                         return;
                     }
+
+                    setPersonalStormlight(player, 0);
 
                     boolean keepInventory =
                             player.level()

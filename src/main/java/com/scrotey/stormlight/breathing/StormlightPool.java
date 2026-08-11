@@ -65,6 +65,13 @@ public final class StormlightPool {
             ServerPlayer player,
             int amount
     ) {
+        return drainSpheres(player, amount);
+    }
+
+    public static int drainSpheres(
+            ServerPlayer player,
+            int amount
+    ) {
         if (amount <= 0) {
             return 0;
         }
@@ -144,6 +151,29 @@ public final class StormlightPool {
             NEXT_DRAIN_SLOT.put(
                     player.getUUID(),
                     nextSlot
+            );
+        }
+
+        return drained;
+    }
+
+    public static int drainReserve(
+            ServerPlayer player,
+            int amount
+    ) {
+        if (amount <= 0) {
+            return 0;
+        }
+
+        int reserve =
+                ModAttachments.getPersonalStormlight(player);
+
+        int drained = Math.min(reserve, amount);
+
+        if (drained > 0) {
+            ModAttachments.setPersonalStormlight(
+                    player,
+                    reserve - drained
             );
         }
 

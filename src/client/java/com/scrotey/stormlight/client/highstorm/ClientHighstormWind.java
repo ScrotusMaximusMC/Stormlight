@@ -3,6 +3,8 @@ package com.scrotey.stormlight.client.highstorm;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class ClientHighstormWind {
@@ -52,9 +54,7 @@ public final class ClientHighstormWind {
         float intensity = getWindIntensity();
 
         if (intensity <= 0.0F
-                || !client.level.canSeeSky(
-                        player.blockPosition().above()
-                )) {
+                || !isOpenToStorm(client, player)) {
             return;
         }
 
@@ -102,6 +102,28 @@ public final class ClientHighstormWind {
                     movement.add(-appliedAcceleration, 0.0, 0.0)
             );
         }
+    }
+
+    private static boolean isOpenToStorm(
+            Minecraft client,
+            LocalPlayer player
+    ) {
+        Vec3 start = player.getEyePosition();
+        Vec3 sky = new Vec3(
+                start.x,
+                client.level.getMaxY() + 1.0,
+                start.z
+        );
+
+        return client.level.clip(
+                new ClipContext(
+                        start,
+                        sky,
+                        ClipContext.Block.COLLIDER,
+                        ClipContext.Fluid.NONE,
+                        player
+                )
+        ).getType() == HitResult.Type.MISS;
     }
 
     private static float getWindIntensity() {

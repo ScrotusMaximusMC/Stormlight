@@ -15,8 +15,8 @@ public final class ModNetworking {
 
     public static void initialize() {
         PayloadTypeRegistry.serverboundPlay().register(
-                AbilityInputPayload.TYPE,
-                AbilityInputPayload.CODEC
+                BreatheStormlightPayload.TYPE,
+                BreatheStormlightPayload.CODEC
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
@@ -35,12 +35,10 @@ public final class ModNetworking {
         );
 
         ServerPlayNetworking.registerGlobalReceiver(
-                AbilityInputPayload.TYPE,
+                BreatheStormlightPayload.TYPE,
                 (payload, context) ->
-                        StormlightManager.handleInput(
-                                context.player(),
-                                payload.ability(),
-                                payload.action()
+                        StormlightManager.breathe(
+                                context.player()
                         )
         );
 

@@ -3,8 +3,7 @@ package com.scrotey.stormlight.client;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import com.scrotey.stormlight.Stormlight;
-import com.scrotey.stormlight.breathing.AbilityId;
-import com.scrotey.stormlight.network.AbilityInputPayload;
+import com.scrotey.stormlight.network.BreatheStormlightPayload;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.screen.SphereJarScreen;
@@ -45,7 +44,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 public class StormlightClient implements ClientModInitializer {
-    private static final int HOLD_THRESHOLD_TICKS = 8;
     private static final int SLOT_DARK_EDGE = 0xFF06131F;
     private static final int SLOT_BACKGROUND = 0xFF102B3D;
     private static final int SLOT_LIGHT_EDGE = 0xFF6DE8FF;
@@ -67,9 +65,6 @@ public class StormlightClient implements ClientModInitializer {
                             STORMLIGHT_CATEGORY
                     )
             );
-
-    private static int heldTicks = 0;
-    private static boolean holdActivated = false;
 
     @Override
     public void onInitializeClient() {
@@ -121,38 +116,23 @@ public class StormlightClient implements ClientModInitializer {
         ClientHighstormState.tick(client);
         ApproachingStormfrontEffects.tick(client);
         ClientHighstormWind.tick(client);
-
         if (client.player == null) {
-            heldTicks = 0;
-            holdActivated = false;
             return;
         }
 
-        boolean down = BREATHE_STORMLIGHT_KEY.isDown() && client.gui.screen() == null;
-
-        if (down) {
-            heldTicks++;
-
-            if (!holdActivated && heldTicks == HOLD_THRESHOLD_TICKS) {
-                holdActivated = true;
-                send(AbilityId.EMERGENCY_HEAL, AbilityInputPayload.Action.START);
-            }
-        } else {
-            if (heldTicks > 0) {
-                if (holdActivated) {
-                    send(AbilityId.EMERGENCY_HEAL, AbilityInputPayload.Action.STOP);
-                } else if (heldTicks < HOLD_THRESHOLD_TICKS) {
-                    send(AbilityId.STRENGTH_SURGE, AbilityInputPayload.Action.TOGGLE);
-                }
-            }
-
-            heldTicks = 0;
-            holdActivated = false;
-        }
+        boolean breathing =
+                BREATHE_STORMLIGHT_KEY.isDown()
+                        && client.gui.screen() == null;
 
         while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
-            // Drain the click queue defensively; tap/hold logic above
-            // uses isDown() polling, not consumeClick().
+            // Drain the click queue. Breathing is controlled by the
+            // key's held state instead of individual key presses.
+        }
+
+        if (breathing) {
+            ClientPlayNetworking.send(
+                    BreatheStormlightPayload.INSTANCE
+            );
         }
     }
 
@@ -477,7 +457,4 @@ public class StormlightClient implements ClientModInitializer {
         );
     }
 
-    private static void send(AbilityId ability, AbilityInputPayload.Action action) {
-        ClientPlayNetworking.send(new AbilityInputPayload(ability, action));
-    }
 }

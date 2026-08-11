@@ -1,12 +1,9 @@
 package com.scrotey.stormlight.client;
 
-import com.scrotey.stormlight.breathing.AbilityId;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-
-import java.util.EnumSet;
 
 public final class StormlightHud {
     private static final int BAR_WIDTH = 81;
@@ -17,29 +14,15 @@ public final class StormlightHud {
     private static final int EMPTY_COLOUR = 0xCC102638;
     private static final int TEXT_COLOUR = 0xFFFFFFFF;
 
-    private static int charge;
+    private static int reserve;
     private static int capacity;
-    private static EnumSet<AbilityId> activeAbilities = EnumSet.noneOf(AbilityId.class);
 
     private StormlightHud() {
     }
 
     public static void update(StormlightStatusPayload payload) {
-        charge = Math.max(0, payload.charge());
+        reserve = Math.max(0, payload.reserve());
         capacity = Math.max(0, payload.capacity());
-        activeAbilities = decode(payload.activeAbilitiesMask());
-    }
-
-    private static EnumSet<AbilityId> decode(int mask) {
-        EnumSet<AbilityId> abilities = EnumSet.noneOf(AbilityId.class);
-
-        for (AbilityId id : AbilityId.values()) {
-            if ((mask & (1 << id.ordinal())) != 0) {
-                abilities.add(id);
-            }
-        }
-
-        return abilities;
     }
 
     public static void render(
@@ -49,7 +32,8 @@ public final class StormlightHud {
         Minecraft client = Minecraft.getInstance();
 
         if (client.player == null
-                || capacity <= 0) {
+                || capacity <= 0
+                || reserve <= 0) {
             return;
         }
 
@@ -61,12 +45,12 @@ public final class StormlightHud {
 
         double fullness = Math.min(
                 1.0,
-                charge / (double) capacity
+                reserve / (double) capacity
         );
 
         int filledWidth = (int) Math.floor(INNER_WIDTH * fullness);
 
-        if (charge > 0 && filledWidth == 0) {
+        if (reserve > 0 && filledWidth == 0) {
             filledWidth = 1;
         }
 
@@ -92,11 +76,13 @@ public final class StormlightHud {
                     y + 1,
                     x + 1 + filledWidth,
                     y + BAR_HEIGHT - 1,
-                    colourForCapacity(capacity)
+                    0xFFC8F7FF
             );
         }
 
-        Component label = Component.literal(statusLabel());
+        Component label = Component.literal(
+                "Stormlight " + reserve + " / " + capacity
+        );
 
         int textX = x + (BAR_WIDTH - client.font.width(label)) / 2;
 
@@ -110,42 +96,4 @@ public final class StormlightHud {
         );
     }
 
-    private static String statusLabel() {
-        boolean surging = activeAbilities.contains(AbilityId.STRENGTH_SURGE);
-        boolean healing = activeAbilities.contains(AbilityId.EMERGENCY_HEAL);
-
-        if (surging && healing) {
-            return "Surging + Healing";
-        }
-
-        if (healing) {
-            return "Healing";
-        }
-
-        if (surging) {
-            return "Surging";
-        }
-
-        return "";
-    }
-
-    private static int colourForCapacity(int totalCapacity) {
-        if (totalCapacity < 100) {
-            return 0xFF8FE7FF; // Pale blue
-        }
-
-        if (totalCapacity < 400) {
-            return 0xFF24D9FF; // Cyan
-        }
-
-        if (totalCapacity < 1000) {
-            return 0xFF2F8FFF; // Bright azure
-        }
-
-        if (totalCapacity < 2000) {
-            return 0xFFC8F7FF; // Blue-white
-        }
-
-        return 0xFFE8D8FF; // Radiant violet-white
-    }
 }

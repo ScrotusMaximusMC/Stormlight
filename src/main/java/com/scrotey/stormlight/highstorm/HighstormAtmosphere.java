@@ -11,7 +11,10 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 
 public final class HighstormAtmosphere {
@@ -435,7 +438,27 @@ public final class HighstormAtmosphere {
             ServerLevel level,
             LivingEntity entity
     ) {
-        return level.canSeeSky(entity.blockPosition().above());
+        Vec3 start = entity.getEyePosition();
+        Vec3 sky = new Vec3(
+                start.x,
+                level.getMaxY() + 1.0,
+                start.z
+        );
+
+        /*
+         * canSeeSky deliberately ignores transparent roofing such as glass.
+         * A Highstorm needs a physical-cover check instead: any collidable
+         * block between the entity and the sky shelters them from the gale.
+         */
+        return level.clip(
+                new ClipContext(
+                        start,
+                        sky,
+                        ClipContext.Block.COLLIDER,
+                        ClipContext.Fluid.NONE,
+                        entity
+                )
+        ).getType() == HitResult.Type.MISS;
     }
 
     private static float clamp(

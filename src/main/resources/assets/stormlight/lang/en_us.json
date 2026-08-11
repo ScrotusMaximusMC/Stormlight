@@ -3,6 +3,10 @@
   "message.stormlight.sphere_pouch.swapped": "Sphere Pouches swapped",
   "message.stormlight.sphere_pouch.none_equipped": "No Sphere Pouch equipped",
   "message.stormlight.sphere_pouch.invalid_item": "Only a Sphere Pouch can be equipped here",
+  "message.stormlight.breathe.no_pouch": "Equip a Sphere Pouch first",
+  "message.stormlight.breathe.no_charge": "Your pouch contains no Stormlight",
+  "message.stormlight.breathe.full": "You are already full of Stormlight",
+  "message.stormlight.breathe.success": "Breathed in %s Stormlight",
 
   "container.stormlight.sphere_pouch": "Sphere Pouch",
 
@@ -10,9 +14,6 @@
   "button.stormlight.inventory": "Inventory",
 
   "item.stormlight.sphere_pouch": "Sphere Pouch",
-
-  "block.stormlight.sphere_jar": "Sphere Jar",
-  "block.stormlight.sphere_lantern": "Sphere Lantern",
 
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
@@ -61,6 +62,8 @@
 
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
+
+  "block.stormlight.sphere_jar": "Sphere Jar",
 
   "tooltip.stormlight.sphere_pouch": "Unlocks your 16-slot Sphere Pouch inventory",
   "tooltip.stormlight.charge": "Stormlight: %s / %s"

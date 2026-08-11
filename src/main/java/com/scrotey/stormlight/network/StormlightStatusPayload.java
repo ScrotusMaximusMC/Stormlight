@@ -7,9 +7,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record StormlightStatusPayload(
-        int charge,
-        int capacity,
-        int activeAbilitiesMask
+        int reserve,
+        int capacity
 ) implements CustomPacketPayload {
 
     public static final Type<StormlightStatusPayload> TYPE =
@@ -20,11 +19,9 @@ public record StormlightStatusPayload(
             StormlightStatusPayload
             > CODEC = StreamCodec.composite(
                     ByteBufCodecs.VAR_INT,
-                    StormlightStatusPayload::charge,
+                    StormlightStatusPayload::reserve,
                     ByteBufCodecs.VAR_INT,
                     StormlightStatusPayload::capacity,
-                    ByteBufCodecs.VAR_INT,
-                    StormlightStatusPayload::activeAbilitiesMask,
                     StormlightStatusPayload::new
             );
 
