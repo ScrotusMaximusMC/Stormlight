@@ -1,6 +1,8 @@
 {
   "parent": "stormlight:block/sphere_lantern_core",
   "textures": {
-    "core": "stormlight:block/sphere_jar_emerald"
+    "core": "stormlight:block/sphere_lantern_core_emerald",
+    "halo": "stormlight:block/sphere_lantern_halo_emerald",
+    "white": "stormlight:block/sphere_lantern_white_core"
   }
 }

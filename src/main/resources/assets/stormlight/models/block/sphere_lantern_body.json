@@ -2,24 +2,31 @@
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "textures": {
-    "particle": "stormlight:block/sphere_jar_frame",
+    "particle": "stormlight:block/sphere_lantern_frame",
     "frame": "stormlight:block/sphere_lantern_frame",
-    "glass": "stormlight:block/sphere_jar_glass"
+    "glass": "stormlight:block/sphere_lantern_glass"
   },
   "elements": [
     {"from":[6,1,6],"to":[10,2,10],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[4.5,2,4.5],"to":[11.5,3,11.5],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,2.75,3.25],"to":[12.75,3.5,4.25],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,2.75,11.75],"to":[12.75,3.5,12.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,2.75,4.25],"to":[4.25,3.5,11.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[11.75,2.75,4.25],"to":[12.75,3.5,11.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[4,3,4],"to":[12,4,12],"faces":{"north":{"texture":"#glass"},"east":{"texture":"#glass"},"south":{"texture":"#glass"},"west":{"texture":"#glass"},"up":{"texture":"#glass"},"down":{"texture":"#glass"}}},
     {"from":[3.5,4,3.5],"to":[12.5,10,12.5],"faces":{"north":{"texture":"#glass"},"east":{"texture":"#glass"},"south":{"texture":"#glass"},"west":{"texture":"#glass"},"up":{"texture":"#glass"},"down":{"texture":"#glass"}}},
     {"from":[4,10,4],"to":[12,11,12],"faces":{"north":{"texture":"#glass"},"east":{"texture":"#glass"},"south":{"texture":"#glass"},"west":{"texture":"#glass"},"up":{"texture":"#glass"},"down":{"texture":"#glass"}}},
     {"from":[4.5,11,4.5],"to":[11.5,12,11.5],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,10.5,3.25],"to":[12.75,11.25,4.25],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,10.5,11.75],"to":[12.75,11.25,12.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[3.25,10.5,4.25],"to":[4.25,11.25,11.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
+    {"from":[11.75,10.5,4.25],"to":[12.75,11.25,11.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[6,12,6],"to":[10,13,10],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
 
     {"from":[3.25,3,3.25],"to":[4.25,11,4.25],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[11.75,3,3.25],"to":[12.75,11,4.25],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[3.25,3,11.75],"to":[4.25,11,12.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[11.75,3,11.75],"to":[12.75,11,12.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
-
     {"from":[7.625,3,3.25],"to":[8.375,11,4],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[7.625,3,12],"to":[8.375,11,12.75],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
     {"from":[3.25,3,7.625],"to":[4,11,8.375],"faces":{"north":{"texture":"#frame"},"east":{"texture":"#frame"},"south":{"texture":"#frame"},"west":{"texture":"#frame"},"up":{"texture":"#frame"},"down":{"texture":"#frame"}}},
