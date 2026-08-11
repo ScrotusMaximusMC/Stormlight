@@ -8,6 +8,7 @@ import com.scrotey.stormlight.screen.SpherePouchInventoryAccess;
 import com.scrotey.stormlight.screen.SpherePouchInventoryLayout;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -148,6 +149,22 @@ public abstract class InventoryMenuMixin
 
         boolean movingFromPouch = slotIsInPouch;
 
+        boolean equippingSpherePouch =
+                slotIndex >= STORMLIGHT$PLAYER_SLOT_START
+                        && slotIndex < STORMLIGHT$PLAYER_SLOT_END
+                        && slots.get(slotIndex).getItem()
+                        .getItem() instanceof SpherePouchItem;
+
+        if (equippingSpherePouch) {
+            stormlight$equipSpherePouch(
+                    player,
+                    slotIndex,
+                    callbackInfo
+            );
+
+            return;
+        }
+
         boolean movingSphereIntoPouch =
                 slotIndex >= STORMLIGHT$PLAYER_SLOT_START
                         && slotIndex
@@ -206,6 +223,64 @@ public abstract class InventoryMenuMixin
 
         slot.onTake(player, stack);
         stormlight$pouchContainer.setChanged();
+
+        callbackInfo.setReturnValue(original);
+    }
+
+    @Unique
+    private void stormlight$equipSpherePouch(
+            Player player,
+            int slotIndex,
+            CallbackInfoReturnable<ItemStack> callbackInfo
+    ) {
+        Slot slot = slots.get(slotIndex);
+
+        if (!slot.hasItem()) {
+            callbackInfo.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
+
+        ItemStack original = slot.getItem().copy();
+        ItemStack pouchToEquip = original.copy();
+        pouchToEquip.setCount(1);
+
+        ItemStack previouslyEquipped =
+                ModAttachments.getEquippedPouch(player);
+
+        ModAttachments.setEquippedPouch(
+                player,
+                pouchToEquip
+        );
+
+        if (previouslyEquipped.isEmpty()) {
+            slot.setByPlayer(
+                    ItemStack.EMPTY,
+                    original
+            );
+
+            player.sendOverlayMessage(
+                    Component.translatable(
+                            "message.stormlight."
+                                    + "sphere_pouch.equipped"
+                    )
+            );
+        } else {
+            slot.setByPlayer(
+                    previouslyEquipped,
+                    original
+            );
+
+            player.sendOverlayMessage(
+                    Component.translatable(
+                            "message.stormlight."
+                                    + "sphere_pouch.swapped"
+                    )
+            );
+        }
+
+        slot.setChanged();
+        stormlight$pouchContainer.setChanged();
+        broadcastChanges();
 
         callbackInfo.setReturnValue(original);
     }

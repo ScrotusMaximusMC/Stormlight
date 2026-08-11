@@ -24,21 +24,22 @@ public class SphereJarMenu
     private static final int JAR_SLOT_COUNT =
             SphereJarBlockEntity.TOTAL_SLOTS;
 
-    private static final int LOWER_SLOT_START =
-            JAR_SLOT_COUNT;
-
     private static final int JAR_START_X = 53;
     private static final int JAR_START_Y = 44;
 
     private static final int PLAYER_START_X = 8;
     private static final int PLAYER_START_Y = 139;
 
-    private static final int POUCH_START_X = 53;
-    private static final int POUCH_START_Y = 139;
+    private static final int POUCH_START_X = 204;
+    private static final int POUCH_START_Y = 44;
 
     private final Container jarContainer;
-    private final Container lowerContainer;
+    private final Container pouchContainer;
     private final boolean showingPouch;
+    private final int pouchSlotStart;
+    private final int pouchSlotEnd;
+    private final int playerSlotStart;
+    private final int playerSlotEnd;
 
     private int selectedTab = CHIP_TAB;
 
@@ -73,8 +74,8 @@ public class SphereJarMenu
                 );
 
         this.jarContainer = jarContainer;
-        this.lowerContainer =
-                createLowerContainer(
+        this.pouchContainer =
+                createPouchContainer(
                         inventory,
                         showingPouch
                 );
@@ -86,7 +87,7 @@ public class SphereJarMenu
 
         if (showingPouch) {
             checkContainerSize(
-                    lowerContainer,
+                    pouchContainer,
                     SpherePouchItem.SLOT_COUNT
             );
         }
@@ -95,32 +96,35 @@ public class SphereJarMenu
                 inventory.player
         );
 
-        lowerContainer.startOpen(
-                inventory.player
-        );
-
         addJarSlots();
 
+        pouchSlotStart = slots.size();
+
         if (showingPouch) {
-            addPouchSlots();
-        } else {
-            addStandardInventorySlots(
-                    inventory,
-                    PLAYER_START_X,
-                    PLAYER_START_Y
+            pouchContainer.startOpen(
+                    inventory.player
             );
+
+            addPouchSlots();
         }
+
+        pouchSlotEnd = slots.size();
+        playerSlotStart = slots.size();
+
+        addStandardInventorySlots(
+                inventory,
+                PLAYER_START_X,
+                PLAYER_START_Y
+        );
+
+        playerSlotEnd = slots.size();
     }
 
-    private static Container createLowerContainer(
+    private static Container createPouchContainer(
             Inventory inventory,
             boolean showingPouch
     ) {
-        if (!showingPouch) {
-            return inventory;
-        }
-
-        if (inventory.player
+        if (showingPouch && inventory.player
                 instanceof ServerPlayer serverPlayer) {
 
             return new SpherePouchContainer(
@@ -211,7 +215,7 @@ public class SphereJarMenu
 
                 addSlot(
                         new Slot(
-                                lowerContainer,
+                                pouchContainer,
                                 slotIndex,
                                 POUCH_START_X
                                         + column * 18,
@@ -245,11 +249,11 @@ public class SphereJarMenu
     }
 
     public void refreshSphereStorage() {
-        if (lowerContainer
+        if (pouchContainer
                 instanceof SpherePouchContainer
-                pouchContainer) {
+                playerPouchContainer) {
 
-            pouchContainer
+            playerPouchContainer
                     .refreshFromPlayerStorage();
         }
     }
@@ -283,24 +287,35 @@ public class SphereJarMenu
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
+        boolean moved;
+
         if (slotIndex < JAR_SLOT_COUNT) {
-            if (!moveItemStackTo(
+            moved = moveJarStackToPouchOrInventory(stack);
+        } else if (slotIndex >= pouchSlotStart
+                && slotIndex < pouchSlotEnd) {
+            moved = moveStackToSelectedJar(stack)
+                    || moveItemStackTo(
                     stack,
-                    LOWER_SLOT_START,
-                    slots.size(),
+                    playerSlotStart,
+                    playerSlotEnd,
                     true
-            )) {
-                return ItemStack.EMPTY;
-            }
-        } else {
-            if (!moveItemStackTo(
+            );
+        } else if (slotIndex >= playerSlotStart
+                && slotIndex < playerSlotEnd) {
+            moved = moveStackToSelectedJar(stack)
+                    || showingPouch
+                    && moveItemStackTo(
                     stack,
-                    0,
-                    JAR_SLOT_COUNT,
+                    pouchSlotStart,
+                    pouchSlotEnd,
                     false
-            )) {
-                return ItemStack.EMPTY;
-            }
+            );
+        } else {
+            return ItemStack.EMPTY;
+        }
+
+        if (!moved) {
+            return ItemStack.EMPTY;
         }
 
         if (stack.isEmpty()) {
@@ -311,10 +326,48 @@ public class SphereJarMenu
             slot.setChanged();
         }
 
-        lowerContainer.setChanged();
+        pouchContainer.setChanged();
         jarContainer.setChanged();
 
         return original;
+    }
+
+    private boolean moveJarStackToPouchOrInventory(
+            ItemStack stack
+    ) {
+        if (showingPouch && moveItemStackTo(
+                stack,
+                pouchSlotStart,
+                pouchSlotEnd,
+                false
+        )) {
+            return true;
+        }
+
+        return moveItemStackTo(
+                stack,
+                playerSlotStart,
+                playerSlotEnd,
+                true
+        );
+    }
+
+    private boolean moveStackToSelectedJar(
+            ItemStack stack
+    ) {
+        int compartmentStart =
+                selectedTab
+                        * SphereJarBlockEntity
+                        .SLOTS_PER_COMPARTMENT;
+
+        return moveItemStackTo(
+                stack,
+                compartmentStart,
+                compartmentStart
+                        + SphereJarBlockEntity
+                        .SLOTS_PER_COMPARTMENT,
+                false
+        );
     }
 
     @Override
@@ -326,7 +379,7 @@ public class SphereJarMenu
         }
 
         return !showingPouch
-                || lowerContainer.stillValid(player);
+                || pouchContainer.stillValid(player);
     }
 
     @Override
@@ -336,6 +389,9 @@ public class SphereJarMenu
         super.removed(player);
 
         jarContainer.stopOpen(player);
-        lowerContainer.stopOpen(player);
+
+        if (showingPouch) {
+            pouchContainer.stopOpen(player);
+        }
     }
 }

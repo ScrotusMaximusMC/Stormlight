@@ -17,6 +17,9 @@ import net.minecraft.world.entity.player.Inventory;
 public class SphereJarScreen
         extends AbstractContainerScreen<SphereJarMenu> {
 
+    private static final int JAR_TEXTURE_WIDTH = 176;
+    private static final int SCREEN_WIDTH_WITH_POUCH = 288;
+
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(
                     Stormlight.MOD_ID,
@@ -32,7 +35,9 @@ public class SphereJarScreen
                 menu,
                 inventory,
                 title,
-                176,
+                menu.isShowingPouch()
+                        ? SCREEN_WIDTH_WITH_POUCH
+                        : JAR_TEXTURE_WIDTH,
                 222
         );
 
@@ -40,10 +45,7 @@ public class SphereJarScreen
         titleLabelY = 6;
         inventoryLabelX = 8;
 
-        inventoryLabelY =
-                menu.isShowingPouch()
-                        ? -1000
-                        : 127;
+        inventoryLabelY = 127;
     }
 
     @Override
@@ -148,9 +150,9 @@ public class SphereJarScreen
                 topPos,
                 0.0F,
                 0.0F,
-                imageWidth,
+                JAR_TEXTURE_WIDTH,
                 imageHeight,
-                176,
+                JAR_TEXTURE_WIDTH,
                 222
         );
 
@@ -168,12 +170,12 @@ public class SphereJarScreen
                 Component.translatable(
                         "container.stormlight.sphere_pouch"
                 ),
-                leftPos + 7,
-                topPos + 122,
-                162,
-                93,
-                leftPos + 53,
-                topPos + 139,
+                leftPos + 190,
+                topPos + 27,
+                90,
+                89,
+                leftPos + 204,
+                topPos + 44,
                 4,
                 4
         );
