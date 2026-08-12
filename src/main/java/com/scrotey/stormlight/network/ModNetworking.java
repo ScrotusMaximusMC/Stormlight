@@ -85,7 +85,10 @@ public final class ModNetworking {
         ServerPlayNetworking.registerGlobalReceiver(
                 ToggleLashingPayload.TYPE,
                 (payload, context) ->
-                        LashingManager.toggle(context.player())
+                        LashingManager.handleInput(
+                                context.player(),
+                                payload.pressed()
+                        )
         );
 
         ServerPlayNetworking.registerGlobalReceiver(

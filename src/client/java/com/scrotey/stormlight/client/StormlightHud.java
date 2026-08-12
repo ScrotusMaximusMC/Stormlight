@@ -85,9 +85,12 @@ public final class StormlightHud {
                 "Stormlight " + reserve + " / " + capacity
         );
 
-        if (ClientLashingState.isActive()) {
+        if (ClientLashingState.isActive()
+                || ClientLashingState.isStabilising()) {
             Component lashingLabel = Component.translatable(
-                    "hud.stormlight.lashing.active"
+                    ClientLashingState.isStabilising()
+                            ? "hud.stormlight.stabilising"
+                            : "hud.stormlight.lashing.active"
             );
             int lashingX = x
                     + (BAR_WIDTH - client.font.width(lashingLabel)) / 2;

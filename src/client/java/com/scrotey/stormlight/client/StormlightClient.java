@@ -56,6 +56,7 @@ public class StormlightClient implements ClientModInitializer {
     private static final int SLOT_HOVER = 0x506DE8FF;
 
     private static final int EMPTY_POUCH_OUTLINE = 0xFF78E8FF;
+    private static boolean lashingKeyWasDown;
 
     private static final KeyMapping.Category STORMLIGHT_CATEGORY =
             KeyMapping.Category.register(
@@ -148,6 +149,7 @@ public class StormlightClient implements ClientModInitializer {
         ClientLashingState.tick(client);
         if (client.player == null) {
             StormlightFovFeedback.setBreathingState(false, false);
+            lashingKeyWasDown = false;
             return;
         }
 
@@ -168,12 +170,20 @@ public class StormlightClient implements ClientModInitializer {
             // key's held state instead of individual key presses.
         }
 
+        boolean lashingKeyDown =
+                LASHING_KEY.isDown()
+                        && client.gui.screen() == null;
+
+        if (lashingKeyDown != lashingKeyWasDown) {
+            ClientPlayNetworking.send(
+                    new ToggleLashingPayload(lashingKeyDown)
+            );
+            lashingKeyWasDown = lashingKeyDown;
+        }
+
         while (LASHING_KEY.consumeClick()) {
-            if (client.gui.screen() == null) {
-                ClientPlayNetworking.send(
-                        ToggleLashingPayload.INSTANCE
-                );
-            }
+            // Drain the click queue. Tap-versus-hold is determined from
+            // the key's pressed and released state on the server.
         }
 
         if (breathingOut) {

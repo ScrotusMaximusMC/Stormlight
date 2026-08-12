@@ -15,8 +15,12 @@
   "message.stormlight.lashing.unavailable": "You cannot Lash while riding, sleeping or gliding",
   "message.stormlight.lashing.no_stormlight": "You need at least %s Stormlight to Lash",
   "message.stormlight.lashing.activated": "Horizontal Lashing engaged",
+  "message.stormlight.lashing.full_activated": "Full Lashing engaged",
   "message.stormlight.lashing.deactivated": "Lashing released",
   "message.stormlight.lashing.depleted": "Your Lashing fades as your Stormlight runs out",
+  "message.stormlight.stabilisation.engaged": "Stabilising",
+  "message.stormlight.stabilisation.no_stormlight": "You need Stormlight to stabilise",
+  "message.stormlight.stabilisation.depleted": "Stabilisation fails as your Stormlight runs out",
   "message.stormlight.order.chosen": "You have chosen the order of the %s",
   "message.stormlight.radiant.level_unlocked": "Windrunner level %s unlocked",
   "message.stormlight.radiant.not_enough_xp": "You need %s experience levels to unlock Windrunner level %s",
@@ -59,7 +63,7 @@
   "progression.stormlight.windrunner.vast_reserve.title": "Vast Reserve",
   "progression.stormlight.windrunner.vast_reserve.description": "A vast personal Stormlight reserve",
   "progression.stormlight.windrunner.vertical_lashing.title": "Vertical Lashing",
-  "progression.stormlight.windrunner.vertical_lashing.description": "Planned: vertical Lashing",
+  "progression.stormlight.windrunner.vertical_lashing.description": "Lash in any direction  •  Hold G to stabilise",
   "progression.stormlight.windrunner.expert_windrunning.title": "Expert Windrunning",
   "progression.stormlight.windrunner.expert_windrunning.description": "Speed III  •  Strength II",
   "progression.stormlight.windrunner.radiant_mastery.title": "Radiant Mastery",
@@ -114,7 +118,8 @@
   "key.stormlight.breathe": "Breathe Stormlight",
   "key.stormlight.lashing": "Toggle Lashing",
 
-  "hud.stormlight.lashing.active": "Horizontal Lashing",
+  "hud.stormlight.lashing.active": "Lashing",
+  "hud.stormlight.stabilising": "Stabilising",
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 
