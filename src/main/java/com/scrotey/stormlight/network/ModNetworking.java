@@ -35,6 +35,11 @@ public final class ModNetworking {
                 ChooseRadiantOrderPayload.CODEC
         );
 
+        PayloadTypeRegistry.serverboundPlay().register(
+                UnlockRadiantLevelPayload.TYPE,
+                UnlockRadiantLevelPayload.CODEC
+        );
+
         PayloadTypeRegistry.clientboundPlay().register(
                 HighstormVisualPayload.TYPE,
                 HighstormVisualPayload.CODEC
@@ -57,6 +62,15 @@ public final class ModNetworking {
                 ChooseRadiantOrderPayload.TYPE,
                 (payload, context) ->
                         RadiantLecternInteraction.chooseOrder(
+                                context.player(),
+                                payload
+                        )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                UnlockRadiantLevelPayload.TYPE,
+                (payload, context) ->
+                        RadiantLecternInteraction.unlockLevel(
                                 context.player(),
                                 payload
                         )

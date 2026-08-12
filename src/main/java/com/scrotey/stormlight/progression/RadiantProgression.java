@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public final class RadiantProgression {
     private static final String NO_ORDER = "";
+    public static final int MIN_LEVEL = 1;
+    public static final int MAX_LEVEL = 10;
 
     public static final AttachmentType<String> RADIANT_ORDER =
             AttachmentRegistry.<String>create(
@@ -79,14 +81,83 @@ public final class RadiantProgression {
             ServerPlayer player,
             RadiantOrder order
     ) {
-        if (getOrder(player).isPresent() || order.level(1).isEmpty()) {
+        if (getOrder(player).isPresent()
+                || order.level(MIN_LEVEL).isEmpty()
+                || !canAffordLevel(player, MIN_LEVEL)) {
             return false;
         }
 
+        consumeExperienceLevels(player, experienceCost(MIN_LEVEL));
         player.setAttached(RADIANT_ORDER, order.id());
-        player.setAttached(RADIANT_LEVEL, 1);
+        player.setAttached(RADIANT_LEVEL, MIN_LEVEL);
         clampReserve(player);
         return true;
+    }
+
+    public static UnlockResult unlockNextLevel(
+            ServerPlayer player,
+            int requestedLevel
+    ) {
+        Optional<RadiantOrder> order = getOrder(player);
+
+        if (order.isEmpty()) {
+            return UnlockResult.NO_ORDER;
+        }
+
+        int currentLevel = getLevel(player);
+
+        if (currentLevel >= MAX_LEVEL) {
+            return UnlockResult.MAX_LEVEL;
+        }
+
+        if (requestedLevel != currentLevel + 1
+                || order.get().level(requestedLevel).isEmpty()) {
+            return UnlockResult.INVALID_LEVEL;
+        }
+
+        if (!canAffordLevel(player, requestedLevel)) {
+            return UnlockResult.NOT_ENOUGH_EXPERIENCE;
+        }
+
+        consumeExperienceLevels(
+                player,
+                experienceCost(requestedLevel)
+        );
+        player.setAttached(RADIANT_LEVEL, requestedLevel);
+        clampReserve(player);
+        return UnlockResult.SUCCESS;
+    }
+
+    public static int experienceCost(int level) {
+        if (level < MIN_LEVEL || level > MAX_LEVEL) {
+            throw new IllegalArgumentException(
+                    "Radiant level out of range: " + level
+            );
+        }
+
+        return level * 2;
+    }
+
+    public static boolean canAffordLevel(
+            Player player,
+            int level
+    ) {
+        return player.experienceLevel >= experienceCost(level);
+    }
+
+    public static boolean hasUnlocked(
+            Player player,
+            int requiredLevel
+    ) {
+        return getOrder(player).isPresent()
+                && getLevel(player) >= requiredLevel;
+    }
+
+    private static void consumeExperienceLevels(
+            ServerPlayer player,
+            int amount
+    ) {
+        player.giveExperienceLevels(-amount);
     }
 
     public static int clampReserve(Player player) {
@@ -99,5 +170,13 @@ public final class RadiantProgression {
         }
 
         return clamped;
+    }
+
+    public enum UnlockResult {
+        SUCCESS,
+        NO_ORDER,
+        INVALID_LEVEL,
+        MAX_LEVEL,
+        NOT_ENOUGH_EXPERIENCE
     }
 }

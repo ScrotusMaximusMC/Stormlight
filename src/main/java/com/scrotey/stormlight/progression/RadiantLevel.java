@@ -8,6 +8,8 @@ public record RadiantLevel(
         int level,
         int stormlightCapacity,
         int speedAmplifier,
-        int strengthAmplifier
+        int strengthAmplifier,
+        String unlockTranslationKey,
+        String descriptionTranslationKey
 ) {
 }
