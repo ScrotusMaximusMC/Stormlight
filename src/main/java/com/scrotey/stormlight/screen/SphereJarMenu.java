@@ -293,7 +293,7 @@ public class SphereJarMenu
             moved = moveJarStackToPouchOrInventory(stack);
         } else if (slotIndex >= pouchSlotStart
                 && slotIndex < pouchSlotEnd) {
-            moved = moveStackToSelectedJar(stack)
+            moved = moveStackToCorrectJarCompartment(stack)
                     || moveItemStackTo(
                     stack,
                     playerSlotStart,
@@ -302,7 +302,7 @@ public class SphereJarMenu
             );
         } else if (slotIndex >= playerSlotStart
                 && slotIndex < playerSlotEnd) {
-            moved = moveStackToSelectedJar(stack)
+            moved = moveStackToCorrectJarCompartment(stack)
                     || showingPouch
                     && moveItemStackTo(
                     stack,
@@ -352,22 +352,41 @@ public class SphereJarMenu
         );
     }
 
-    private boolean moveStackToSelectedJar(
+    private boolean moveStackToCorrectJarCompartment(
             ItemStack stack
     ) {
-        int compartmentStart =
-                selectedTab
-                        * SphereJarBlockEntity
-                        .SLOTS_PER_COMPARTMENT;
+        /*
+         * The visible tab is only a view filter. For quick-moving,
+         * ask the jar which compartment accepts this denomination so
+         * chips, marks and broams always reach the correct storage.
+         */
+        for (int tab = CHIP_TAB;
+             tab <= BROAM_TAB;
+             tab++) {
 
-        return moveItemStackTo(
-                stack,
-                compartmentStart,
-                compartmentStart
-                        + SphereJarBlockEntity
-                        .SLOTS_PER_COMPARTMENT,
-                false
-        );
+            int compartmentStart =
+                    tab
+                            * SphereJarBlockEntity
+                            .SLOTS_PER_COMPARTMENT;
+
+            if (!jarContainer.canPlaceItem(
+                    compartmentStart,
+                    stack
+            )) {
+                continue;
+            }
+
+            return moveItemStackTo(
+                    stack,
+                    compartmentStart,
+                    compartmentStart
+                            + SphereJarBlockEntity
+                            .SLOTS_PER_COMPARTMENT,
+                    false
+            );
+        }
+
+        return false;
     }
 
     @Override

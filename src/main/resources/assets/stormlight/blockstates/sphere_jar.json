@@ -1,41 +1,41 @@
 {
   "multipart": [
     {
-      "apply": { "model": "stormlight:block/sphere_jar" }
+      "apply": {
+        "model": "stormlight:block/sphere_jar"
+      }
     },
     {
       "when": {
-        "OR": [
-          { "fill_level": "1" },
-          { "fill_level": "2" },
-          { "fill_level": "3" },
-          { "fill_level": "4" }
-        ]
+        "fill_level": "1"
       },
-      "apply": { "model": "stormlight:block/sphere_jar_fill_1" }
+      "apply": {
+        "model": "stormlight:block/sphere_jar_fill_1"
+      }
     },
     {
       "when": {
-        "OR": [
-          { "fill_level": "2" },
-          { "fill_level": "3" },
-          { "fill_level": "4" }
-        ]
+        "fill_level": "2"
       },
-      "apply": { "model": "stormlight:block/sphere_jar_fill_2" }
+      "apply": {
+        "model": "stormlight:block/sphere_jar_fill_2"
+      }
     },
     {
       "when": {
-        "OR": [
-          { "fill_level": "3" },
-          { "fill_level": "4" }
-        ]
+        "fill_level": "3"
       },
-      "apply": { "model": "stormlight:block/sphere_jar_fill_3" }
+      "apply": {
+        "model": "stormlight:block/sphere_jar_fill_3"
+      }
     },
     {
-      "when": { "fill_level": "4" },
-      "apply": { "model": "stormlight:block/sphere_jar_fill_4" }
+      "when": {
+        "fill_level": "4"
+      },
+      "apply": {
+        "model": "stormlight:block/sphere_jar_fill_4"
+      }
     }
   ]
 }
