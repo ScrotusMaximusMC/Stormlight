@@ -28,7 +28,7 @@ import java.util.UUID;
 
 public final class StormlightManager {
     private static final int TARGET_FULL_BREATH_TICKS = 50;
-    private static final int EXHALE_AMOUNT_PER_TICK = 2;
+    private static final int EXHALE_AMOUNT_PER_TICK = 10;
     private static final int BREATHE_SOUND_INTERVAL_TICKS = 12;
     private static final int BREATHE_WARNING_INTERVAL_TICKS = 20;
 

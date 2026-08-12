@@ -21,6 +21,9 @@ import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
 import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
+import com.scrotey.stormlight.network.LashingStatePayload;
+import com.scrotey.stormlight.network.ToggleLashingPayload;
+import com.scrotey.stormlight.client.lashing.ClientLashingState;
 
 import java.util.function.Supplier;
 
@@ -69,6 +72,16 @@ public class StormlightClient implements ClientModInitializer {
                     )
             );
 
+    private static final KeyMapping LASHING_KEY =
+            KeyMappingHelper.registerKeyMapping(
+                    new KeyMapping(
+                            "key.stormlight.lashing",
+                            InputConstants.Type.KEYSYM,
+                            InputConstants.KEY_G,
+                            STORMLIGHT_CATEGORY
+                    )
+            );
+
     @Override
     public void onInitializeClient() {
         ParticleProviderRegistry.getInstance().register(
@@ -96,6 +109,11 @@ public class StormlightClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(
                 StormlightStatusPayload.TYPE,
                 (payload, context) -> StormlightHud.update(payload)
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                LashingStatePayload.TYPE,
+                (payload, context) -> ClientLashingState.update(payload)
         );
 
         ClientPlayNetworking.registerGlobalReceiver(
@@ -127,6 +145,7 @@ public class StormlightClient implements ClientModInitializer {
         ClientHighstormState.tick(client);
         ApproachingStormfrontEffects.tick(client);
         ClientHighstormWind.tick(client);
+        ClientLashingState.tick(client);
         if (client.player == null) {
             StormlightFovFeedback.setBreathingState(false, false);
             return;
@@ -147,6 +166,14 @@ public class StormlightClient implements ClientModInitializer {
         while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
             // Drain the click queue. Breathing is controlled by the
             // key's held state instead of individual key presses.
+        }
+
+        while (LASHING_KEY.consumeClick()) {
+            if (client.gui.screen() == null) {
+                ClientPlayNetworking.send(
+                        ToggleLashingPayload.INSTANCE
+                );
+            }
         }
 
         if (breathingOut) {

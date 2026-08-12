@@ -11,6 +11,12 @@
   "message.stormlight.exhale.empty": "You are not holding any Stormlight",
   "message.stormlight.exhale.no_pouch": "Equip a Sphere Pouch to reclaim Stormlight",
   "message.stormlight.exhale.no_capacity": "Your pouch spheres have no free capacity",
+  "message.stormlight.lashing.locked": "Unlock Horizontal Lashing at Windrunner level 3",
+  "message.stormlight.lashing.unavailable": "You cannot Lash while riding, sleeping or gliding",
+  "message.stormlight.lashing.no_stormlight": "You need at least %s Stormlight to Lash",
+  "message.stormlight.lashing.activated": "Horizontal Lashing engaged",
+  "message.stormlight.lashing.deactivated": "Lashing released",
+  "message.stormlight.lashing.depleted": "Your Lashing fades as your Stormlight runs out",
   "message.stormlight.order.chosen": "You have chosen the order of the %s",
   "message.stormlight.radiant.level_unlocked": "Windrunner level %s unlocked",
   "message.stormlight.radiant.not_enough_xp": "You need %s experience levels to unlock Windrunner level %s",
@@ -43,7 +49,7 @@
   "progression.stormlight.windrunner.expanded_reserve.title": "Expanded Reserve",
   "progression.stormlight.windrunner.expanded_reserve.description": "A larger personal Stormlight reserve",
   "progression.stormlight.windrunner.horizontal_lashing.title": "Horizontal Lashing",
-  "progression.stormlight.windrunner.horizontal_lashing.description": "Planned: horizontal Lashing",
+  "progression.stormlight.windrunner.horizontal_lashing.description": "Change gravity in any horizontal direction",
   "progression.stormlight.windrunner.adept_windrunning.title": "Adept Windrunning",
   "progression.stormlight.windrunner.adept_windrunning.description": "Speed II  •  Strength I",
   "progression.stormlight.windrunner.greater_reserve.title": "Greater Reserve",
@@ -106,6 +112,9 @@
 
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
+  "key.stormlight.lashing": "Toggle Lashing",
+
+  "hud.stormlight.lashing.active": "Horizontal Lashing",
 
   "block.stormlight.sphere_jar": "Sphere Jar",
 

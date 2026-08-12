@@ -3,10 +3,14 @@ package com.scrotey.stormlight.client;
 public final class StormlightFovFeedback {
     private static final float INHALE_FOV_OFFSET = 7.0F;
     private static final float EXHALE_FOV_OFFSET = -4.0F;
+    private static final float LASHING_FOV_OFFSET = 4.0F;
     private static final double RESPONSE_PER_SECOND = 9.0;
 
     private static float targetOffset;
     private static float currentOffset;
+    private static boolean breathingIn;
+    private static boolean breathingOut;
+    private static boolean lashingActive;
     private static long lastUpdateNanos = System.nanoTime();
 
     private StormlightFovFeedback() {
@@ -16,10 +20,23 @@ public final class StormlightFovFeedback {
             boolean breathingIn,
             boolean breathingOut
     ) {
+        StormlightFovFeedback.breathingIn = breathingIn;
+        StormlightFovFeedback.breathingOut = breathingOut;
+        updateTarget();
+    }
+
+    public static void setLashingActive(boolean active) {
+        lashingActive = active;
+        updateTarget();
+    }
+
+    private static void updateTarget() {
         if (breathingOut) {
             targetOffset = EXHALE_FOV_OFFSET;
         } else if (breathingIn) {
             targetOffset = INHALE_FOV_OFFSET;
+        } else if (lashingActive) {
+            targetOffset = LASHING_FOV_OFFSET;
         } else {
             targetOffset = 0.0F;
         }

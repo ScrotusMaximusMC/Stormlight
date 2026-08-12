@@ -1,5 +1,6 @@
 package com.scrotey.stormlight.client;
 
+import com.scrotey.stormlight.client.lashing.ClientLashingState;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -83,6 +84,23 @@ public final class StormlightHud {
         Component label = Component.literal(
                 "Stormlight " + reserve + " / " + capacity
         );
+
+        if (ClientLashingState.isActive()) {
+            Component lashingLabel = Component.translatable(
+                    "hud.stormlight.lashing.active"
+            );
+            int lashingX = x
+                    + (BAR_WIDTH - client.font.width(lashingLabel)) / 2;
+
+            graphics.text(
+                    client.font,
+                    lashingLabel,
+                    lashingX,
+                    y - 21,
+                    0xFF8DEBFF,
+                    true
+            );
+        }
 
         int textX = x + (BAR_WIDTH - client.font.width(label)) / 2;
 
