@@ -70,19 +70,22 @@ public final class ApproachingStormfrontEffects {
          * particle field every client tick.
          */
         if (ClientHighstormState.isHighstorm()) {
-            spawnHighstormClouds(client);
+            spawnHighstormClouds(client, 1.0F);
+            return;
+        }
+
+        if (ClientHighstormState.isPassing()) {
+            float progress =
+                    ClientHighstormState.getPassingProgress();
+
+            float intensity =
+                    1.0F - smoothstep(progress);
+
+            spawnHighstormClouds(client, intensity);
             return;
         }
 
         if (!ClientHighstormState.isApproaching()) {
-            return;
-        }
-
-        /*
-         * Approach particles retain their lighter,
-         * every-second-tick emission rate.
-         */
-        if ((client.level.getGameTime() & 1L) != 0L) {
             return;
         }
 
@@ -93,6 +96,24 @@ public final class ApproachingStormfrontEffects {
                 progress
                         * progress
                         * (3.0F - 2.0F * progress);
+
+        /*
+         * Loose leaves arrive ahead of the storm wall. Their density rises
+         * smoothly from none to the full Highstorm amount, avoiding a sudden
+         * burst when the phase changes to HIGHSTORM.
+         */
+        spawnHighstormLeaves(
+                client,
+                smoothProgress
+        );
+
+        /*
+         * The heavier smoke wall and rain retain their lighter,
+         * every-second-tick emission rate.
+         */
+        if ((client.level.getGameTime() & 1L) != 0L) {
+            return;
+        }
 
         double distance =
                 START_DISTANCE
@@ -208,10 +229,16 @@ public final class ApproachingStormfrontEffects {
     }
 
     private static void spawnHighstormClouds(
-            Minecraft client
+            Minecraft client,
+            float intensity
     ) {
+        int particleCount = scaledCount(
+                HIGHSTORM_PARTICLES_PER_TICK,
+                intensity
+        );
+
         for (int i = 0;
-             i < HIGHSTORM_PARTICLES_PER_TICK;
+             i < particleCount;
              i++) {
             /*
              * Spawn the particles east of the player so they
@@ -259,8 +286,9 @@ public final class ApproachingStormfrontEffects {
              * at the end of the approaching phase.
              */
             double westSpeed =
-                    -0.52
-                            - RANDOM.nextDouble() * 0.34;
+                    (-0.52
+                            - RANDOM.nextDouble() * 0.34)
+                            * (0.55 + intensity * 0.45);
 
             double verticalMovement =
                     -0.045
@@ -268,7 +296,8 @@ public final class ApproachingStormfrontEffects {
 
             double sidewaysMovement =
                     (RANDOM.nextDouble() - 0.5)
-                            * 0.16;
+                            * 0.16
+                            * (0.55 + intensity * 0.45);
 
             client.level.addAlwaysVisibleParticle(
                     selectCloudParticle(),
@@ -281,13 +310,19 @@ public final class ApproachingStormfrontEffects {
             );
         }
 
-        spawnHighstormLeaves(client);
+        spawnHighstormLeaves(client, intensity);
     }
 
     private static void spawnHighstormLeaves(
-            Minecraft client
+            Minecraft client,
+            float intensity
     ) {
-        for (int i = 0; i < HIGHSTORM_LEAVES_PER_TICK; i++) {
+        int leafCount = scaledCount(
+                HIGHSTORM_LEAVES_PER_TICK,
+                intensity
+        );
+
+        for (int i = 0; i < leafCount; i++) {
             double x = client.player.getX()
                     + LEAF_MIN_EAST_DISTANCE
                     + RANDOM.nextDouble() * LEAF_SPAWN_DEPTH;
@@ -307,12 +342,15 @@ public final class ApproachingStormfrontEffects {
                     + RANDOM.nextDouble() * LEAF_HEIGHT;
 
             // Every leaf heads west, but no two receive quite the same gust.
-            double westSpeed = -0.48
-                    - RANDOM.nextDouble() * 0.46;
+            double westSpeed = (-0.48
+                    - RANDOM.nextDouble() * 0.46)
+                    * (0.55 + intensity * 0.45);
             double verticalMovement = -0.04
                     + RANDOM.nextDouble() * 0.16;
             double sidewaysMovement =
-                    (RANDOM.nextDouble() - 0.5) * 0.34;
+                    (RANDOM.nextDouble() - 0.5)
+                            * 0.34
+                            * (0.55 + intensity * 0.45);
 
             client.level.addAlwaysVisibleParticle(
                     ModParticles.HIGHSTORM_LEAF,
@@ -324,6 +362,33 @@ public final class ApproachingStormfrontEffects {
                     sidewaysMovement
             );
         }
+    }
+
+    /*
+     * Fractional random rounding makes low intensities fade naturally instead
+     * of snapping between whole particles per tick.
+     */
+    private static int scaledCount(
+            int fullCount,
+            float intensity
+    ) {
+        double exactCount = fullCount
+                * Mth.clamp(intensity, 0.0F, 1.0F);
+
+        int count = Mth.floor(exactCount);
+
+        if (RANDOM.nextDouble() < exactCount - count) {
+            count++;
+        }
+
+        return count;
+    }
+
+    private static float smoothstep(float progress) {
+        float clamped = Mth.clamp(progress, 0.0F, 1.0F);
+        return clamped
+                * clamped
+                * (3.0F - 2.0F * clamped);
     }
 
     private static void spawnRainCurtain(

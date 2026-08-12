@@ -38,6 +38,12 @@ public final class HighstormCommands {
                                                         )
                                         )
                                         .then(
+                                                Commands.literal("passing")
+                                                        .executes(
+                                                                HighstormCommands::passing
+                                                        )
+                                        )
+                                        .then(
                                                 Commands.literal("status")
                                                         .executes(HighstormCommands::status)
                                         )
@@ -89,6 +95,23 @@ public final class HighstormCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal(
                         "Started the three-minute Highstorm approach."
+                ),
+                true
+        );
+
+        return 1;
+    }
+
+    private static int passing(
+            CommandContext<CommandSourceStack> context
+    ) {
+        HighstormManager.startPassingNow(
+                context.getSource().getServer()
+        );
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Started the three-minute Highstorm passing phase."
                 ),
                 true
         );

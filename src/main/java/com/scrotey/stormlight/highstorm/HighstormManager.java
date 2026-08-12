@@ -86,6 +86,32 @@ public final class HighstormManager {
         );
     }
 
+    public static void startPassingNow(
+            MinecraftServer server
+    ) {
+        ServerLevel level =
+                server.overworld();
+
+        HighstormSavedData data =
+                HighstormSavedData.get(server);
+
+        data.setPhase(
+                HighstormPhase.PASSING,
+                HighstormTimings.PASSING_TICKS
+        );
+
+        setRainWithoutThunder(
+                level,
+                HighstormTimings.PASSING_TICKS
+        );
+
+        announce(
+                server,
+                "The Highstorm is passing.",
+                ChatFormatting.GRAY
+        );
+    }
+
     public static void stopNow(
             MinecraftServer server
     ) {
