@@ -9,7 +9,7 @@
 		"SpherePouchClickBoundsMixin",
 		"CloudRendererMixin",
 		"DaylightDarkeningMixin",
-		"WeatherEffectRendererMixin"
+		"CameraFovMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

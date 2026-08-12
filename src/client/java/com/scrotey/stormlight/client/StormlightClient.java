@@ -128,6 +128,7 @@ public class StormlightClient implements ClientModInitializer {
         ApproachingStormfrontEffects.tick(client);
         ClientHighstormWind.tick(client);
         if (client.player == null) {
+            StormlightFovFeedback.setBreathingState(false, false);
             return;
         }
 
@@ -137,6 +138,11 @@ public class StormlightClient implements ClientModInitializer {
         boolean breathingOut =
                 breatheKeyHeld
                         && client.options.keyShift.isDown();
+
+        StormlightFovFeedback.setBreathingState(
+                breatheKeyHeld && !breathingOut,
+                breathingOut
+        );
 
         while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
             // Drain the click queue. Breathing is controlled by the

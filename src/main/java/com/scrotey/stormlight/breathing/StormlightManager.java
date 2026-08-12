@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class StormlightManager {
-    private static final int BREATHE_AMOUNT_PER_TICK = 5;
-    private static final int BREATHE_SOUND_INTERVAL_TICKS = 10;
+    private static final int TARGET_FULL_BREATH_TICKS = 50;
+    private static final int EXHALE_AMOUNT_PER_TICK = 2;
+    private static final int BREATHE_SOUND_INTERVAL_TICKS = 12;
     private static final int BREATHE_WARNING_INTERVAL_TICKS = 20;
 
     private static final int STATUS_SYNC_INTERVAL_TICKS = 5;
@@ -130,7 +131,10 @@ public final class StormlightManager {
 
         int breathed = StormlightPool.drainSpheres(
                 player,
-                Math.min(room, BREATHE_AMOUNT_PER_TICK)
+                Math.min(
+                        room,
+                        getBreatheAmountPerTick(capacity)
+                )
         );
 
         if (breathed <= 0) {
@@ -155,6 +159,14 @@ public final class StormlightManager {
         sendStatus(player);
     }
 
+    private static int getBreatheAmountPerTick(int capacity) {
+        return Math.max(
+                1,
+                (capacity + TARGET_FULL_BREATH_TICKS - 1)
+                        / TARGET_FULL_BREATH_TICKS
+        );
+    }
+
     public static void exhale(ServerPlayer player) {
         if (!player.isAlive() || player.isSpectator()) {
             return;
@@ -172,7 +184,7 @@ public final class StormlightManager {
             return;
         }
 
-        int amount = Math.min(reserve, BREATHE_AMOUNT_PER_TICK);
+        int amount = Math.min(reserve, EXHALE_AMOUNT_PER_TICK);
         int released;
 
         if (RadiantProgression.hasUnlocked(
@@ -300,18 +312,32 @@ public final class StormlightManager {
 
     private static void spawnBreathingMote(ServerPlayer player) {
         ServerLevel level = (ServerLevel) player.level();
+        double centreX = player.getX();
+        double centreY = player.getY() + 1.05;
+        double centreZ = player.getZ();
+        double rotation = level.getGameTime() * 0.34;
 
-        level.sendParticles(
-                ModParticles.SURGE_LIGHT,
-                player.getX(),
-                player.getY() + 1.0,
-                player.getZ(),
-                1,
-                0.42,
-                0.72,
-                0.42,
-                0.018
-        );
+        for (int particle = 0; particle < 6; particle++) {
+            double angle = rotation
+                    + particle * Math.PI * 2.0 / 6.0;
+            double radius = particle % 2 == 0 ? 1.15 : 0.9;
+            double particleX = centreX + Math.cos(angle) * radius;
+            double particleY = centreY
+                    + (particle % 3 - 1) * 0.32;
+            double particleZ = centreZ + Math.sin(angle) * radius;
+
+            level.sendParticles(
+                    ModParticles.SURGE_LIGHT,
+                    particleX,
+                    particleY,
+                    particleZ,
+                    0,
+                    (centreX - particleX) * 0.2,
+                    (centreY - particleY) * 0.2,
+                    (centreZ - particleZ) * 0.2,
+                    1.0
+            );
+        }
     }
 
     private static void playBreathingSoundIfDue(
@@ -332,27 +358,49 @@ public final class StormlightManager {
         player.level().playSound(
                 null,
                 player.blockPosition(),
+                SoundEvents.BREEZE_INHALE,
+                SoundSource.PLAYERS,
+                0.9F,
+                1.08F
+        );
+
+        player.level().playSound(
+                null,
+                player.blockPosition(),
                 SoundEvents.AMETHYST_BLOCK_CHIME,
                 SoundSource.PLAYERS,
-                0.55F,
-                1.35F
+                0.32F,
+                1.5F
         );
     }
 
     private static void spawnExhalingMotes(ServerPlayer player) {
         ServerLevel level = (ServerLevel) player.level();
+        double centreX = player.getX();
+        double centreY = player.getY() + 1.05;
+        double centreZ = player.getZ();
+        double rotation = -level.getGameTime() * 0.3;
 
-        level.sendParticles(
-                ModParticles.SURGE_LIGHT,
-                player.getX(),
-                player.getY() + 1.0,
-                player.getZ(),
-                3,
-                0.5,
-                0.78,
-                0.5,
-                0.035
-        );
+        for (int particle = 0; particle < 8; particle++) {
+            double angle = rotation
+                    + particle * Math.PI * 2.0 / 8.0;
+            double horizontalSpeed = particle % 2 == 0
+                    ? 0.19
+                    : 0.15;
+            double verticalSpeed = (particle % 3 - 1) * 0.055;
+
+            level.sendParticles(
+                    ModParticles.SURGE_LIGHT,
+                    centreX,
+                    centreY,
+                    centreZ,
+                    0,
+                    Math.cos(angle) * horizontalSpeed,
+                    verticalSpeed,
+                    Math.sin(angle) * horizontalSpeed,
+                    1.0
+            );
+        }
     }
 
     private static void playExhalingSoundIfDue(
@@ -373,10 +421,19 @@ public final class StormlightManager {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundEvents.WIND_CHARGE_BURST.value(),
                 SoundSource.PLAYERS,
-                0.45F,
-                0.72F
+                0.62F,
+                0.68F
+        );
+
+        player.level().playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.AMETHYST_BLOCK_RESONATE,
+                SoundSource.PLAYERS,
+                0.28F,
+                0.74F
         );
     }
 
