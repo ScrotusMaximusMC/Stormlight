@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IGI",
+    "GAG",
+    "IGI"
+  ],
+  "key": {
+    "I": "minecraft:iron_nugget",
+    "G": "minecraft:glass_pane",
+    "A": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "stormlight:sphere_lantern",
+    "count": 1
+  }
+}
