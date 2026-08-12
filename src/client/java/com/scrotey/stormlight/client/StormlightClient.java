@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.network.BreatheStormlightPayload;
+import com.scrotey.stormlight.network.ExhaleStormlightPayload;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.screen.SphereJarScreen;
@@ -130,16 +131,23 @@ public class StormlightClient implements ClientModInitializer {
             return;
         }
 
-        boolean breathing =
+        boolean breatheKeyHeld =
                 BREATHE_STORMLIGHT_KEY.isDown()
                         && client.gui.screen() == null;
+        boolean breathingOut =
+                breatheKeyHeld
+                        && client.options.keyShift.isDown();
 
         while (BREATHE_STORMLIGHT_KEY.consumeClick()) {
             // Drain the click queue. Breathing is controlled by the
             // key's held state instead of individual key presses.
         }
 
-        if (breathing) {
+        if (breathingOut) {
+            ClientPlayNetworking.send(
+                    ExhaleStormlightPayload.INSTANCE
+            );
+        } else if (breatheKeyHeld) {
             ClientPlayNetworking.send(
                     BreatheStormlightPayload.INSTANCE
             );

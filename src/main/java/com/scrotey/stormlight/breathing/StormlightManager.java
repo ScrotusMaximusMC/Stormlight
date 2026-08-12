@@ -4,6 +4,7 @@ import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.network.StormlightStatusPayload;
 import com.scrotey.stormlight.particle.ModParticles;
 import com.scrotey.stormlight.progression.RadiantLevel;
+import com.scrotey.stormlight.progression.RadiantOrderRegistry;
 import com.scrotey.stormlight.progression.RadiantProgression;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -26,7 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class StormlightManager {
-    private static final int BREATHE_AMOUNT_PER_TICK = 10;
+    private static final int BREATHE_AMOUNT_PER_TICK = 5;
     private static final int BREATHE_SOUND_INTERVAL_TICKS = 10;
     private static final int BREATHE_WARNING_INTERVAL_TICKS = 20;
 
@@ -154,6 +155,65 @@ public final class StormlightManager {
         sendStatus(player);
     }
 
+    public static void exhale(ServerPlayer player) {
+        if (!player.isAlive() || player.isSpectator()) {
+            return;
+        }
+
+        int reserve = RadiantProgression.clampReserve(player);
+
+        if (reserve <= 0) {
+            sendBreatheWarning(
+                    player,
+                    Component.translatable(
+                            "message.stormlight.exhale.empty"
+                    )
+            );
+            return;
+        }
+
+        int amount = Math.min(reserve, BREATHE_AMOUNT_PER_TICK);
+        int released;
+
+        if (RadiantProgression.hasUnlocked(
+                player,
+                RadiantOrderRegistry.REABSORPTION_LEVEL
+        )) {
+            if (!ModAttachments.hasEquippedPouch(player)) {
+                sendBreatheWarning(
+                        player,
+                        Component.translatable(
+                                "message.stormlight.exhale.no_pouch"
+                        )
+                );
+                return;
+            }
+
+            released = StormlightPool.returnReserveToSpheres(
+                    player,
+                    amount
+            );
+
+            if (released <= 0) {
+                sendBreatheWarning(
+                        player,
+                        Component.translatable(
+                                "message.stormlight.exhale.no_capacity"
+                        )
+                );
+                return;
+            }
+        } else {
+            released = StormlightPool.drainReserve(player, amount);
+        }
+
+        if (released > 0) {
+            spawnExhalingMotes(player);
+            playExhalingSoundIfDue(player);
+            sendStatus(player);
+        }
+    }
+
     private static void tick(MinecraftServer server) {
         long gameTime = server.overworld().getGameTime();
         boolean syncNow = gameTime % STATUS_SYNC_INTERVAL_TICKS == 0L;
@@ -276,6 +336,47 @@ public final class StormlightManager {
                 SoundSource.PLAYERS,
                 0.55F,
                 1.35F
+        );
+    }
+
+    private static void spawnExhalingMotes(ServerPlayer player) {
+        ServerLevel level = (ServerLevel) player.level();
+
+        level.sendParticles(
+                ModParticles.SURGE_LIGHT,
+                player.getX(),
+                player.getY() + 1.0,
+                player.getZ(),
+                3,
+                0.5,
+                0.78,
+                0.5,
+                0.035
+        );
+    }
+
+    private static void playExhalingSoundIfDue(
+            ServerPlayer player
+    ) {
+        long gameTime = player.level().getGameTime();
+        UUID playerId = player.getUUID();
+        Long lastTick = LAST_BREATHE_SOUND_TICK.get(playerId);
+
+        if (lastTick != null
+                && gameTime - lastTick
+                < BREATHE_SOUND_INTERVAL_TICKS) {
+            return;
+        }
+
+        LAST_BREATHE_SOUND_TICK.put(playerId, gameTime);
+
+        player.level().playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.PLAYERS,
+                0.45F,
+                0.72F
         );
     }
 

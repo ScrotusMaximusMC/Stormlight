@@ -342,13 +342,31 @@ public final class RadiantProgressionScreen extends Screen {
                 textColour,
                 false
         );
+        // On normal layouts, keep the reward summary beneath its title.
+        // Very narrow layouts omit it so the capacity column cannot overlap.
+        if (panelWidth >= 600) {
+            graphics.text(
+                    font,
+                    Component.translatable(
+                            level.descriptionTranslationKey()
+                    ),
+                    textX,
+                    nodeY + 1,
+                    unlocked ? WINDRUNNER_BLUE : MUTED_INK,
+                    false
+            );
+        }
+
+        // Every capacity value begins at the same X coordinate, forming a
+        // clean vertical column independently of the reward text's length.
+        int capacityX = panelLeft + panelWidth - 260;
         graphics.text(
                 font,
                 Component.translatable(
                         "screen.stormlight.radiant.capacity",
                         level.stormlightCapacity()
                 ),
-                textX,
+                capacityX,
                 nodeY + 1,
                 unlocked ? WINDRUNNER_BLUE : MUTED_INK,
                 false

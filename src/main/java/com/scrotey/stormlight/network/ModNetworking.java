@@ -20,6 +20,11 @@ public final class ModNetworking {
                 BreatheStormlightPayload.CODEC
         );
 
+        PayloadTypeRegistry.serverboundPlay().register(
+                ExhaleStormlightPayload.TYPE,
+                ExhaleStormlightPayload.CODEC
+        );
+
         PayloadTypeRegistry.clientboundPlay().register(
                 StormlightStatusPayload.TYPE,
                 StormlightStatusPayload.CODEC
@@ -54,6 +59,14 @@ public final class ModNetworking {
                 BreatheStormlightPayload.TYPE,
                 (payload, context) ->
                         StormlightManager.breathe(
+                                context.player()
+                        )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                ExhaleStormlightPayload.TYPE,
+                (payload, context) ->
+                        StormlightManager.exhale(
                                 context.player()
                         )
         );

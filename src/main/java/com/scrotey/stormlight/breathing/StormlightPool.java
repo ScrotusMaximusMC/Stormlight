@@ -15,6 +15,9 @@ public final class StormlightPool {
     private static final Map<UUID, Integer>
             NEXT_DRAIN_SLOT =
             new HashMap<>();
+    private static final Map<UUID, Integer>
+            NEXT_FILL_SLOT =
+            new HashMap<>();
 
     private StormlightPool() {
     }
@@ -180,6 +183,84 @@ public final class StormlightPool {
         return drained;
     }
 
+    public static int returnReserveToSpheres(
+            ServerPlayer player,
+            int amount
+    ) {
+        int available = Math.min(
+                ModAttachments.getPersonalStormlight(player),
+                Math.max(0, amount)
+        );
+
+        if (available <= 0) {
+            return 0;
+        }
+
+        int stored = fillSpheres(player, available);
+
+        if (stored > 0) {
+            drainReserve(player, stored);
+        }
+
+        return stored;
+    }
+
+    private static int fillSpheres(
+            ServerPlayer player,
+            int amount
+    ) {
+        if (amount <= 0
+                || !ModAttachments.hasEquippedPouch(player)) {
+            NEXT_FILL_SLOT.remove(player.getUUID());
+            return 0;
+        }
+
+        NonNullList<ItemStack> sphereItems =
+                ModAttachments.getSphereItems(player);
+
+        if (sphereItems.isEmpty()) {
+            NEXT_FILL_SLOT.remove(player.getUUID());
+            return 0;
+        }
+
+        int nextSlot = Math.floorMod(
+                NEXT_FILL_SLOT.getOrDefault(player.getUUID(), 0),
+                sphereItems.size()
+        );
+        int remaining = amount;
+
+        while (remaining > 0) {
+            int sphereSlot = findNextSphereWithSpace(
+                    sphereItems,
+                    nextSlot
+            );
+
+            if (sphereSlot < 0) {
+                break;
+            }
+
+            ItemStack sphereStack = sphereItems.get(sphereSlot);
+            SphereItem sphere = (SphereItem) sphereStack.getItem();
+
+            sphere.setCharge(
+                    sphereStack,
+                    sphere.getCharge(sphereStack) + 1
+            );
+
+            remaining--;
+            nextSlot = (sphereSlot + 1) % sphereItems.size();
+        }
+
+        int stored = amount - remaining;
+
+        if (stored > 0) {
+            ModAttachments.setSphereItems(player, sphereItems);
+            NEXT_FILL_SLOT.put(player.getUUID(), nextSlot);
+        }
+
+        return stored;
+    }
+
     private static int findNextChargedSphere(
             NonNullList<ItemStack> sphereItems,
             int startingSlot
@@ -199,6 +280,26 @@ public final class StormlightPool {
                     instanceof SphereItem sphere
                     && sphere.getCharge(stack) > 0) {
 
+                return slot;
+            }
+        }
+
+        return -1;
+    }
+
+    private static int findNextSphereWithSpace(
+            NonNullList<ItemStack> sphereItems,
+            int startingSlot
+    ) {
+        for (int offset = 0;
+             offset < sphereItems.size();
+             offset++) {
+
+            int slot = (startingSlot + offset) % sphereItems.size();
+            ItemStack stack = sphereItems.get(slot);
+
+            if (stack.getItem() instanceof SphereItem sphere
+                    && sphere.getCharge(stack) < sphere.getCapacity()) {
                 return slot;
             }
         }

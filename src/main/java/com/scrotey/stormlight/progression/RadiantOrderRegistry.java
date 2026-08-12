@@ -10,7 +10,8 @@ public final class RadiantOrderRegistry {
 
     public static final int HORIZONTAL_LASHING_LEVEL = 3;
     public static final int FALL_PROTECTION_LEVEL = 6;
-    public static final int VERTICAL_LASHING_LEVEL = 7;
+    public static final int VERTICAL_LASHING_LEVEL = 8;
+    public static final int REABSORPTION_LEVEL = 10;
 
     public static final RadiantOrder WINDRUNNER = new RadiantOrder(
             "windrunner",
@@ -18,16 +19,16 @@ public final class RadiantOrderRegistry {
             "order.stormlight.windrunner",
             0xFF8DEBFF,
             List.of(
-                    level(1, 100, "breathing"),
-                    level(2, 200, "capacity_200"),
-                    level(3, 200, "horizontal_lashing"),
-                    level(4, 300, "capacity_300"),
-                    level(5, 300, "undiscovered"),
-                    level(6, 300, "fall_protection"),
-                    level(7, 300, "vertical_lashing"),
-                    level(8, 300, "undiscovered"),
-                    level(9, 300, "undiscovered"),
-                    level(10, 300, "undiscovered")
+                    level(1, 100, 0, 0, "breathing"),
+                    level(2, 200, 0, 0, "expanded_reserve"),
+                    level(3, 200, 0, 0, "horizontal_lashing"),
+                    level(4, 200, 1, 0, "adept_windrunning"),
+                    level(5, 400, 1, 0, "greater_reserve"),
+                    level(6, 400, 1, 0, "surefoot"),
+                    level(7, 600, 1, 0, "vast_reserve"),
+                    level(8, 600, 1, 0, "vertical_lashing"),
+                    level(9, 600, 2, 1, "expert_windrunning"),
+                    level(10, 1000, 2, 2, "radiant_mastery")
             )
     );
 
@@ -46,13 +47,15 @@ public final class RadiantOrderRegistry {
     private static RadiantLevel level(
             int level,
             int capacity,
+            int speedAmplifier,
+            int strengthAmplifier,
             String translationSuffix
     ) {
         return new RadiantLevel(
                 level,
                 capacity,
-                0,
-                0,
+                speedAmplifier,
+                strengthAmplifier,
                 "progression.stormlight.windrunner."
                         + translationSuffix + ".title",
                 "progression.stormlight.windrunner."
