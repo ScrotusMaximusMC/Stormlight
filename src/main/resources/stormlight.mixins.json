@@ -3,7 +3,6 @@
 	"package": "com.scrotey.stormlight.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ExampleMixin",
 		"InventoryMenuMixin",
 		"LivingEntitySurefootMixin"
 	],

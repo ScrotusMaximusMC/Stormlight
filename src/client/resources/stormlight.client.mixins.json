@@ -3,13 +3,13 @@
 	"package": "com.scrotey.stormlight.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"ExampleClientMixin",
 		"AbstractContainerScreenAccessor",
 		"InventoryScreenMixin",
 		"SpherePouchClickBoundsMixin",
 		"CloudRendererMixin",
 		"DaylightDarkeningMixin",
-		"CameraFovMixin"
+		"CameraFovMixin",
+		"WeatherEffectRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -33,6 +33,10 @@
   "item.stormlight.sphere_pouch": "Sphere Pouch",
   "item.stormlight.words_of_radiance": "The Words of Radiance",
 
+  "block.stormlight.chrysalis_shell": "Chrysalis Shell",
+  "block.stormlight.weathered_chrysalis_shell": "Weathered Chrysalis Shell",
+  "block.stormlight.pale_chrysalis_shell": "Pale Chrysalis Shell",
+
   "order.stormlight.windrunner": "Windrunner",
   "screen.stormlight.radiant.title": "The Words of Radiance",
   "screen.stormlight.radiant.choose_order": "Choose Your Order",

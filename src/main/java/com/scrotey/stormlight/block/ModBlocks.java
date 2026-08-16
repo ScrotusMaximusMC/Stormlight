@@ -66,6 +66,180 @@ public final class ModBlocks {
                     Blocks.DEEPSLATE_DIAMOND_ORE
             );
 
+    /*
+     * Chrysalis Shell.
+     *
+     * The brown terracotta texture is temporary while we establish
+     * the worldgen shape. It can later receive its own proper texture
+     * without changing any generation code.
+     */
+    private static final Identifier CHRYSALIS_SHELL_ID =
+            Identifier.fromNamespaceAndPath(
+                    Stormlight.MOD_ID,
+                    "chrysalis_shell"
+            );
+
+    private static final ResourceKey<Block>
+            CHRYSALIS_SHELL_BLOCK_KEY =
+            ResourceKey.create(
+                    Registries.BLOCK,
+                    CHRYSALIS_SHELL_ID
+            );
+
+    private static final ResourceKey<Item>
+            CHRYSALIS_SHELL_ITEM_KEY =
+            ResourceKey.create(
+                    Registries.ITEM,
+                    CHRYSALIS_SHELL_ID
+            );
+
+    public static final Block CHRYSALIS_SHELL =
+            Registry.register(
+                    BuiltInRegistries.BLOCK,
+                    CHRYSALIS_SHELL_BLOCK_KEY,
+                    new Block(
+                            BlockBehaviour.Properties
+                                    .ofFullCopy(
+                                            Blocks.TERRACOTTA
+                                    )
+                                    .setId(
+                                            CHRYSALIS_SHELL_BLOCK_KEY
+                                    )
+                                    .strength(
+                                            4.0F,
+                                            8.0F
+                                    )
+                                    .sound(
+                                            SoundType.DRIPSTONE_BLOCK
+                                    )
+                    )
+            );
+
+    public static final Item CHRYSALIS_SHELL_ITEM =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    CHRYSALIS_SHELL_ITEM_KEY,
+                    new BlockItem(
+                            CHRYSALIS_SHELL,
+                            new Item.Properties()
+                                    .setId(
+                                            CHRYSALIS_SHELL_ITEM_KEY
+                                    )
+                                    .useBlockDescriptionPrefix()
+                    )
+            );
+
+    private static final Identifier WEATHERED_CHRYSALIS_SHELL_ID =
+            Identifier.fromNamespaceAndPath(
+                    Stormlight.MOD_ID,
+                    "weathered_chrysalis_shell"
+            );
+
+    private static final ResourceKey<Block>
+            WEATHERED_CHRYSALIS_SHELL_BLOCK_KEY =
+            ResourceKey.create(
+                    Registries.BLOCK,
+                    WEATHERED_CHRYSALIS_SHELL_ID
+            );
+
+    private static final ResourceKey<Item>
+            WEATHERED_CHRYSALIS_SHELL_ITEM_KEY =
+            ResourceKey.create(
+                    Registries.ITEM,
+                    WEATHERED_CHRYSALIS_SHELL_ID
+            );
+
+    public static final Block WEATHERED_CHRYSALIS_SHELL =
+            Registry.register(
+                    BuiltInRegistries.BLOCK,
+                    WEATHERED_CHRYSALIS_SHELL_BLOCK_KEY,
+                    new Block(
+                            BlockBehaviour.Properties
+                                    .ofFullCopy(
+                                            Blocks.TERRACOTTA
+                                    )
+                                    .setId(
+                                            WEATHERED_CHRYSALIS_SHELL_BLOCK_KEY
+                                    )
+                                    .strength(
+                                            4.0F,
+                                            8.0F
+                                    )
+                                    .sound(
+                                            SoundType.DRIPSTONE_BLOCK
+                                    )
+                    )
+            );
+
+    public static final Item WEATHERED_CHRYSALIS_SHELL_ITEM =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    WEATHERED_CHRYSALIS_SHELL_ITEM_KEY,
+                    new BlockItem(
+                            WEATHERED_CHRYSALIS_SHELL,
+                            new Item.Properties()
+                                    .setId(
+                                            WEATHERED_CHRYSALIS_SHELL_ITEM_KEY
+                                    )
+                                    .useBlockDescriptionPrefix()
+                    )
+            );
+
+    private static final Identifier PALE_CHRYSALIS_SHELL_ID =
+            Identifier.fromNamespaceAndPath(
+                    Stormlight.MOD_ID,
+                    "pale_chrysalis_shell"
+            );
+
+    private static final ResourceKey<Block>
+            PALE_CHRYSALIS_SHELL_BLOCK_KEY =
+            ResourceKey.create(
+                    Registries.BLOCK,
+                    PALE_CHRYSALIS_SHELL_ID
+            );
+
+    private static final ResourceKey<Item>
+            PALE_CHRYSALIS_SHELL_ITEM_KEY =
+            ResourceKey.create(
+                    Registries.ITEM,
+                    PALE_CHRYSALIS_SHELL_ID
+            );
+
+    public static final Block PALE_CHRYSALIS_SHELL =
+            Registry.register(
+                    BuiltInRegistries.BLOCK,
+                    PALE_CHRYSALIS_SHELL_BLOCK_KEY,
+                    new Block(
+                            BlockBehaviour.Properties
+                                    .ofFullCopy(
+                                            Blocks.TERRACOTTA
+                                    )
+                                    .setId(
+                                            PALE_CHRYSALIS_SHELL_BLOCK_KEY
+                                    )
+                                    .strength(
+                                            4.0F,
+                                            8.0F
+                                    )
+                                    .sound(
+                                            SoundType.DRIPSTONE_BLOCK
+                                    )
+                    )
+            );
+
+    public static final Item PALE_CHRYSALIS_SHELL_ITEM =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    PALE_CHRYSALIS_SHELL_ITEM_KEY,
+                    new BlockItem(
+                            PALE_CHRYSALIS_SHELL,
+                            new Item.Properties()
+                                    .setId(
+                                            PALE_CHRYSALIS_SHELL_ITEM_KEY
+                                    )
+                                    .useBlockDescriptionPrefix()
+                    )
+            );
 
     /*
      * Sphere Jar.
@@ -251,6 +425,10 @@ public final class ModBlocks {
 
             entries.accept(SAPPHIRE_ORE.asItem());
             entries.accept(DEEPSLATE_SAPPHIRE_ORE.asItem());
+
+            entries.accept(CHRYSALIS_SHELL_ITEM);
+            entries.accept(WEATHERED_CHRYSALIS_SHELL_ITEM);
+            entries.accept(PALE_CHRYSALIS_SHELL_ITEM);
         });
     }
 }

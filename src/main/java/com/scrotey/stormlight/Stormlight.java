@@ -17,6 +17,7 @@ import com.scrotey.stormlight.progression.RadiantLecternInteraction;
 import com.scrotey.stormlight.progression.RadiantProgression;
 import com.scrotey.stormlight.highstorm.SphereDecayManager;
 import com.scrotey.stormlight.worldgen.ModWorldGeneration;
+import com.scrotey.stormlight.worldgen.ModFeatures;
 
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -34,6 +35,7 @@ public class Stormlight implements ModInitializer {
         RadiantProgression.initialize();
         ModAttachments.initialize();
         ModBlocks.initialize();
+        ModFeatures.initialize();
         ModWorldGeneration.initialize();
         ModBlockEntities.initialize();
         ModMenuTypes.initialize();
