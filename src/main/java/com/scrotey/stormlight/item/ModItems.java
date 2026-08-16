@@ -25,6 +25,36 @@ public class ModItems {
             new Item.Properties().stacksTo(1)
     );
 
+    public static final Item LARGE_DIAMOND = register(
+            ModItemIds.LARGE_DIAMOND,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item LARGE_GARNET = register(
+            ModItemIds.LARGE_GARNET,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item LARGE_RUBY = register(
+            ModItemIds.LARGE_RUBY,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item LARGE_SAPPHIRE = register(
+            ModItemIds.LARGE_SAPPHIRE,
+            Item::new,
+            new Item.Properties()
+    );
+
+    public static final Item LARGE_EMERALD = register(
+            ModItemIds.LARGE_EMERALD,
+            Item::new,
+            new Item.Properties()
+    );
+
     public static final Item DIAMOND_CHIP = register(
             ModItemIds.DIAMOND_CHIP,
             properties -> new SphereItem(properties, 10, "diamond_chip"),
@@ -197,6 +227,12 @@ public class ModItems {
                 .register(entries -> {
                     entries.accept(SPHERE_POUCH);
                     entries.accept(WORDS_OF_RADIANCE);
+
+                    entries.accept(LARGE_DIAMOND);
+                    entries.accept(LARGE_GARNET);
+                    entries.accept(LARGE_RUBY);
+                    entries.accept(LARGE_SAPPHIRE);
+                    entries.accept(LARGE_EMERALD);
 
                     entries.accept(DIAMOND_CHIP);
                     entries.accept(DIAMOND_MARK);

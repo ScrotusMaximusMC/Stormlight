@@ -23,6 +23,7 @@ import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
 import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
 import com.scrotey.stormlight.network.LashingStatePayload;
 import com.scrotey.stormlight.network.ToggleLashingPayload;
+import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
 
 import java.util.function.Supplier;

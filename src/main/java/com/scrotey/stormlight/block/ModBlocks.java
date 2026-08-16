@@ -3,6 +3,7 @@ package com.scrotey.stormlight.block;
 import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.block.custom.SphereJarBlock;
 import com.scrotey.stormlight.block.custom.SphereLanternBlock;
+import com.scrotey.stormlight.block.custom.GemheartBlock;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
@@ -65,6 +66,33 @@ public final class ModBlocks {
                     "deepslate_sapphire_ore",
                     Blocks.DEEPSLATE_DIAMOND_ORE
             );
+
+    /*
+     * Gemhearts.
+     *
+     * These are deliberately non-occluding, light-emitting crystal blocks.
+     * Correct-tool drops are restricted to diamond-tier pickaxes and above
+     * through the minecraft:needs_diamond_tool block tag.
+     */
+    public static final Block DIAMOND_GEMHEART = registerGemheart("diamond_gemheart");
+    public static final Block GARNET_GEMHEART = registerGemheart("garnet_gemheart");
+    public static final Block RUBY_GEMHEART = registerGemheart("ruby_gemheart");
+    public static final Block SAPPHIRE_GEMHEART = registerGemheart("sapphire_gemheart");
+    public static final Block EMERALD_GEMHEART = registerGemheart("emerald_gemheart");
+
+    /*
+     * Structure-authoring marker.
+     *
+     * This exists only so the chrysalis NBT can mark the exact position
+     * where a randomly selected Gemheart will eventually be placed.
+     *
+     * It is intentionally NOT added to any creative tab.
+     */
+    public static final Block GEMHEART_PLACEHOLDER =
+            registerStructureMarker("gemheart_placeholder");
+
+    public static final Block CAVITY_PLACEHOLDER =
+            registerStructureMarker("cavity_placeholder");
 
     /*
      * Chrysalis Shell.
@@ -350,6 +378,85 @@ public final class ModBlocks {
             );
 
 
+    private static Block registerGemheart(String name) {
+        Identifier id = Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, name);
+
+        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
+
+        Block block = new GemheartBlock(
+                BlockBehaviour.Properties.of()
+                        .setId(blockKey)
+                        .strength(5.0F, 8.0F)
+                        .sound(SoundType.AMETHYST)
+                        .noOcclusion()
+                        .lightLevel(state -> 15)
+                        .requiresCorrectToolForDrops()
+        );
+
+        Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+        Registry.register(
+                BuiltInRegistries.ITEM,
+                itemKey,
+                new BlockItem(
+                        block,
+                        new Item.Properties()
+                                .setId(itemKey)
+                                .useBlockDescriptionPrefix()
+                )
+        );
+
+        return block;
+    }
+
+    private static Block registerStructureMarker(String name) {
+        Identifier id =
+                Identifier.fromNamespaceAndPath(
+                        Stormlight.MOD_ID,
+                        name
+                );
+
+        ResourceKey<Block> blockKey =
+                ResourceKey.create(
+                        Registries.BLOCK,
+                        id
+                );
+
+        ResourceKey<Item> itemKey =
+                ResourceKey.create(
+                        Registries.ITEM,
+                        id
+                );
+
+        Block block =
+                new Block(
+                        BlockBehaviour.Properties
+                                .of()
+                                .setId(blockKey)
+                                .strength(0.5F)
+                                .sound(SoundType.STONE)
+                );
+
+        Registry.register(
+                BuiltInRegistries.BLOCK,
+                blockKey,
+                block
+        );
+
+        Registry.register(
+                BuiltInRegistries.ITEM,
+                itemKey,
+                new BlockItem(
+                        block,
+                        new Item.Properties()
+                                .setId(itemKey)
+                                .useBlockDescriptionPrefix()
+                )
+        );
+
+        return block;
+    }
+
     /*
      * Registers an ore block and its matching inventory item.
      */
@@ -429,6 +536,13 @@ public final class ModBlocks {
             entries.accept(CHRYSALIS_SHELL_ITEM);
             entries.accept(WEATHERED_CHRYSALIS_SHELL_ITEM);
             entries.accept(PALE_CHRYSALIS_SHELL_ITEM);
+
+
+            entries.accept(DIAMOND_GEMHEART.asItem());
+            entries.accept(GARNET_GEMHEART.asItem());
+            entries.accept(RUBY_GEMHEART.asItem());
+            entries.accept(SAPPHIRE_GEMHEART.asItem());
+            entries.accept(EMERALD_GEMHEART.asItem());
         });
     }
 }

@@ -5,6 +5,11 @@
     "stormlight:ruby_ore",
     "stormlight:deepslate_ruby_ore",
     "stormlight:sapphire_ore",
-    "stormlight:deepslate_sapphire_ore"
+    "stormlight:deepslate_sapphire_ore",
+    "stormlight:diamond_gemheart",
+    "stormlight:garnet_gemheart",
+    "stormlight:ruby_gemheart",
+    "stormlight:sapphire_gemheart",
+    "stormlight:emerald_gemheart"
   ]
 }

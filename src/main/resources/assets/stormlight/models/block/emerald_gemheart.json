@@ -1,0 +1,6 @@
+{
+  "parent": "stormlight:block/gemheart_base",
+  "textures": {
+    "crystal": "stormlight:block/emerald_gemheart"
+  }
+}

@@ -24,19 +24,16 @@
   "message.stormlight.order.chosen": "You have chosen the order of the %s",
   "message.stormlight.radiant.level_unlocked": "Windrunner level %s unlocked",
   "message.stormlight.radiant.not_enough_xp": "You need %s experience levels to unlock Windrunner level %s",
-
   "container.stormlight.sphere_pouch": "Sphere Pouch",
-
   "button.stormlight.sphere_pouch": "Sphere Pouch",
   "button.stormlight.inventory": "Inventory",
-
   "item.stormlight.sphere_pouch": "Sphere Pouch",
   "item.stormlight.words_of_radiance": "The Words of Radiance",
-
   "block.stormlight.chrysalis_shell": "Chrysalis Shell",
   "block.stormlight.weathered_chrysalis_shell": "Weathered Chrysalis Shell",
   "block.stormlight.pale_chrysalis_shell": "Pale Chrysalis Shell",
-
+  "block.stormlight.gemheart_placeholder": "Gemheart Placeholder (DEV)",
+  "block.stormlight.cavity_placeholder": "Cavity Placeholder (DEV)",
   "order.stormlight.windrunner": "Windrunner",
   "screen.stormlight.radiant.title": "The Words of Radiance",
   "screen.stormlight.radiant.choose_order": "Choose Your Order",
@@ -51,7 +48,6 @@
   "button.stormlight.choosing": "Choosing...",
   "button.stormlight.radiant.unlock": "Unlock %s (%s XP)",
   "button.stormlight.radiant.unlocking": "Unlocking...",
-
   "progression.stormlight.windrunner.breathing.title": "Breathing Stormlight",
   "progression.stormlight.windrunner.breathing.description": "Speed I  •  Strength I  •  Healing  •  Breathe Out",
   "progression.stormlight.windrunner.expanded_reserve.title": "Expanded Reserve",
@@ -72,21 +68,18 @@
   "progression.stormlight.windrunner.expert_windrunning.description": "Speed III  •  Strength II",
   "progression.stormlight.windrunner.radiant_mastery.title": "Radiant Mastery",
   "progression.stormlight.windrunner.radiant_mastery.description": "Speed III  •  Strength III  •  Reabsorption",
-
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
   "item.stormlight.diamond_mark.dun": "Dun Diamond Mark",
   "item.stormlight.diamond_mark.infused": "Infused Diamond Mark",
   "item.stormlight.diamond_broam.dun": "Dun Diamond Broam",
   "item.stormlight.diamond_broam.infused": "Infused Diamond Broam",
-
   "item.stormlight.emerald_chip.dun": "Dun Emerald Chip",
   "item.stormlight.emerald_chip.infused": "Infused Emerald Chip",
   "item.stormlight.emerald_mark.dun": "Dun Emerald Mark",
   "item.stormlight.emerald_mark.infused": "Infused Emerald Mark",
   "item.stormlight.emerald_broam.dun": "Dun Emerald Broam",
   "item.stormlight.emerald_broam.infused": "Infused Emerald Broam",
-
   "item.stormlight.garnet": "Garnet",
   "item.stormlight.garnet_chip.dun": "Dun Garnet Chip",
   "item.stormlight.garnet_chip.infused": "Infused Garnet Chip",
@@ -94,7 +87,6 @@
   "item.stormlight.garnet_mark.infused": "Infused Garnet Mark",
   "item.stormlight.garnet_broam.dun": "Dun Garnet Broam",
   "item.stormlight.garnet_broam.infused": "Infused Garnet Broam",
-
   "item.stormlight.ruby": "Ruby",
   "item.stormlight.ruby_chip.dun": "Dun Ruby Chip",
   "item.stormlight.ruby_chip.infused": "Infused Ruby Chip",
@@ -102,7 +94,6 @@
   "item.stormlight.ruby_mark.infused": "Infused Ruby Mark",
   "item.stormlight.ruby_broam.dun": "Dun Ruby Broam",
   "item.stormlight.ruby_broam.infused": "Infused Ruby Broam",
-
   "item.stormlight.sapphire": "Sapphire",
   "item.stormlight.sapphire_chip.dun": "Dun Sapphire Chip",
   "item.stormlight.sapphire_chip.infused": "Infused Sapphire Chip",
@@ -110,23 +101,28 @@
   "item.stormlight.sapphire_mark.infused": "Infused Sapphire Mark",
   "item.stormlight.sapphire_broam.dun": "Dun Sapphire Broam",
   "item.stormlight.sapphire_broam.infused": "Infused Sapphire Broam",
-
   "block.stormlight.garnet_ore": "Garnet Ore",
   "block.stormlight.deepslate_garnet_ore": "Deepslate Garnet Ore",
   "block.stormlight.ruby_ore": "Ruby Ore",
   "block.stormlight.deepslate_ruby_ore": "Deepslate Ruby Ore",
   "block.stormlight.sapphire_ore": "Sapphire Ore",
   "block.stormlight.deepslate_sapphire_ore": "Deepslate Sapphire Ore",
-
   "key.category.stormlight.controls": "Stormlight",
   "key.stormlight.breathe": "Breathe Stormlight",
   "key.stormlight.lashing": "Toggle Lashing",
-
   "hud.stormlight.lashing.active": "Lashing",
   "hud.stormlight.stabilising": "Stabilising",
-
   "block.stormlight.sphere_jar": "Sphere Jar",
-
   "tooltip.stormlight.sphere_pouch": "Unlocks your 16-slot Sphere Pouch inventory",
-  "tooltip.stormlight.charge": "Stormlight: %s / %s"
+  "tooltip.stormlight.charge": "Stormlight: %s / %s",
+  "item.stormlight.large_diamond": "Large Diamond",
+  "block.stormlight.diamond_gemheart": "Diamond Gemheart",
+  "item.stormlight.large_garnet": "Large Garnet",
+  "block.stormlight.garnet_gemheart": "Garnet Gemheart",
+  "item.stormlight.large_ruby": "Large Ruby",
+  "block.stormlight.ruby_gemheart": "Ruby Gemheart",
+  "item.stormlight.large_sapphire": "Large Sapphire",
+  "block.stormlight.sapphire_gemheart": "Sapphire Gemheart",
+  "item.stormlight.large_emerald": "Large Emerald",
+  "block.stormlight.emerald_gemheart": "Emerald Gemheart"
 }

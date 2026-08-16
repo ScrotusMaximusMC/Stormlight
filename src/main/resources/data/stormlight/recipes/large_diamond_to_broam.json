@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GLG",
+    "GGG"
+  ],
+  "key": {
+    "G": "minecraft:glass",
+    "L": "stormlight:large_diamond"
+  },
+  "result": {
+    "id": "stormlight:diamond_broam",
+    "count": 1
+  }
+}

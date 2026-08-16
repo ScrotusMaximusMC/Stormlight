@@ -2,12 +2,15 @@ package com.scrotey.stormlight.worldgen.feature;
 
 import com.mojang.serialization.Codec;
 import com.scrotey.stormlight.Stormlight;
+import com.scrotey.stormlight.block.ModBlocks;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -116,7 +119,7 @@ public final class ChrysalisFeature
                                 BlockIgnoreProcessor.STRUCTURE_AND_AIR
                         );
 
-        return template.placeInWorld(
+        boolean placed = template.placeInWorld(
                 level,
                 placementOrigin,
                 placementOrigin,
@@ -124,5 +127,67 @@ public final class ChrysalisFeature
                 random,
                 2
         );
+
+        if (!placed) {
+            return false;
+        }
+
+        /*
+         * The authored NBT uses two explicit marker blocks:
+         *
+         * - cavity_placeholder marks spaces that must become real air.
+         * - gemheart_placeholder marks the position of the Gemheart.
+         *
+         * Normal structure air is still ignored, so terrain outside the
+         * chrysalis is never carved away. Only deliberately marked interior
+         * spaces are cleared.
+         */
+        Block chosenGemheart = randomGemheart(random);
+
+        /*
+         * Ask the template itself for the transformed world positions of our
+         * marker blocks. This avoids reading neighbouring chunks during worldgen.
+         */
+        for (StructureTemplate.StructureBlockInfo info :
+                template.filterBlocks(
+                        placementOrigin,
+                        settings,
+                        ModBlocks.CAVITY_PLACEHOLDER,
+                        true
+                )) {
+
+            level.setBlock(
+                    info.pos(),
+                    Blocks.AIR.defaultBlockState(),
+                    2
+            );
+        }
+
+        for (StructureTemplate.StructureBlockInfo info :
+                template.filterBlocks(
+                        placementOrigin,
+                        settings,
+                        ModBlocks.GEMHEART_PLACEHOLDER,
+                        true
+                )) {
+
+            level.setBlock(
+                    info.pos(),
+                    chosenGemheart.defaultBlockState(),
+                    2
+            );
+        }
+
+        return true;
+    }
+
+    private static Block randomGemheart(RandomSource random) {
+        return switch (random.nextInt(5)) {
+            case 0 -> ModBlocks.DIAMOND_GEMHEART;
+            case 1 -> ModBlocks.GARNET_GEMHEART;
+            case 2 -> ModBlocks.RUBY_GEMHEART;
+            case 3 -> ModBlocks.SAPPHIRE_GEMHEART;
+            default -> ModBlocks.EMERALD_GEMHEART;
+        };
     }
 }

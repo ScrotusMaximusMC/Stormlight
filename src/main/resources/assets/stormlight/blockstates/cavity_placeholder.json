@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "stormlight:block/cavity_placeholder"
+    }
+  }
+}

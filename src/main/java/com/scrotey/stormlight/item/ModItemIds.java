@@ -12,6 +12,12 @@ public class ModItemIds {
     public static final ResourceKey<Item> WORDS_OF_RADIANCE =
             create("words_of_radiance");
 
+    public static final ResourceKey<Item> LARGE_DIAMOND = create("large_diamond");
+    public static final ResourceKey<Item> LARGE_GARNET = create("large_garnet");
+    public static final ResourceKey<Item> LARGE_RUBY = create("large_ruby");
+    public static final ResourceKey<Item> LARGE_SAPPHIRE = create("large_sapphire");
+    public static final ResourceKey<Item> LARGE_EMERALD = create("large_emerald");
+
     public static final ResourceKey<Item> DIAMOND_CHIP = create("diamond_chip");
     public static final ResourceKey<Item> DIAMOND_MARK = create("diamond_mark");
     public static final ResourceKey<Item> DIAMOND_BROAM = create("diamond_broam");
