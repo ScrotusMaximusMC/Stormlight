@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
+import com.scrotey.stormlight.worldgen.chrysalis.ChrysalisSpawner;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -58,6 +59,8 @@ public final class HighstormManager {
                 "A Highstorm has arrived!",
                 ChatFormatting.AQUA
         );
+
+        ChrysalisSpawner.beginHighstormSearch(server);
     }
 
     public static void startApproachNow(
@@ -110,6 +113,10 @@ public final class HighstormManager {
                 "The Highstorm is passing.",
                 ChatFormatting.GRAY
         );
+
+        /* Dev shortcut support: begin the incremental search even when
+         * /highstorm passing skips the HIGHSTORM phase entirely. */
+        ChrysalisSpawner.beginHighstormSearch(server);
     }
 
     public static void stopNow(
@@ -131,6 +138,7 @@ public final class HighstormManager {
         );
 
         releaseWeather(level);
+        ChrysalisSpawner.cancelSearch();
 
         if (wasInProgress) {
             announce(
@@ -200,6 +208,8 @@ public final class HighstormManager {
                 data,
                 level.getRandom()
         );
+
+        ChrysalisSpawner.tick(server);
 
         maintainWeather(
                 level,
@@ -296,6 +306,8 @@ public final class HighstormManager {
                         "A Highstorm has arrived!",
                         ChatFormatting.AQUA
                 );
+
+                ChrysalisSpawner.beginHighstormSearch(server);
             }
 
             case HIGHSTORM -> {
@@ -329,6 +341,8 @@ public final class HighstormManager {
                         "The Highstorm has passed.",
                         ChatFormatting.GRAY
                 );
+
+                ChrysalisSpawner.onHighstormFinished(server);
             }
         }
     }

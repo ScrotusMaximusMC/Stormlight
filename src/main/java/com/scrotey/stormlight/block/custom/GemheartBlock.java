@@ -1,6 +1,10 @@
 package com.scrotey.stormlight.block.custom;
 
+import com.scrotey.stormlight.worldgen.chrysalis.ChrysalisSavedData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,6 +37,26 @@ public class GemheartBlock extends Block {
 
     public GemheartBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public BlockState playerWillDestroy(
+            Level level,
+            BlockPos pos,
+            BlockState state,
+            Player player
+    ) {
+        if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
+            ChrysalisSavedData.get(serverLevel.getServer())
+                    .markGemheartMined(pos);
+        }
+
+        return super.playerWillDestroy(
+                level,
+                pos,
+                state,
+                player
+        );
     }
 
     @Override
