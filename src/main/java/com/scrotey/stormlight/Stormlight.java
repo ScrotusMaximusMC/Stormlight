@@ -49,6 +49,7 @@ public class Stormlight implements ModInitializer {
         StormlightManager.initialize();
         LashingManager.initialize();
 
+
         LOGGER.info("Hello Kaladin!");
     }
 

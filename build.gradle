@@ -7,6 +7,8 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	maven { url = 'https://maven.minecraftforge.net/' }
+
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -38,6 +40,12 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// TerraBlender is OPTIONAL for players.
+	// We compile against it and include it in the local dev runtime, but it is
+	// not bundled into Stormlight and Fabric does not require it to launch.
+	compileOnly "com.github.glitchfiend:TerraBlender-fabric:${project.minecraft_version}-${project.terrablender_version}"
+	runtimeOnly "com.github.glitchfiend:TerraBlender-fabric:${project.minecraft_version}-${project.terrablender_version}"
 }
 
 processResources {

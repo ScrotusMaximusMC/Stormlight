@@ -1,0 +1,8 @@
+{
+  "feature": "stormlight:shattered_plains_surface",
+  "placement": [
+    {
+      "type": "minecraft:in_square"
+    }
+  ]
+}

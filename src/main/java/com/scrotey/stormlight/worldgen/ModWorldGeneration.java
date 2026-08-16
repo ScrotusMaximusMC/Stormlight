@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.worldgen;
 
 import com.scrotey.stormlight.Stormlight;
+import com.scrotey.stormlight.worldgen.biome.ModBiomes;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
@@ -26,6 +27,9 @@ public final class ModWorldGeneration {
     private static final ResourceKey<PlacedFeature> CHRYSALIS =
             placedFeatureKey("chrysalis");
 
+    private static final ResourceKey<PlacedFeature> SHATTERED_PLAINS_SURFACE =
+            placedFeatureKey("shattered_plains_surface");
+
     private ModWorldGeneration() {
     }
 
@@ -50,6 +54,14 @@ public final class ModWorldGeneration {
                 SAPPHIRE_ORE
         );
 
+        BiomeModifications.addFeature(
+                BiomeSelectors.includeByKey(
+                        ModBiomes.SHATTERED_PLAINS
+                ),
+                GenerationStep.Decoration.LOCAL_MODIFICATIONS,
+                SHATTERED_PLAINS_SURFACE
+        );
+
         /*
          * Temporary home for chrysalises.
          *
@@ -60,7 +72,8 @@ public final class ModWorldGeneration {
                 BiomeSelectors.includeByKey(
                         Biomes.BADLANDS,
                         Biomes.ERODED_BADLANDS,
-                        Biomes.WOODED_BADLANDS
+                        Biomes.WOODED_BADLANDS,
+                        ModBiomes.SHATTERED_PLAINS
                 ),
                 GenerationStep.Decoration.VEGETAL_DECORATION,
                 CHRYSALIS
