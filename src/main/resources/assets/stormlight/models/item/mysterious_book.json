@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "stormlight:item/words_of_radiance"
+    "layer0": "stormlight:item/mysterious_book"
   }
 }

@@ -229,6 +229,11 @@ public final class HighstormManager {
             );
         }
 
+        MysteriousBookRitual.tick(
+                level,
+                data.getPhase() == HighstormPhase.HIGHSTORM
+        );
+
         if (data.getPhase()
                 == HighstormPhase.HIGHSTORM) {
 

@@ -7,10 +7,10 @@ public final class HighstormTimings {
             3 * 60 * TICKS_PER_SECOND;
 
     public static final int HIGHSTORM_TICKS =
-            5 * 60 * TICKS_PER_SECOND;
+            2 * 60 * TICKS_PER_SECOND;
 
     public static final int PASSING_TICKS =
-            3 * 60 * TICKS_PER_SECOND;
+            1 * 60 * TICKS_PER_SECOND;
 
     private HighstormTimings() {
     }

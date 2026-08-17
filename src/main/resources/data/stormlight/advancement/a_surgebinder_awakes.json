@@ -1,0 +1,28 @@
+{
+  "criteria": {
+    "awakened": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "stormlight:words_of_radiance"
+    },
+    "title": {
+      "translate": "advancement.stormlight.a_surgebinder_awakes.title"
+    },
+    "description": {
+      "translate": "advancement.stormlight.a_surgebinder_awakes.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "requirements": [
+    [
+      "awakened"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

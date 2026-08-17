@@ -4,8 +4,12 @@ import com.scrotey.stormlight.breathing.StormlightManager;
 import com.scrotey.stormlight.item.ModItems;
 import com.scrotey.stormlight.network.ChooseRadiantOrderPayload;
 import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
+import com.scrotey.stormlight.network.OpenMysteriousBookPayload;
 import com.scrotey.stormlight.network.UnlockRadiantLevelPayload;
+import com.scrotey.stormlight.network.TakeLecternBookPayload;
 
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.LecternBlock;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
@@ -27,8 +31,22 @@ public final class RadiantLecternInteraction {
                 (player, level, hand, hitResult) -> {
                     BlockPos pos = hitResult.getBlockPos();
 
-                    if (player.isSpectator()
-                            || !hasWordsOfRadiance(level, pos)) {
+                    if (player.isSpectator()) {
+                        return InteractionResult.PASS;
+                    }
+
+                    if (hasMysteriousBook(level, pos)) {
+                        if (!level.isClientSide()
+                                && player instanceof ServerPlayer serverPlayer) {
+                            ServerPlayNetworking.send(
+                                    serverPlayer,
+                                    new OpenMysteriousBookPayload(pos)
+                            );
+                        }
+                        return InteractionResult.SUCCESS;
+                    }
+
+                    if (!hasWordsOfRadiance(level, pos)) {
                         return InteractionResult.PASS;
                     }
 
@@ -162,6 +180,69 @@ public final class RadiantLecternInteraction {
                         RadiantProgression.experienceCost(level),
                         level
                 )
+        );
+    }
+
+    private static boolean hasMysteriousBook(
+            Level level,
+            BlockPos pos
+    ) {
+        if (!level.getBlockState(pos).is(Blocks.LECTERN)) {
+            return false;
+        }
+
+        return level.getBlockEntity(pos)
+                instanceof LecternBlockEntity lectern
+                && lectern.getBook().is(ModItems.MYSTERIOUS_BOOK);
+    }
+
+    public static void takeLecternBook(
+            ServerPlayer player,
+            TakeLecternBookPayload payload
+    ) {
+        BlockPos pos = payload.lecternPos();
+
+        if (player.distanceToSqr(
+                pos.getX() + 0.5,
+                pos.getY() + 0.5,
+                pos.getZ() + 0.5
+        ) > MAX_INTERACTION_DISTANCE_SQUARED) {
+            return;
+        }
+
+        if (!(player.level().getBlockEntity(pos)
+                instanceof LecternBlockEntity lectern)) {
+            return;
+        }
+
+        ItemStack book = lectern.getBook();
+
+        if (!book.is(ModItems.MYSTERIOUS_BOOK)
+                && !book.is(ModItems.WORDS_OF_RADIANCE)) {
+            return;
+        }
+
+        ItemStack removedBook = book.copy();
+
+        lectern.setBook(ItemStack.EMPTY);
+
+        var state = player.level().getBlockState(pos);
+
+        if (state.is(Blocks.LECTERN)
+                && state.hasProperty(LecternBlock.HAS_BOOK)) {
+
+            player.level().setBlock(
+                    pos,
+                    state.setValue(
+                            LecternBlock.HAS_BOOK,
+                            false
+                    ),
+                    3
+            );
+        }
+
+        player.getInventory().placeItemBackInInventory(
+                removedBook
         );
     }
 

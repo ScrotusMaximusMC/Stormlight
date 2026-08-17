@@ -46,6 +46,11 @@ public final class ModNetworking {
                 OpenRadiantProgressionPayload.CODEC
         );
 
+        PayloadTypeRegistry.clientboundPlay().register(
+                OpenMysteriousBookPayload.TYPE,
+                OpenMysteriousBookPayload.CODEC
+        );
+
         PayloadTypeRegistry.serverboundPlay().register(
                 ChooseRadiantOrderPayload.TYPE,
                 ChooseRadiantOrderPayload.CODEC
@@ -72,6 +77,11 @@ public final class ModNetworking {
                         StormlightManager.breathe(
                                 context.player()
                         )
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                TakeLecternBookPayload.TYPE,
+                TakeLecternBookPayload.CODEC
         );
 
         ServerPlayNetworking.registerGlobalReceiver(
@@ -104,6 +114,15 @@ public final class ModNetworking {
                 UnlockRadiantLevelPayload.TYPE,
                 (payload, context) ->
                         RadiantLecternInteraction.unlockLevel(
+                                context.player(),
+                                payload
+                        )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                TakeLecternBookPayload.TYPE,
+                (payload, context) ->
+                        RadiantLecternInteraction.takeLecternBook(
                                 context.player(),
                                 payload
                         )

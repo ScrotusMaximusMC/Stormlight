@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "stormlight:mysterious_book",
     "stormlight:words_of_radiance"
   ]
 }

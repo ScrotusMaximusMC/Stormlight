@@ -3,6 +3,7 @@ package com.scrotey.stormlight.client.progression;
 import com.scrotey.stormlight.network.ChooseRadiantOrderPayload;
 import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
 import com.scrotey.stormlight.network.UnlockRadiantLevelPayload;
+import com.scrotey.stormlight.network.TakeLecternBookPayload;
 import com.scrotey.stormlight.progression.RadiantLevel;
 import com.scrotey.stormlight.progression.RadiantOrder;
 import com.scrotey.stormlight.progression.RadiantOrderRegistry;
@@ -116,17 +117,52 @@ public final class RadiantProgressionScreen extends Screen {
             updateUnlockButton();
         }
 
+        int bottomButtonWidth = 90;
+        int bottomButtonGap = 8;
+        int bottomButtonsWidth =
+                bottomButtonWidth * 2 + bottomButtonGap;
+
+        int bottomButtonStartX =
+                centreX - bottomButtonsWidth / 2;
+
+        int bottomButtonY =
+                panelTop + panelHeight - 35;
+
+        addRenderableWidget(
+                Button.builder(
+                        Component.literal("Take Book"),
+                        button -> takeBook()
+                ).bounds(
+                        bottomButtonStartX,
+                        bottomButtonY,
+                        bottomButtonWidth,
+                        20
+                ).build()
+        );
+
         addRenderableWidget(
                 Button.builder(
                         Component.translatable("gui.done"),
                         button -> onClose()
                 ).bounds(
-                        centreX - 45,
-                        panelTop + panelHeight - 35,
-                        90,
+                        bottomButtonStartX
+                                + bottomButtonWidth
+                                + bottomButtonGap,
+                        bottomButtonY,
+                        bottomButtonWidth,
                         20
                 ).build()
         );
+    }
+
+    private void takeBook() {
+        ClientPlayNetworking.send(
+                new TakeLecternBookPayload(
+                        state.lecternPos()
+                )
+        );
+
+        onClose();
     }
 
     private void chooseWindrunner(Button button) {

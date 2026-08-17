@@ -19,6 +19,12 @@ public class ModItems {
                     .stacksTo(1)
     );
 
+    public static final Item MYSTERIOUS_BOOK = register(
+            ModItemIds.MYSTERIOUS_BOOK,
+            Item::new,
+            new Item.Properties().stacksTo(1)
+    );
+
     public static final Item WORDS_OF_RADIANCE = register(
             ModItemIds.WORDS_OF_RADIANCE,
             WordsOfRadianceItem::new,
@@ -226,6 +232,7 @@ public class ModItems {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> {
                     entries.accept(SPHERE_POUCH);
+                    entries.accept(MYSTERIOUS_BOOK);
                     entries.accept(WORDS_OF_RADIANCE);
 
                     entries.accept(LARGE_DIAMOND);
