@@ -129,5 +129,6 @@
   "item.stormlight.large_sapphire": "Large Sapphire",
   "block.stormlight.sapphire_gemheart": "Sapphire Gemheart",
   "item.stormlight.large_emerald": "Large Emerald",
-  "block.stormlight.emerald_gemheart": "Emerald Gemheart"
+  "block.stormlight.emerald_gemheart": "Emerald Gemheart",
+  "entity.stormlight.spren": "Windrunner Spren"
 }

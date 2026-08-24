@@ -82,6 +82,14 @@ public final class LashingManager {
         );
     }
 
+    public static boolean isLashing(ServerPlayer player) {
+        return ACTIVE_LASHINGS.containsKey(player.getUUID());
+    }
+
+    public static boolean isStabilising(ServerPlayer player) {
+        return STABILISATIONS.containsKey(player.getUUID());
+    }
+
     public static void handleInput(
             ServerPlayer player,
             boolean pressed

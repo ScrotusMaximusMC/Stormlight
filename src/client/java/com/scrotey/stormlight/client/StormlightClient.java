@@ -27,6 +27,7 @@ import com.scrotey.stormlight.network.LashingStatePayload;
 import com.scrotey.stormlight.network.ToggleLashingPayload;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
+import com.scrotey.stormlight.spren.ModSprenEntities;
 
 import java.util.function.Supplier;
 
@@ -51,6 +52,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.entity.AllayRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 
 public class StormlightClient implements ClientModInitializer {
     private static final int SLOT_DARK_EDGE = 0xFF06131F;
@@ -88,6 +91,11 @@ public class StormlightClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        EntityRenderers.register(
+                ModSprenEntities.SPREN,
+                AllayRenderer::new
+        );
+
         ParticleProviderRegistry.getInstance().register(
                 ModParticles.WINDSPREN,
                 EndRodParticle.Provider::new
