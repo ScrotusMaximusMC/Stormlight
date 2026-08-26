@@ -27,7 +27,7 @@ public final class SprenManager {
     private static final Map<UUID, UUID> ACTIVE = new HashMap<>();
 
     private static final int CHECK_INTERVAL_TICKS = 20;
-    private static final double SEARCH_RADIUS = 96.0;
+    private static final double SEARCH_RADIUS = 128.0;
 
     private SprenManager() {
     }
@@ -75,6 +75,8 @@ public final class SprenManager {
             return;
         }
 
+        // Sweep loaded legacy manifestations too. New spren are not saved
+        // to chunk data, but this also cleans up copies left by older builds.
         List<SprenEntity> owned = findOwnedSpren(player);
 
         if (!owned.isEmpty()) {

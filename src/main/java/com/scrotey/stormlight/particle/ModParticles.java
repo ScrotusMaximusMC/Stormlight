@@ -28,6 +28,14 @@ public final class ModParticles {
                     FabricParticleTypes.simple()
             );
 
+
+    public static final SimpleParticleType HONORSPREN_MOTE =
+            Registry.register(
+                    BuiltInRegistries.PARTICLE_TYPE,
+                    Stormlight.id("honorspren_mote"),
+                    FabricParticleTypes.simple()
+            );
+
     private ModParticles() {
     }
 

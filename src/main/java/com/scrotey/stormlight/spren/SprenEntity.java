@@ -4,8 +4,10 @@ import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.lashing.LashingManager;
 
 import net.minecraft.core.BlockPos;
+import com.scrotey.stormlight.particle.ModParticles;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -126,13 +128,75 @@ public final class SprenEntity extends Allay {
         setInvulnerable(true);
         noPhysics = true;
 
-        if (level().isClientSide()
-                || !(level() instanceof ServerLevel serverLevel)) {
+        if (level().isClientSide()) {
+            tickClientMagicParticles();
+            return;
+        }
+
+        if (!(level() instanceof ServerLevel serverLevel)) {
             return;
         }
 
         tickSprenAi(serverLevel);
     }
+
+    /*
+     * Spren should not inherit the Allay's chirps/whines. Until we add a
+     * purpose-built honorspren sound set, she is intentionally quiet.
+     */
+    @Override
+    protected @Nullable SoundEvent getAmbientSound() {
+        return null;
+    }
+
+    @Override
+    protected @Nullable SoundEvent getHurtSound(DamageSource damageSource) {
+        return null;
+    }
+
+    @Override
+    protected @Nullable SoundEvent getDeathSound() {
+        return null;
+    }
+
+    @Override
+    protected float getSoundVolume() {
+        return 0.0F;
+    }
+
+    /**
+     * Client-only honorspren twinkles.
+     *
+     * These are intentionally tiny, sparse, full-bright blue points rather
+     * than vanilla star/spark shapes. They live for only a handful of ticks
+     * and are spawned randomly around her body, so movement leaves scattered
+     * twinkles rather than a uniform particle streak.
+     */
+    private void tickClientMagicParticles() {
+        // Roughly 60% of the previous density. The random cadence also stops
+        // the motes from appearing on a perfectly regular beat.
+        if (random.nextFloat() >= 0.60F) {
+            return;
+        }
+
+        double angle = random.nextDouble() * Math.PI * 2.0;
+        double radius = 0.10 + random.nextDouble() * 0.24;
+
+        double x = getX() + Math.cos(angle) * radius;
+        double y = getY() + 0.10 + random.nextDouble() * 0.58;
+        double z = getZ() + Math.sin(angle) * radius;
+
+        level().addParticle(
+                ModParticles.HONORSPREN_MOTE,
+                x,
+                y,
+                z,
+                0.0,
+                0.0,
+                0.0
+        );
+    }
+
 
     private void tickSprenAi(ServerLevel level) {
         ServerPlayer owner = getOwner(level);
@@ -793,19 +857,51 @@ public final class SprenEntity extends Allay {
 
         Vec3 desired = difference.normalize().scale(speed);
         Vec3 currentVelocity = getDeltaMovement();
-        double smoothing = speed >= EXCITED_SPEED ? 0.36 : 0.28;
+
+        /*
+         * Ease toward a new flight vector instead of snapping onto it.
+         * Ordinary wandering gets the softest steering; excited/dart movement
+         * remains more responsive so playful bursts still feel energetic.
+         */
+        double smoothing;
+        if (activity == Activity.PLAYFUL_DART
+                || activity == Activity.TRAVEL_DART) {
+            smoothing = 0.26;
+        } else if (speed >= EXCITED_SPEED) {
+            smoothing = 0.22;
+        } else {
+            smoothing = 0.16;
+        }
+
         Vec3 nextVelocity = currentVelocity
                 .scale(1.0 - smoothing)
                 .add(desired.scale(smoothing));
 
         setDeltaMovement(nextVelocity);
 
+        /*
+         * Turn her visible facing gradually as well. This removes the harsh
+         * "instant compass turn" when a new wander leg is chosen.
+         */
         double horizontal = nextVelocity.horizontalDistanceSqr();
         if (horizontal > 0.0001) {
-            setYRot((float)(Mth.atan2(
+            float targetYaw = (float)(Mth.atan2(
                     nextVelocity.z,
                     nextVelocity.x
-            ) * Mth.RAD_TO_DEG) - 90.0F);
+            ) * Mth.RAD_TO_DEG) - 90.0F;
+
+            float yawDelta = Mth.wrapDegrees(targetYaw - getYRot());
+            float maxYawStep =
+                    activity == Activity.PLAYFUL_DART
+                            || activity == Activity.TRAVEL_DART
+                            ? 16.0F
+                            : 10.0F;
+
+            setYRot(getYRot() + Mth.clamp(
+                    yawDelta,
+                    -maxYawStep,
+                    maxYawStep
+            ));
         }
     }
 
@@ -885,6 +981,17 @@ public final class SprenEntity extends Allay {
         activityTicks = 0;
         decisionCooldown = 0;
         clearInterest();
+    }
+
+    /**
+     * A bonded spren is an online-player manifestation, not a world-persistent
+     * mob. Persisting it in chunk entity data lets an old copy reload on the
+     * next session while SprenManager creates the current manifestation,
+     * producing duplicates.
+     */
+    @Override
+    public boolean shouldBeSaved() {
+        return false;
     }
 
     @Override

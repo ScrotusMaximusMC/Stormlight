@@ -17,6 +17,7 @@ import com.scrotey.stormlight.client.highstorm.ApproachingStormfrontEffects;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormWind;
 import com.scrotey.stormlight.client.highstorm.HighstormLeafParticle;
+import com.scrotey.stormlight.client.spren.HonorSprenMoteParticle;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
@@ -28,6 +29,8 @@ import com.scrotey.stormlight.network.ToggleLashingPayload;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
 import com.scrotey.stormlight.spren.ModSprenEntities;
+import com.scrotey.stormlight.client.spren.ModSprenModelLayers;
+import com.scrotey.stormlight.client.spren.SprenRenderer;
 
 import java.util.function.Supplier;
 
@@ -52,7 +55,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.entity.AllayRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 
 public class StormlightClient implements ClientModInitializer {
@@ -91,9 +93,11 @@ public class StormlightClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ModSprenModelLayers.register();
+
         EntityRenderers.register(
                 ModSprenEntities.SPREN,
-                AllayRenderer::new
+                SprenRenderer::new
         );
 
         ParticleProviderRegistry.getInstance().register(
@@ -109,6 +113,11 @@ public class StormlightClient implements ClientModInitializer {
         ParticleProviderRegistry.getInstance().register(
                 ModParticles.HIGHSTORM_LEAF,
                 HighstormLeafParticle.Provider::new
+        );
+
+        ParticleProviderRegistry.getInstance().register(
+                ModParticles.HONORSPREN_MOTE,
+                HonorSprenMoteParticle.Provider::new
         );
 
         MenuScreens.register(
