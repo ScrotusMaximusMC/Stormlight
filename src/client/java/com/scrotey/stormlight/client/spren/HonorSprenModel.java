@@ -1,272 +1,248 @@
 package com.scrotey.stormlight.client.spren;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
+/** A simple silhouette with hinged hair and hem, using the existing texture. */
 public class HonorSprenModel extends EntityModel<SprenRenderState> {
-    private final ModelPart head_group;
-    private final ModelPart hair_group;
-    private final ModelPart body_group;
-    private final ModelPart left_arm_group;
-    private final ModelPart right_arm_group;
-    private final ModelPart skirt_group;
-    private final ModelPart left_leg_group;
-    private final ModelPart right_leg_group;
+    private final int renderPass;
+    private final java.util.Set<ModelPart> softParts = new java.util.HashSet<>();
+    private final java.util.Set<ModelPart> faintParts = new java.util.HashSet<>();
+    private final ModelPart figure;
+    private final ModelPart head;
+    private final ModelPart leftArm;
+    private final ModelPart rightArm;
+    private final ModelPart leftLeg;
+    private final ModelPart rightLeg;
+    private final ModelPart[] hair = new ModelPart[3];
+    private final ModelPart[] hairTips = new ModelPart[3];
+    private final ModelPart[] sideLocks = new ModelPart[2];
+    private final ModelPart[] hem = new ModelPart[4];
 
     public HonorSprenModel(ModelPart root) {
+        this(root, 0);
+    }
+
+    /** Pass 0 is solid; passes 1 and 2 contain only the fading ends. */
+    public HonorSprenModel(ModelPart root, int renderPass) {
         super(root);
-        this.head_group = root.getChild("head_group");
-        this.hair_group = this.head_group.getChild("hair_group");
-        this.body_group = root.getChild("body_group");
-        this.left_arm_group = root.getChild("left_arm_group");
-        this.right_arm_group = root.getChild("right_arm_group");
-        this.skirt_group = root.getChild("skirt_group");
-        this.left_leg_group = root.getChild("left_leg_group");
-        this.right_leg_group = root.getChild("right_leg_group");
+        this.renderPass = renderPass;
+        for (ModelPart part : root.getAllParts()) {
+            if (part.hasChild("fade_1")) softParts.add(part.getChild("fade_1"));
+            if (part.hasChild("fade_2")) faintParts.add(part.getChild("fade_2"));
+        }
+        figure = root.getChild("figure");
+        head = figure.getChild("head");
+        leftArm = figure.getChild("left_arm");
+        rightArm = figure.getChild("right_arm");
+        leftLeg = figure.getChild("left_leg");
+        rightLeg = figure.getChild("right_leg");
+        for (int i = 0; i < hair.length; i++) {
+            hair[i] = head.getChild("hair_" + i);
+            hairTips[i] = hair[i].getChild("tip");
+        }
+        for (int i = 0; i < sideLocks.length; i++) {
+            sideLocks[i] = head.getChild("side_" + i).getChild("tip");
+        }
+        ModelPart dress = figure.getChild("dress");
+        for (int i = 0; i < hem.length; i++) {
+            hem[i] = dress.getChild("hem_" + i);
+        }
+        // Palette swatches from the existing texture. Face details are geometry,
+        // so no part of the old face atlas can leak onto the clothing or hair.
+        root.visit(new PoseStack(), (pose, path, index, cube) -> {
+            boolean hairPart = path.contains("hair") || path.contains("side_");
+            boolean pupil = path.contains("eye_pupil");
+            boolean mist = path.contains("fade_");
+            float u = (pupil ? 176.5F : hairPart && !mist ? 180.5F : 25.5F) / 256.0F;
+            float v = (pupil ? 28.5F : hairPart && !mist ? 24.5F : 1.5F) / 256.0F;
+            for (int p = 0; p < cube.polygons.length; p++) {
+                ModelPart.Polygon polygon = cube.polygons[p];
+                ModelPart.Vertex[] vertices = polygon.vertices().clone();
+                for (int n = 0; n < vertices.length; n++) vertices[n] = vertices[n].remap(u, v);
+                cube.polygons[p] = new ModelPart.Polygon(vertices, polygon.normal());
+            }
+        });
+        applyPassMask();
+    }
+
+    private void applyPassMask() {
+        for (ModelPart part : root.getAllParts()) {
+            int partPass = softParts.contains(part) ? 1 : faintParts.contains(part) ? 2 : 0;
+            // skipDraw hides this part's cubes, but still traverses its children.
+            part.skipDraw = partPass != renderPass;
+        }
     }
 
     public static LayerDefinition getLayerDefinition() {
-        MeshDefinition modelData = new MeshDefinition();
-        PartDefinition modelPartData = modelData.getRoot();
-        PartDefinition head_group = modelPartData.addOrReplaceChild("head_group", CubeListBuilder.create().texOffs(0, 0).addBox(-3.0F, -6.0F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(-1.5F, 16.0F, 0.0F));
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition figure = mesh.getRoot().addOrReplaceChild("figure",
+                CubeListBuilder.create(), PartPose.offset(0, 16, 0));
 
-        PartDefinition hair_group = head_group.addOrReplaceChild("hair_group", CubeListBuilder.create().texOffs(40, 42).addBox(2.5F, -6.0F, 3.0F, 1.0F, 8.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(40, 22).addBox(1.5F, -6.0F, 3.0F, 1.0F, 9.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 33).addBox(0.5F, -6.0F, 3.0F, 1.0F, 10.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(6, 33).addBox(-1.5F, -6.0F, 3.0F, 1.0F, 10.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(16, 26).addBox(-0.5F, -7.0F, 3.0F, 1.0F, 11.0F, 3.0F, new CubeDeformation(0.0F))
-        .texOffs(40, 32).addBox(-2.5F, -6.0F, 3.0F, 1.0F, 9.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 6).addBox(-3.5F, -6.0F, 3.0F, 1.0F, 8.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 19).addBox(-3.5F, -7.0F, -3.0F, 7.0F, 1.0F, 6.0F, new CubeDeformation(0.0F))
-        .texOffs(46, 49).addBox(-2.5F, -8.0F, -1.0F, 5.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
-        .texOffs(12, 40).addBox(2.5F, -6.0F, 1.0F, 1.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 15).addBox(2.5F, -6.0F, -1.0F, 1.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 32).addBox(2.5F, -6.0F, -4.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 43).addBox(2.5F, -6.0F, -3.0F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(4, 45).addBox(2.5F, -6.0F, -2.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(18, 40).addBox(-3.5F, -6.0F, 1.0F, 1.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 21).addBox(-3.5F, -6.0F, -1.0F, 1.0F, 3.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 45).addBox(-3.5F, -6.0F, -2.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 37).addBox(-3.5F, -6.0F, -3.0F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(12, 33).addBox(-3.5F, -6.0F, -4.0F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 26).addBox(1.0F, -7.0F, -4.0F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 41).addBox(-1.0F, -7.0F, -4.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
-        .texOffs(44, 29).addBox(-3.0F, -7.0F, -4.0F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+        // Pale face with small blue eyes, centred on the model.
+        PartDefinition head = figure.addOrReplaceChild("head",
+                CubeListBuilder.create().texOffs(0, 0)
+                        .addBox(-3, -6, -3, 6, 6, 6), PartPose.ZERO);
+        head.addOrReplaceChild("hair_cap", CubeListBuilder.create()
+                .addBox(-3.25F, -7.0F, -3.0F, 6.5F, 1.5F, 6.25F), PartPose.ZERO);
+        // A broad, offset crown lifts the centre without adding a hat brim.
+        head.addOrReplaceChild("hair_crown", CubeListBuilder.create()
+                .addBox(-2.75F, -7.7F, -2.5F, 5.25F, 0.9F, 5.25F), PartPose.ZERO);
+        head.addOrReplaceChild("hair_sweep", CubeListBuilder.create()
+                .addBox(-3.1F, -5.8F, -3.18F, 2.1F, 0.85F, 0.4F), PartPose.ZERO);
+        for (int i = 0; i < 2; i++) {
+            float x = i == 0 ? -1.25F : 1.25F;
+            head.addOrReplaceChild("eye_pupil_" + i, CubeListBuilder.create()
+                    .addBox(-0.28F, -0.35F, -0.04F, 0.56F, 0.70F, 0.08F),
+                    PartPose.offset(x, -3.1F, -3.045F));
+            head.addOrReplaceChild("eye_white_" + i, CubeListBuilder.create()
+                    .addBox(-0.10F, -0.10F, -0.025F, 0.20F, 0.20F, 0.05F),
+                    PartPose.offset(x - 0.10F, -3.32F, -3.10F));
+        }
+        // Side coverage joins the crown to the back locks; no projecting brim.
+        for (int i = 0; i < 2; i++) {
+            PartDefinition side = head.addOrReplaceChild("side_" + i,
+                    CubeListBuilder.create().texOffs(23, 29)
+                            .addBox(-0.5F, 0, -2.5F, 1, 5, 5),
+                    PartPose.offset(i == 0 ? -3 : 3, -6, 0));
+            PartDefinition sideTip = side.addOrReplaceChild("tip", CubeListBuilder.create()
+                            .addBox(-0.5F, 0, -1, 1, 1.5F, 2), PartPose.offset(0, 5, 1.5F));
+            addFade(sideTip, -0.5F, 1.5F, -1, 1, 1.5F, 2);
+        }
 
-        PartDefinition body_group = modelPartData.addOrReplaceChild("body_group", CubeListBuilder.create().texOffs(0, 26).addBox(-2.5F, 0.0F, -1.0F, 5.0F, 4.0F, 3.0F, new CubeDeformation(0.0F))
-        .texOffs(26, 22).addBox(-2.0F, 4.0F, -1.0F, 4.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offset(-1.5F, 16.0F, 0.0F));
+        // Three broad locks, each with a second joint. No rigid fringe sculpture.
+        for (int i = 0; i < 3; i++) {
+            PartDefinition lock = head.addOrReplaceChild("hair_" + i,
+                    CubeListBuilder.create().texOffs(6, 19)
+                            .addBox(-1, 0, 0, 2, 4, 1),
+                    PartPose.offset((i - 1) * 2.0F, -5.5F, 3.0F));
+            PartDefinition tip = lock.addOrReplaceChild("tip", CubeListBuilder.create()
+                            .addBox(-1, 0, 0, 2, 2, 1), PartPose.offset(0, 4, 0));
+            addFade(tip, -1, 2, 0, 2, i == 1 ? 3 : 2, 1);
+        }
 
-        PartDefinition left_arm_group = modelPartData.addOrReplaceChild("left_arm_group", CubeListBuilder.create().texOffs(24, 29).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(2.0F, 17.0F, 0.5F));
+        figure.addOrReplaceChild("body", CubeListBuilder.create().texOffs(24, 31)
+                .addBox(-2.5F, 0, -1, 5, 4, 3)
+                .texOffs(24, 31).addBox(-2, 4, -1, 4, 3, 3), PartPose.ZERO);
+        figure.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 29)
+                .addBox(-1, -1, -1, 2, 8, 2), PartPose.offset(3.5F, 1, 0.5F));
+        figure.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(16, 29)
+                .addBox(-1, -1, -1, 2, 8, 2), PartPose.offset(-3.5F, 1, 0.5F));
 
-        PartDefinition right_arm_group = modelPartData.addOrReplaceChild("right_arm_group", CubeListBuilder.create().texOffs(32, 29).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 8.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(-5.0F, 17.0F, 0.5F));
-
-        PartDefinition skirt_group = modelPartData.addOrReplaceChild("skirt_group", CubeListBuilder.create().texOffs(25, 16).addBox(-2.5F, -1.0F, -1.5F, 5.0F, 1.0F, 4.0F, new CubeDeformation(0.0F))
-        .texOffs(42, 56).addBox(-3.0F, 0.0F, -2.0F, 6.0F, 1.0F, 5.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 57).addBox(-3.5F, 1.0F, -2.0F, 7.0F, 1.0F, 5.0F, new CubeDeformation(0.0F))
-        .texOffs(0, 48).addBox(-4.0F, 3.0F, -2.5F, 8.0F, 1.0F, 6.0F, new CubeDeformation(0.0F))
-        .texOffs(15, 57).addBox(-4.0F, 2.0F, -2.5F, 8.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(-1.5F, 24.0F, 0.5F));
-
-        PartDefinition left_leg_group = modelPartData.addOrReplaceChild("left_leg_group", CubeListBuilder.create().texOffs(24, 39).addBox(-1.0F, 3.0F, 0.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(23, 38).addBox(-1.0F, 8.0F, -1.0F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
-
-        PartDefinition right_leg_group = modelPartData.addOrReplaceChild("right_leg_group", CubeListBuilder.create().texOffs(32, 39).addBox(-4.0F, 3.0F, 0.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F))
-        .texOffs(23, 38).addBox(-4.0F, 8.0F, -1.0F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
-        return LayerDefinition.create(modelData, 64, 64);
+        PartDefinition dress = figure.addOrReplaceChild("dress",
+                CubeListBuilder.create().texOffs(23, 31)
+                        .addBox(-2.5F, 0, -2, 5, 3, 4), PartPose.offset(0, 7, 0.5F));
+        // Each panel has an opaque upper section and two translucent end bands.
+        PartDefinition front = dress.addOrReplaceChild("hem_0", CubeListBuilder.create()
+                .addBox(-2.5F, 0, -0.5F, 5, 2, 1), PartPose.offset(0, 3, -1.5F));
+        PartDefinition back = dress.addOrReplaceChild("hem_1", CubeListBuilder.create()
+                .addBox(-2.5F, 0, -0.5F, 5, 2, 1), PartPose.offset(0, 3, 1.5F));
+        PartDefinition left = dress.addOrReplaceChild("hem_2", CubeListBuilder.create()
+                .addBox(-0.5F, 0, -2, 1, 2, 4), PartPose.offset(2, 3, 0));
+        PartDefinition right = dress.addOrReplaceChild("hem_3", CubeListBuilder.create()
+                .addBox(-0.5F, 0, -2, 1, 2, 4), PartPose.offset(-2, 3, 0));
+        addFade(front, -2.5F, 2, -0.5F, 5, 2, 1);
+        addFade(back, -2.5F, 2, -0.5F, 5, 2, 1);
+        addFade(left, -0.5F, 2, -2, 1, 2, 4);
+        addFade(right, -0.5F, 2, -2, 1, 2, 4);
+        PartDefinition leftLeg = figure.addOrReplaceChild("left_leg", CubeListBuilder.create()
+                .addBox(-1, 0, -1, 2, 3.5F, 2), PartPose.offset(1.25F, 11, 0.5F));
+        PartDefinition rightLeg = figure.addOrReplaceChild("right_leg", CubeListBuilder.create()
+                .addBox(-1, 0, -1, 2, 3.5F, 2), PartPose.offset(-1.25F, 11, 0.5F));
+        addFade(leftLeg, -1, 3.5F, -1, 2, 2.5F, 2);
+        addFade(rightLeg, -1, 3.5F, -1, 2, 2.5F, 2);
+        return LayerDefinition.create(mesh, 64, 64);
     }
+
+    private static void addFade(PartDefinition parent, float x, float y, float z,
+                                float width, float height, float depth) {
+        float half = height / 2;
+        parent.addOrReplaceChild("fade_1", CubeListBuilder.create()
+                .addBox(x, y, z, width, half, depth), PartPose.ZERO);
+        // Slight taper makes the final boundary less square without extra wisps.
+        parent.addOrReplaceChild("fade_2", CubeListBuilder.create()
+                .addBox(x + width * 0.06F, y + half, z + depth * 0.06F,
+                        width * 0.88F, half, depth * 0.88F), PartPose.ZERO);
+    }
+
     @Override
     public void setupAnim(SprenRenderState state) {
         super.setupAnim(state);
+        // Reset the entire hierarchy so repeated calls never accumulate rotations.
+        figure.getAllParts().forEach(ModelPart::resetPose);
+        applyPassMask();
+        float t = state.ageInTicks + state.whimsyOffset;
+        float flight = smooth(0.025F, 0.28F, state.horizontalSpeed);
+        float resting = 1.0F - flight;
+        float curiosity = gesture(t, 300, 35, 16, 30, 20) * resting;
+        float handGesture = gesture(t, 420, 170, 18, 24, 24) * resting;
 
-        head_group.resetPose();
-        hair_group.resetPose();
-        body_group.resetPose();
-        left_arm_group.resetPose();
-        right_arm_group.resetPose();
-        skirt_group.resetPose();
-        left_leg_group.resetPose();
-        right_leg_group.resetPose();
+        // A calm hover, with readable pauses between small gestures.
+        figure.y += wave(t, 0.065F, 0) * 0.30F;
+        figure.zRot = wave(t, 0.045F, 0.7F) * 0.025F;
+        head.xRot = -flight * 0.24F - curiosity * 0.12F;
+        head.yRot = wave(t, 0.028F, 1.2F) * 0.07F + curiosity * 0.22F;
+        head.zRot = resting * 0.065F + curiosity * 0.17F;
 
-        float age = state.ageInTicks;
-        float speed01 = Math.min(state.horizontalSpeed / 0.35F, 1.0F);
-        float phaseAge = age + state.whimsyOffset;
+        // Retain the tested outward arm signs from the previous model.
+        leftArm.zRot = -0.10F - flight * 0.35F - handGesture * 0.60F;
+        rightArm.zRot = 0.10F + flight * 0.35F;
+        leftArm.xRot = flight * 0.45F - resting * 0.12F - handGesture * 0.65F;
+        rightArm.xRot = flight * 0.45F + resting * 0.17F + curiosity * 0.18F;
+        leftArm.xRot += wave(t, 0.075F, 0) * 0.035F;
+        rightArm.xRot += wave(t, 0.075F, 1.8F) * 0.035F;
+        leftLeg.xRot = flight * 0.42F + wave(t, 0.07F, 0.4F) * 0.035F;
+        rightLeg.xRot = resting * 0.22F + flight * 0.36F + wave(t, 0.07F, 2) * 0.035F;
 
-        // Layer several slow rhythms together so no body part ever settles
-        // into one visibly repeating "robot" loop.
-        float slowA = (float) Math.sin(phaseAge * 0.071F);
-        float slowB = (float) Math.sin(phaseAge * 0.043F + 1.7F);
-        float mediumA = (float) Math.sin(phaseAge * 0.137F + 0.6F);
-        float mediumB = (float) Math.sin(phaseAge * 0.109F + 2.1F);
+        leftLeg.zRot = -resting * 0.025F;
+        rightLeg.zRot = resting * 0.055F;
+        rightLeg.y -= resting * 0.30F;
 
-        float bob =
-                slowA * (0.075F + speed01 * 0.025F)
-                        + slowB * 0.025F;
-
-        float twirlProgress = playfulTwirlProgress(phaseAge);
-        float twirlFlourish =
-                twirlProgress > 0.0F
-                        ? (float) Math.sin(twirlProgress * Math.PI)
-                        : 0.0F;
-
-        // Even at rest she should look alive, not posed.
-        head_group.y += bob;
-        body_group.y += bob * 0.85F;
-        left_arm_group.y += bob;
-        right_arm_group.y += bob;
-        skirt_group.y += bob * 0.8F;
-        left_leg_group.y += bob * 0.75F;
-        right_leg_group.y += bob * 0.75F;
-
-        // BODY: tiny asymmetric breathing/sway continuously.
-        body_group.zRot =
-                slowA * 0.025F
-                        + slowB * 0.015F;
-        body_group.yRot =
-                slowB * 0.018F;
-
-        /*
-         * HEAD:
-         * continuous curiosity rather than a fixed flying stare.
-         * It still counter-tilts upward during travel, but gently looks around,
-         * nods and cocks to one side at different rhythms.
-         */
-        float headLookSide =
-                slowB * 0.10F
-                        + mediumA * 0.035F;
-        float headNod =
-                slowA * 0.025F
-                        + mediumB * 0.015F;
-        float headCock =
-                (float) Math.sin(phaseAge * 0.052F + 2.8F) * 0.045F;
-
-        head_group.xRot =
-                -speed01 * 0.28F
-                        + headNod;
-        head_group.yRot = headLookSide;
-        head_group.zRot = headCock;
-
-        /*
-         * ARMS:
-         * preserve the user's established signs:
-         *   positive X = trailing backwards
-         *   left negative Z / right positive Z = spreading outward
-         *
-         * The arms now constantly breathe, rise/fall independently and
-         * respond more strongly as she travels.
-         */
-        float travelArmPitch = speed01 * 0.48F;
-
-        float leftArmPitchLife =
-                (float) Math.sin(phaseAge * 0.163F + 0.2F) * (0.08F + speed01 * 0.07F)
-                        + (float) Math.sin(phaseAge * 0.071F + 2.0F) * 0.035F;
-
-        float rightArmPitchLife =
-                (float) Math.sin(phaseAge * 0.147F + 2.4F) * (0.08F + speed01 * 0.07F)
-                        + (float) Math.sin(phaseAge * 0.083F + 0.7F) * 0.035F;
-
-        left_arm_group.xRot =
-                travelArmPitch + leftArmPitchLife;
-        right_arm_group.xRot =
-                travelArmPitch + rightArmPitchLife;
-
-        float baseArmOpen =
-                0.14F
-                        + speed01 * 0.48F
-                        + twirlFlourish * 0.62F;
-
-        float leftArmOpenLife =
-                (float) Math.sin(phaseAge * 0.121F + 0.5F) * (0.055F + speed01 * 0.025F);
-        float rightArmOpenLife =
-                (float) Math.sin(phaseAge * 0.113F + 2.2F) * (0.055F + speed01 * 0.025F);
-
-        // DO NOT flip these signs: this is the user's tested outward direction.
-        left_arm_group.zRot =
-                -baseArmOpen + leftArmOpenLife;
-        right_arm_group.zRot =
-                baseArmOpen + rightArmOpenLife;
-
-        // Small opposing yaw adds depth and lets the hands describe little arcs
-        // through the air instead of moving on flat hinges.
-        float armYawBase =
-                speed01 * 0.09F
-                        + twirlFlourish * 0.14F;
-
-        left_arm_group.yRot =
-                -armYawBase
-                        + (float) Math.sin(phaseAge * 0.095F + 1.1F) * 0.045F;
-        right_arm_group.yRot =
-                armYawBase
-                        + (float) Math.sin(phaseAge * 0.087F + 2.9F) * 0.045F;
-
-        /*
-         * LEGS:
-         * still trail backwards in flight, but they now drift independently
-         * rather than holding the same swept-back pose.
-         */
-        float legTrail = speed01 * 0.50F;
-
-        float leftLegLife =
-                (float) Math.sin(phaseAge * 0.126F + 0.4F) * (0.055F + speed01 * 0.035F)
-                        + slowB * 0.018F;
-        float rightLegLife =
-                (float) Math.sin(phaseAge * 0.119F + 2.5F) * (0.055F + speed01 * 0.035F)
-                        - slowB * 0.018F;
-
-        left_leg_group.xRot = legTrail + leftLegLife;
-        right_leg_group.xRot = legTrail + rightLegLife;
-
-        left_leg_group.zRot =
-                (float) Math.sin(phaseAge * 0.091F + 0.8F) * 0.025F;
-        right_leg_group.zRot =
-                (float) Math.sin(phaseAge * 0.097F + 2.6F) * 0.025F;
-
-        /*
-         * Hair and dress remain secondary motion. They use different timings
-         * from the limbs so the entire figure doesn't pulse in unison.
-         */
-        hair_group.xRot =
-                speed01 * 0.40F
-                        + (float) Math.sin(phaseAge * 0.101F + 0.8F) * 0.040F
-                        + (float) Math.sin(phaseAge * 0.227F) * 0.020F * speed01;
-        hair_group.zRot =
-                (float) Math.sin(phaseAge * 0.067F + 2.0F) * 0.032F
-                        + (float) Math.sin(phaseAge * 0.157F) * 0.016F * speed01;
-
-        skirt_group.xRot =
-                -speed01 * 0.18F
-                        + (float) Math.sin(phaseAge * 0.089F + 2.0F) * 0.024F;
-        skirt_group.zRot =
-                (float) Math.sin(phaseAge * 0.061F + 1.3F) * 0.022F;
-        skirt_group.yRot =
-                (float) Math.sin(phaseAge * 0.077F + 2.6F) * 0.018F;
+        // Roots and tips use delayed waves, giving a travelling bend instead of
+        // moving all the hair as a solid block. Airflow increases with speed.
+        for (int i = 0; i < hair.length; i++) {
+            float phase = i * 0.75F;
+            hair[i].xRot = 0.10F + flight * 0.42F
+                    + wave(t, 0.10F, phase) * (0.055F + flight * 0.04F);
+            hair[i].zRot = wave(t, 0.073F, phase) * 0.055F;
+            hairTips[i].xRot = 0.08F + flight * 0.20F
+                    + wave(t - 4, 0.10F, phase) * (0.11F + flight * 0.07F);
+            hairTips[i].zRot = wave(t - 5, 0.073F, phase) * 0.09F;
+        }
+        for (int i = 0; i < sideLocks.length; i++) {
+            sideLocks[i].xRot = 0.07F + flight * 0.30F
+                    + wave(t - 3, 0.10F, i * 1.4F) * 0.06F;
+            sideLocks[i].zRot = wave(t, 0.073F, i * 1.4F) * 0.035F;
+        }
+        float ripple = 0.045F + flight * 0.035F;
+        hem[0].xRot = -0.12F + flight * 0.18F + wave(t, 0.10F, 0) * ripple;
+        hem[1].xRot = 0.12F + flight * 0.24F + wave(t - 4, 0.10F, 0) * ripple;
+        hem[2].zRot = -0.12F + wave(t, 0.085F, 1) * ripple;
+        hem[3].zRot = 0.12F + wave(t - 4, 0.085F, 1) * ripple;
+        hem[2].xRot = flight * 0.18F;
+        hem[3].xRot = flight * 0.18F;
     }
 
-    /**
-     * One short playful twirl roughly every 13 seconds. Outside the twirl
-     * window this returns zero. During the window it eases from 0 -> 1.
-     */
-    private static float playfulTwirlProgress(float phaseAge) {
-        final float cycleTicks = 260.0F;
-        final float rollTicks = 24.0F;
-
-        float cycle = phaseAge % cycleTicks;
-        if (cycle < 0.0F) {
-            cycle += cycleTicks;
-        }
-
-        if (cycle >= rollTicks) {
-            return 0.0F;
-        }
-
-        float t = cycle / rollTicks;
-
-        // Smoothstep makes the start and finish less robotic.
-        return t * t * (3.0F - 2.0F * t);
+    private static float wave(float time, float frequency, float phase) {
+        return (float) Math.sin(time * frequency + phase);
     }
 
+    private static float smooth(float low, float high, float value) {
+        float x = Math.max(0, Math.min(1, (value - low) / (high - low)));
+        return x * x * (3 - 2 * x);
+    }
+
+    private static float gesture(float time, float period, float start,
+                                 float rise, float hold, float fall) {
+        float local = ((time % period) + period) % period - start;
+        return smooth(0, rise, local) * (1 - smooth(rise + hold, rise + hold + fall, local));
+    }
 }
+
+
