@@ -125,6 +125,8 @@ public class StormlightClient implements ClientModInitializer {
                 SphereJarScreen::new
         );
 
+        net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(com.scrotey.stormlight.block.entity.ModBlockEntities.GEMCUTTING_TABLE, com.scrotey.stormlight.client.GemcuttingTableRenderer::new);
+
         registerSpherePouchInventoryControls();
 
         ClientPlayNetworking.registerGlobalReceiver(

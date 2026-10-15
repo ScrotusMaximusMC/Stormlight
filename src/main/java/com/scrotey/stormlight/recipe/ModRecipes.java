@@ -4,9 +4,20 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 
 public class ModRecipes {
     private static final String MOD_ID = "stormlight";
+
+    public static final RecipeType<GemcuttingRecipe> GEMCUTTING_TYPE = Registry.register(
+            BuiltInRegistries.RECIPE_TYPE, Identifier.fromNamespaceAndPath(MOD_ID, "gemcutting"),
+            new RecipeType<GemcuttingRecipe>() {
+                @Override
+                public String toString() { return "stormlight:gemcutting"; }
+            });
+    public static final RecipeSerializer<GemcuttingRecipe> GEMCUTTING = Registry.register(
+            BuiltInRegistries.RECIPE_SERIALIZER, Identifier.fromNamespaceAndPath(MOD_ID, "gemcutting"),
+            new RecipeSerializer<>(GemcuttingRecipe.CODEC, GemcuttingRecipe.STREAM_CODEC));
 
     public static final RecipeSerializer<SphereUpgradeRecipe> DIAMOND_CHIP_TO_MARK =
             register(

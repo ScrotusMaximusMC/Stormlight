@@ -10,6 +10,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public final class ModBlockEntities {
+    public static final BlockEntityType<GemcuttingTableBlockEntity> GEMCUTTING_TABLE =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "gemcutting_table"),
+                    FabricBlockEntityTypeBuilder.create(GemcuttingTableBlockEntity::new,
+                            ModBlocks.GEMCUTTING_TABLE).build());
     public static final BlockEntityType<SphereJarBlockEntity>
             SPHERE_JAR_BLOCK_ENTITY =
             Registry.register(

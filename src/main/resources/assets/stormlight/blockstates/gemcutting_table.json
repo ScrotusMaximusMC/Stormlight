@@ -1,8 +1,36 @@
 {
   "variants": {
-    "facing=north": { "model": "stormlight:block/gemcutting_table" },
-    "facing=east": { "model": "stormlight:block/gemcutting_table", "y": 90 },
-    "facing=south": { "model": "stormlight:block/gemcutting_table", "y": 180 },
-    "facing=west": { "model": "stormlight:block/gemcutting_table", "y": 270 }
+    "facing=east,right=false": {
+      "model": "stormlight:block/gemcutting_table_left",
+      "y": 0
+    },
+    "facing=east,right=true": {
+      "model": "stormlight:block/gemcutting_table_right",
+      "y": 0
+    },
+    "facing=south,right=false": {
+      "model": "stormlight:block/gemcutting_table_left",
+      "y": 90
+    },
+    "facing=south,right=true": {
+      "model": "stormlight:block/gemcutting_table_right",
+      "y": 90
+    },
+    "facing=west,right=false": {
+      "model": "stormlight:block/gemcutting_table_left",
+      "y": 180
+    },
+    "facing=west,right=true": {
+      "model": "stormlight:block/gemcutting_table_right",
+      "y": 180
+    },
+    "facing=north,right=false": {
+      "model": "stormlight:block/gemcutting_table_left",
+      "y": 270
+    },
+    "facing=north,right=true": {
+      "model": "stormlight:block/gemcutting_table_right",
+      "y": 270
+    }
   }
 }

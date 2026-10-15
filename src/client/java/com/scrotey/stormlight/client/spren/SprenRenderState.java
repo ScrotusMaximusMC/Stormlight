@@ -14,6 +14,6 @@ public final class SprenRenderState extends LivingEntityRenderState {
     /** Stable offset used to desynchronise procedural personality animation. */
     public float whimsyOffset;
 
-    /** Alternates the direction of occasional ballerina twirls. */
+    /** Alternates the direction of curious body tilts. */
     public float twirlDirection = 1.0F;
 }

@@ -26,6 +26,14 @@ loom {
 }
 
 fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "stormlight-tests"
+        enableGameTests = true
+        enableClientGameTests = true
+        clearRunDirectory = false
+    }
+
 	configureDataGeneration {
 		client = true
 	}

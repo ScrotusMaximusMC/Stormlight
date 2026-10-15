@@ -1,9 +1,6 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    "stormlight:sapphire"
-  ],
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:sapphire",
   "result": {
     "id": "stormlight:sapphire_nugget",
     "count": 9

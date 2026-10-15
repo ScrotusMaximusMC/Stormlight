@@ -1,9 +1,6 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    "minecraft:emerald"
-  ],
+  "type": "stormlight:gemcutting",
+  "ingredient": "minecraft:emerald",
   "result": {
     "id": "stormlight:emerald_nugget",
     "count": 9

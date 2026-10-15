@@ -8,6 +8,8 @@ import net.minecraft.world.item.Item;
 
 public class ModItemIds {
 
+    public static final ResourceKey<Item> CHISEL = create("chisel");
+
     public static final ResourceKey<Item> SPHERE_POUCH = create("sphere_pouch");
     public static final ResourceKey<Item> MYSTERIOUS_BOOK =
             create("mysterious_book");

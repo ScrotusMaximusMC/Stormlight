@@ -1,9 +1,6 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    "stormlight:ruby"
-  ],
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:ruby",
   "result": {
     "id": "stormlight:ruby_nugget",
     "count": 9

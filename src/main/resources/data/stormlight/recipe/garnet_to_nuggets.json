@@ -1,9 +1,6 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    "stormlight:garnet"
-  ],
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:garnet",
   "result": {
     "id": "stormlight:garnet_nugget",
     "count": 9

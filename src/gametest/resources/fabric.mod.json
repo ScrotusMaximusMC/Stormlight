@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"stormlight-tests","version":"1.0.0","name":"Stormlight Game Tests","environment":"*","entrypoints":{"fabric-gametest":["com.scrotey.stormlight.GemcuttingTableGameTests"],"fabric-client-gametest":["com.scrotey.stormlight.GemcuttingTableClientTest"]},"depends":{"stormlight":"*"}}
