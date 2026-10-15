@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "stormlight:ruby"
+  ],
+  "result": {
+    "id": "stormlight:ruby_nugget",
+    "count": 9
+  }
+}
