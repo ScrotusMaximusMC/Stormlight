@@ -4,6 +4,7 @@ import com.scrotey.stormlight.Stormlight;
 import com.scrotey.stormlight.block.custom.SphereJarBlock;
 import com.scrotey.stormlight.block.custom.SphereLanternBlock;
 import com.scrotey.stormlight.block.custom.GemheartBlock;
+import com.scrotey.stormlight.block.custom.GemcuttingTableBlock;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
@@ -22,6 +23,32 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public final class ModBlocks {
+
+    public static final Block GEMCUTTING_TABLE = registerGemcuttingTable();
+
+    private static Block registerGemcuttingTable() {
+        Identifier id = Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "gemcutting_table");
+        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
+
+        Block block = Registry.register(
+                BuiltInRegistries.BLOCK,
+                blockKey,
+                new GemcuttingTableBlock(
+                        BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE)
+                                .setId(blockKey)
+                                .noOcclusion()
+                )
+        );
+        Registry.register(
+                BuiltInRegistries.ITEM,
+                itemKey,
+                new BlockItem(block, new Item.Properties()
+                        .setId(itemKey)
+                        .useBlockDescriptionPrefix())
+        );
+        return block;
+    }
 
     /*
      * Gemstone ores.
@@ -517,6 +544,7 @@ public final class ModBlocks {
         CreativeModeTabEvents.modifyOutputEvent(
                 CreativeModeTabs.FUNCTIONAL_BLOCKS
         ).register(entries -> {
+            entries.accept(GEMCUTTING_TABLE);
             entries.accept(SPHERE_JAR_ITEM);
             entries.accept(SPHERE_LANTERN_ITEM);
         });

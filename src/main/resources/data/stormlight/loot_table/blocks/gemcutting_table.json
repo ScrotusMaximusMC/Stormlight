@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [{ "condition": "minecraft:survives_explosion" }],
+      "entries": [{ "type": "minecraft:item", "name": "stormlight:gemcutting_table" }]
+    }
+  ],
+  "random_sequence": "stormlight:blocks/gemcutting_table"
+}

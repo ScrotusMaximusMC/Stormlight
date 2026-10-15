@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SIS",
+    "PPP",
+    "P P"
+  ],
+  "key": {
+    "S": "minecraft:smooth_stone_slab",
+    "I": "minecraft:iron_ingot",
+    "P": "#minecraft:planks"
+  },
+  "result": {
+    "id": "stormlight:gemcutting_table",
+    "count": 1
+  }
+}

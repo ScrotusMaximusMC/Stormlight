@@ -118,6 +118,7 @@
   "hud.stormlight.lashing.active": "Lashing",
   "hud.stormlight.stabilising": "Stabilising",
   "block.stormlight.sphere_jar": "Sphere Jar",
+  "block.stormlight.gemcutting_table": "Gemcutting Table",
   "tooltip.stormlight.sphere_pouch": "Unlocks your 16-slot Sphere Pouch inventory",
   "tooltip.stormlight.charge": "Stormlight: %s / %s",
   "item.stormlight.large_diamond": "Large Diamond",

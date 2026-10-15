@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "stormlight:block/gemcutting_table" },
+    "facing=east": { "model": "stormlight:block/gemcutting_table", "y": 90 },
+    "facing=south": { "model": "stormlight:block/gemcutting_table", "y": 180 },
+    "facing=west": { "model": "stormlight:block/gemcutting_table", "y": 270 }
+  }
+}
