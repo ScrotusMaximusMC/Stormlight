@@ -49,6 +49,7 @@ public final class SprenEntity extends Allay {
     private static final double HARD_RETURN_DISTANCE = 72.0;
     private static final double HARD_RETURN_DISTANCE_SQR =
             HARD_RETURN_DISTANCE * HARD_RETURN_DISTANCE;
+    private static final double SEEK_RETURN_DISTANCE_SQR = 100.0 * 100.0;
 
     private static final double NORMAL_SPEED = 0.22;
     private static final double FAST_SPEED = 0.34;
@@ -82,6 +83,10 @@ public final class SprenEntity extends Allay {
 
     private @Nullable UUID interestingEntityUuid;
     private @Nullable BlockPos interestingBlock;
+    private List<Vec3> seekRoute = List.of();
+    private int seekIndex;
+    private @Nullable BlockPos seekOre;
+    private boolean seekReturning;
 
     public SprenEntity(
             EntityType<? extends Allay> entityType,
@@ -113,6 +118,35 @@ public final class SprenEntity extends Allay {
     public boolean isOwnedBy(Player player) {
         return ownerUuid != null
                 && ownerUuid.equals(player.getUUID());
+    }
+
+    public void startSeek(List<Vec3> route, BlockPos ore) {
+        seekRoute = List.copyOf(route);
+        seekIndex = 0;
+        seekOre = ore.immutable();
+        seekReturning = false;
+        activity = Activity.SEEK;
+        clearInterest();
+        setDeltaMovement(Vec3.ZERO);
+    }
+
+    public void startSeekReturn(BlockPos ore) {
+        seekRoute = List.of();
+        seekIndex = 0;
+        seekOre = ore.immutable();
+        seekReturning = true;
+        activity = Activity.SEEK;
+        clearInterest();
+        setDeltaMovement(Vec3.ZERO);
+    }
+
+    public void stopSeek() {
+        seekRoute = List.of();
+        seekIndex = 0;
+        seekOre = null;
+        seekReturning = false;
+        setDeltaMovement(Vec3.ZERO);
+        targetChosen = false;
     }
 
     @Override
@@ -214,6 +248,15 @@ public final class SprenEntity extends Allay {
         tickCooldowns();
         updateOwnerActivity(owner);
 
+        if (seekOre != null) {
+            if (distanceToSqr(owner) > SEEK_RETURN_DISTANCE_SQR) {
+                SprenSeekManager.cancel(owner);
+            } else {
+                tickSeek(owner);
+                return;
+            }
+        }
+
         if (distanceToSqr(owner) > HARD_RETURN_DISTANCE_SQR) {
             // Emergency returns should still respect the player's personal
             // space.  Reappear a little above and off to one side rather than
@@ -255,6 +298,44 @@ public final class SprenEntity extends Allay {
 
         updateDynamicTarget(owner, level);
         moveTowardTarget(owner, hasStormlight || lashing);
+    }
+
+    private void tickSeek(ServerPlayer owner) {
+        if (seekReturning) {
+            Vec3 home = owner.position().add(0, 1.5, 0);
+            Vec3 direction = home.subtract(position());
+            if (direction.lengthSqr() < 2.25) {
+                setDeltaMovement(Vec3.ZERO);
+                if (seekOre != null) {
+                    SprenSeekManager.returned(owner, seekOre);
+                }
+                return;
+            }
+            setDeltaMovement(direction.normalize().scale(
+                    Math.min(0.42, direction.length())));
+            facePoint(home);
+            return;
+        }
+        while (seekIndex < seekRoute.size()
+                && position().distanceToSqr(seekRoute.get(seekIndex))
+                < 0.04) {
+            seekIndex++;
+        }
+        if (seekIndex >= seekRoute.size()) {
+            BlockPos found = seekOre;
+            stopSeek();
+            chooseVisit(owner, 100);
+            if (found != null) {
+                SprenSeekManager.arrived(owner, found);
+            }
+            return;
+        }
+
+        Vec3 direction = seekRoute.get(seekIndex)
+                .subtract(position());
+        double speed = Math.min(0.30, direction.length());
+        setDeltaMovement(direction.normalize().scale(speed));
+        facePoint(seekRoute.get(seekIndex));
     }
 
     private void tickCooldowns() {
@@ -1000,6 +1081,7 @@ public final class SprenEntity extends Allay {
     }
 
     private enum Activity {
+        SEEK,
         WANDER,
         VISIT,
         PERCH,

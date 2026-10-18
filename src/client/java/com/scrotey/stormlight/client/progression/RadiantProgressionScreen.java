@@ -8,20 +8,21 @@ import com.scrotey.stormlight.progression.RadiantLevel;
 import com.scrotey.stormlight.progression.RadiantOrder;
 import com.scrotey.stormlight.progression.RadiantOrderRegistry;
 import com.scrotey.stormlight.progression.RadiantProgression;
+import com.scrotey.stormlight.progression.SprenBondLevel;
+import com.scrotey.stormlight.progression.SprenBondProgression;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+
+import java.util.List;
 
 public final class RadiantProgressionScreen extends Screen {
-    private static final int MIN_PANEL_WIDTH = 390;
-    private static final int MAX_PANEL_WIDTH = 680;
-    private static final int MIN_PANEL_HEIGHT = 250;
-    private static final int MAX_PANEL_HEIGHT = 410;
-
-    private static final int ROW_HEIGHT = 42;
+    private static final int MAX_PANEL_WIDTH = 1000;
+    private static final int MIN_ROW_HEIGHT = 34;
     private static final int BACKDROP = 0xD80A0806;
     private static final int SHADOW = 0xB0000000;
     private static final int LEATHER_DARK = 0xFF3A2418;
@@ -35,6 +36,7 @@ public final class RadiantProgressionScreen extends Screen {
     private static final int MUTED_INK = 0xFF705B42;
     private static final int WINDRUNNER_BLUE = 0xFF276E83;
     private static final int WINDRUNNER_PALE = 0xFF8FC6CF;
+    private static final int BOND_GOLD = 0xFF9A7135;
     private static final int LOCKED = 0xFF8B775B;
 
     private final OpenRadiantProgressionPayload state;
@@ -45,7 +47,8 @@ public final class RadiantProgressionScreen extends Screen {
     private int panelHeight;
     private int panelLeft;
     private int panelTop;
-    private int scrollOffset;
+    private int minimumRowHeight;
+    private int scrollIndex;
     private int unlockTargetLevel;
     private Button unlockButton;
 
@@ -58,20 +61,34 @@ public final class RadiantProgressionScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = clamp(
-                (int) (width * 0.62F),
-                MIN_PANEL_WIDTH,
-                MAX_PANEL_WIDTH
-        );
-        panelHeight = clamp(
-                (int) (height * 0.62F),
-                MIN_PANEL_HEIGHT,
-                MAX_PANEL_HEIGHT
-        );
-        panelWidth = Math.min(panelWidth, width - 24);
-        panelHeight = Math.min(panelHeight, height - 20);
+        panelWidth = Math.min(MAX_PANEL_WIDTH, width - 24);
+        panelHeight = height - 20;
         panelLeft = (width - panelWidth) / 2;
         panelTop = (height - panelHeight) / 2;
+        minimumRowHeight = MIN_ROW_HEIGHT;
+        for (SprenBondLevel bond : SprenBondProgression.levels()) {
+            int lineCount = font.split(
+                    Component.translatable(bond.wordsTranslationKey()),
+                    bondWordsWidth()
+            ).size();
+            minimumRowHeight = Math.max(
+                    minimumRowHeight,
+                    bond.level() == 1 && state.level() >= 1
+                            ? 20 + 18 * lineCount
+                            : 20 + 18 * (lineCount - 1)
+            );
+        }
+        int lockedLineCount = font.split(
+                Component.translatable(
+                        "screen.stormlight.spren_bond.locked_words"
+                ),
+                bondWordsWidth()
+        ).size();
+        minimumRowHeight = Math.max(
+                minimumRowHeight,
+                20 + 18 * (lockedLineCount - 1)
+        );
+        scrollIndex = Math.min(scrollIndex, maxScrollIndex());
 
         int centreX = width / 2;
 
@@ -84,21 +101,24 @@ public final class RadiantProgressionScreen extends Screen {
                             ),
                             this::chooseWindrunner
                     ).bounds(
-                            centreX - 105,
-                            panelTop + panelHeight - 73,
-                            210,
-                            24
+                            panelLeft + 24,
+                            panelTop + panelHeight - 35,
+                            panelWidth / 2 - 48,
+                            20
                     ).build()
             );
             chooseButton.active = state.experienceLevel()
                     >= RadiantProgression.experienceCost(1);
         } else if (state.level() < RadiantProgression.MAX_LEVEL) {
             unlockTargetLevel = state.level() + 1;
+            scrollIndex = Math.min(
+                    maxScrollIndex(),
+                    Math.max(0, unlockTargetLevel - visibleRows())
+            );
             int cost = RadiantProgression.experienceCost(
                     unlockTargetLevel
             );
 
-            centreScrollOn(unlockTargetLevel);
             unlockButton = addRenderableWidget(
                     Button.builder(
                             Component.translatable(
@@ -108,13 +128,13 @@ public final class RadiantProgressionScreen extends Screen {
                             ),
                             this::unlockLevel
                     ).bounds(
-                            panelLeft + panelWidth - 121,
-                            0,
-                            101,
+                            panelLeft + 24,
+                            panelTop + panelHeight - 35,
+                            panelWidth / 2 - 48,
                             20
                     ).build()
             );
-            updateUnlockButton();
+            unlockButton.active = state.experienceLevel() >= cost;
         }
 
         int bottomButtonWidth = 90;
@@ -123,7 +143,7 @@ public final class RadiantProgressionScreen extends Screen {
                 bottomButtonWidth * 2 + bottomButtonGap;
 
         int bottomButtonStartX =
-                centreX - bottomButtonsWidth / 2;
+                centreX + (panelWidth / 2 - bottomButtonsWidth) / 2;
 
         int bottomButtonY =
                 panelTop + panelHeight - 35;
@@ -216,7 +236,7 @@ public final class RadiantProgressionScreen extends Screen {
                 panelTop + 18,
                 INK
         );
-        drawOrnament(graphics, panelTop + 34);
+        drawOrnament(graphics, panelTop + 32);
 
         if (state.orderNetworkId()
                 == RadiantOrderRegistry.NO_ORDER_NETWORK_ID) {
@@ -234,11 +254,17 @@ public final class RadiantProgressionScreen extends Screen {
                 .byNetworkId(state.orderNetworkId())
                 .orElse(RadiantOrderRegistry.WINDRUNNER);
 
+        int bindingX = width / 2;
+        int leftPageCentre = (panelLeft + 17 + bindingX - 7) / 2;
+        int rightPageCentre = (
+                bindingX + 7 + panelLeft + panelWidth - 17
+        ) / 2;
+
         drawCentered(
                 graphics,
                 Component.translatable(order.translationKey()),
-                width / 2,
-                panelTop + 45,
+                leftPageCentre,
+                panelTop + 42,
                 WINDRUNNER_BLUE
         );
         drawCentered(
@@ -247,25 +273,49 @@ public final class RadiantProgressionScreen extends Screen {
                         "screen.stormlight.radiant.xp_available",
                         state.experienceLevel()
                 ),
-                width / 2,
-                panelTop + 57,
+                leftPageCentre,
+                panelTop + 53,
+                MUTED_INK
+        );
+
+        drawCentered(
+                graphics,
+                Component.translatable(
+                        "screen.stormlight.spren_bond.title"
+                ),
+                rightPageCentre,
+                panelTop + 42,
+                BOND_GOLD
+        );
+        drawCentered(
+                graphics,
+                Component.translatable(
+                        "screen.stormlight.spren_bond.current",
+                        SprenBondProgression.getLevelForRadiantLevel(
+                                state.level()
+                        )
+                ),
+                rightPageCentre,
+                panelTop + 53,
                 MUTED_INK
         );
 
         int treeTop = treeTop();
         int treeBottom = treeBottom();
-        int nodeX = panelLeft + 43;
+        int nodeX = panelLeft + 39;
+
+        drawSprenBondColumn(
+                graphics,
+                treeTop,
+                treeBottom,
+                bindingX
+        );
 
         for (RadiantLevel level : order.levels()) {
-            int rowTop = treeTop
-                    + (level.level() - 1) * ROW_HEIGHT
-                    - scrollOffset;
-            int nodeY = rowTop + ROW_HEIGHT / 2;
-
-            if (rowTop < treeTop
-                    || rowTop + ROW_HEIGHT > treeBottom) {
+            if (!rowVisible(level.level() - 1)) {
                 continue;
             }
+            int nodeY = rowCentre(level.level() - 1);
 
             boolean unlocked = level.level() <= state.level();
             boolean available = level.level() == state.level() + 1;
@@ -277,19 +327,21 @@ public final class RadiantProgressionScreen extends Screen {
                 // the number inside the node above it.
                 int lineTop = Math.max(
                         treeTop,
-                        nodeY - ROW_HEIGHT + 14
+                        rowCentre(level.level() - 2) + 10
                 );
                 int lineBottom = Math.min(
                         treeBottom,
-                        nodeY - 14
+                        nodeY - 10
                 );
-                graphics.fill(
-                        nodeX - 1,
-                        lineTop,
-                        nodeX + 2,
-                        lineBottom,
-                        lineColour
-                );
+                if (lineTop < lineBottom) {
+                    graphics.fill(
+                            nodeX - 1,
+                            lineTop,
+                            nodeX + 2,
+                            lineBottom,
+                            lineColour
+                    );
+                }
             }
 
             drawLevelNode(
@@ -316,18 +368,26 @@ public final class RadiantProgressionScreen extends Screen {
                 treeBottom + 2,
                 PAGE_EDGE
         );
-
-        if (maxScrollOffset() > 0) {
-            graphics.text(
-                    font,
-                    Component.translatable(
-                            "screen.stormlight.radiant.scroll_hint"
-                    ),
-                    panelLeft + 20,
-                    panelTop + panelHeight - 31,
-                    MUTED_INK,
-                    false
-            );
+        if (maxScrollIndex() > 0) {
+            int indicatorX = panelLeft + panelWidth - 18;
+            if (scrollIndex > 0) {
+                drawCentered(
+                        graphics,
+                        Component.literal("↑"),
+                        indicatorX,
+                        treeTop + 2,
+                        MUTED_INK
+                );
+            }
+            if (scrollIndex < maxScrollIndex()) {
+                drawCentered(
+                        graphics,
+                        Component.literal("↓"),
+                        indicatorX,
+                        treeBottom - 12,
+                        MUTED_INK
+                );
+            }
         }
     }
 
@@ -348,17 +408,17 @@ public final class RadiantProgressionScreen extends Screen {
         int textColour = unlocked || available ? INK : MUTED_INK;
 
         graphics.fill(
-                nodeX - 14,
-                nodeY - 14,
-                nodeX + 14,
-                nodeY + 14,
-                outer
-        );
-        graphics.fill(
                 nodeX - 10,
                 nodeY - 10,
                 nodeX + 10,
                 nodeY + 10,
+                outer
+        );
+        graphics.fill(
+                nodeX - 7,
+                nodeY - 7,
+                nodeX + 7,
+                nodeY + 7,
                 inner
         );
         drawCentered(
@@ -369,57 +429,205 @@ public final class RadiantProgressionScreen extends Screen {
                 textColour
         );
 
-        int textX = nodeX + 22;
+        int textX = nodeX + 16;
+        boolean roomyRow = rowHeight() >= 34;
         graphics.text(
                 font,
                 Component.translatable(level.unlockTranslationKey()),
                 textX,
-                nodeY - 12,
+                nodeY - (roomyRow ? 15 : 10),
                 textColour,
                 false
         );
-        // On normal layouts, keep the reward summary beneath its title.
-        // Very narrow layouts omit it so the capacity column cannot overlap.
-        if (panelWidth >= 600) {
+        Component description = Component.translatable(
+                level.descriptionTranslationKey()
+        );
+        if (roomyRow
+                && font.width(description) < width / 2 - textX - 10) {
             graphics.text(
                     font,
-                    Component.translatable(
-                            level.descriptionTranslationKey()
-                    ),
+                    description,
                     textX,
-                    nodeY + 1,
+                    nodeY - 4,
                     unlocked ? WINDRUNNER_BLUE : MUTED_INK,
                     false
             );
         }
 
-        // Every capacity value begins at the same X coordinate, forming a
-        // clean vertical column independently of the reward text's length.
-        int capacityX = panelLeft + panelWidth - 260;
+        Component capacity = Component.translatable(
+                "screen.stormlight.radiant.capacity",
+                level.stormlightCapacity()
+        );
         graphics.text(
                 font,
-                Component.translatable(
-                        "screen.stormlight.radiant.capacity",
-                        level.stormlightCapacity()
-                ),
-                capacityX,
-                nodeY + 1,
+                capacity,
+                textX,
+                nodeY + (roomyRow ? 7 : 1),
                 unlocked ? WINDRUNNER_BLUE : MUTED_INK,
                 false
         );
+    }
 
-        if (unlocked) {
-            graphics.text(
-                    font,
-                    Component.translatable(
-                            "screen.stormlight.radiant.unlocked"
-                    ),
-                    panelLeft + panelWidth - 76,
-                    nodeY - 4,
-                    WINDRUNNER_BLUE,
-                    false
+    private void drawSprenBondColumn(
+            GuiGraphicsExtractor graphics,
+            int treeTop,
+            int treeBottom,
+            int bindingX
+    ) {
+        int currentBondLevel =
+                SprenBondProgression.getLevelForRadiantLevel(
+                        state.level()
+                );
+        int nodeX = bindingX + 29;
+
+        graphics.fill(
+                nodeX - 1,
+                treeTop,
+                nodeX + 2,
+                treeBottom,
+                LOCKED
+        );
+
+        if (currentBondLevel > 0) {
+            SprenBondLevel currentBond = SprenBondProgression.levels()
+                    .get(currentBondLevel - 1);
+            int unlockedLineBottom = rowCentre(
+                    currentBond.requiredRadiantLevel() - 1
+            );
+            graphics.fill(
+                    nodeX - 1,
+                    treeTop,
+                    nodeX + 2,
+                    Math.min(treeBottom, Math.max(treeTop,
+                            unlockedLineBottom)),
+                    WINDRUNNER_BLUE
             );
         }
+
+        for (SprenBondLevel bond : SprenBondProgression.levels()) {
+            if (!rowVisible(bond.requiredRadiantLevel() - 1)) {
+                continue;
+            }
+            int nodeY = rowCentre(bond.requiredRadiantLevel() - 1);
+
+            boolean unlocked = bond.level() <= currentBondLevel;
+            int outer = unlocked ? WINDRUNNER_BLUE : LOCKED;
+            int inner = unlocked ? WINDRUNNER_PALE : PARCHMENT_DARK;
+            int textColour = unlocked ? INK : MUTED_INK;
+
+            graphics.fill(
+                    nodeX - 9,
+                    nodeY - 9,
+                    nodeX + 9,
+                    nodeY + 9,
+                    outer
+            );
+            graphics.fill(
+                    nodeX - 6,
+                    nodeY - 6,
+                    nodeX + 6,
+                    nodeY + 6,
+                    inner
+            );
+            drawCentered(
+                    graphics,
+                    Component.literal(Integer.toString(bond.level())),
+                    nodeX,
+                    nodeY - 4,
+                    textColour
+            );
+
+            int textX = nodeX + 15;
+            Component heading = Component.translatable(
+                    "screen.stormlight.spren_bond.level",
+                    bond.level(),
+                    Component.translatable(bond.titleTranslationKey())
+            );
+
+            graphics.text(
+                    font,
+                    heading,
+                    textX,
+                    nodeY - 12,
+                    textColour,
+                    false
+            );
+
+            Component wordsText = Component.translatable(
+                    unlocked
+                            ? bond.wordsTranslationKey()
+                            : "screen.stormlight.spren_bond.locked_words"
+            );
+            List<FormattedCharSequence> words = font.split(
+                    wordsText,
+                    bondWordsWidth()
+            );
+
+            for (int line = 0;
+                    line < words.size();
+                    line++) {
+                graphics.text(
+                        font,
+                        words.get(line),
+                        textX,
+                        nodeY + 1 + line * 9,
+                        unlocked ? WINDRUNNER_BLUE : MUTED_INK,
+                        false
+                );
+            }
+            if (bond.level() == 1 && unlocked) {
+                graphics.text(
+                        font,
+                        Component.translatable(
+                                "screen.stormlight.spren_bond.spren_seek"
+                        ),
+                        textX,
+                        nodeY + 1 + words.size() * 9,
+                        WINDRUNNER_BLUE,
+                        false
+                );
+            }
+        }
+    }
+
+    private int treeTop() {
+        return panelTop + 65;
+    }
+
+    private int treeBottom() {
+        return panelTop + panelHeight - 40;
+    }
+
+    private int rowHeight() {
+        return Math.max(
+                minimumRowHeight,
+                (treeBottom() - treeTop()) / RadiantProgression.MAX_LEVEL
+        );
+    }
+
+    private int bondWordsWidth() {
+        return Math.max(1, panelWidth / 2 - 65);
+    }
+
+    private int rowCentre(int rowIndex) {
+        return treeTop() + (rowIndex - scrollIndex) * rowHeight()
+                + rowHeight() / 2;
+    }
+
+    private int visibleRows() {
+        return Math.max(1, Math.min(
+                RadiantProgression.MAX_LEVEL,
+                (treeBottom() - treeTop()) / rowHeight()
+        ));
+    }
+
+    private int maxScrollIndex() {
+        return RadiantProgression.MAX_LEVEL - visibleRows();
+    }
+
+    private boolean rowVisible(int rowIndex) {
+        return rowIndex >= scrollIndex
+                && rowIndex < scrollIndex + visibleRows();
     }
 
     @Override
@@ -431,13 +639,17 @@ public final class RadiantProgressionScreen extends Screen {
     ) {
         if (state.orderNetworkId()
                 != RadiantOrderRegistry.NO_ORDER_NETWORK_ID
+                && maxScrollIndex() > 0
                 && mouseX >= panelLeft + 14
                 && mouseX < panelLeft + panelWidth - 14
                 && mouseY >= treeTop()
                 && mouseY < treeBottom()
                 && scrollY != 0.0) {
             int direction = scrollY > 0.0 ? -1 : 1;
-            setScrollOffset(scrollOffset + direction * ROW_HEIGHT);
+            scrollIndex = Math.max(0, Math.min(
+                    maxScrollIndex(),
+                    scrollIndex + direction
+            ));
             return true;
         }
 
@@ -447,51 +659,6 @@ public final class RadiantProgressionScreen extends Screen {
                 scrollX,
                 scrollY
         );
-    }
-
-    private void centreScrollOn(int level) {
-        int viewportHeight = treeBottom() - treeTop();
-        int desired = (level - 1) * ROW_HEIGHT
-                - (viewportHeight - ROW_HEIGHT) / 2;
-        scrollOffset = clamp(desired, 0, maxScrollOffset());
-    }
-
-    private void setScrollOffset(int value) {
-        scrollOffset = clamp(value, 0, maxScrollOffset());
-        updateUnlockButton();
-    }
-
-    private int maxScrollOffset() {
-        int contentHeight = RadiantProgression.MAX_LEVEL * ROW_HEIGHT;
-        return Math.max(0, contentHeight - (treeBottom() - treeTop()));
-    }
-
-    private int treeTop() {
-        return panelTop + 72;
-    }
-
-    private int treeBottom() {
-        return panelTop + panelHeight - 44;
-    }
-
-    private void updateUnlockButton() {
-        if (unlockButton == null) {
-            return;
-        }
-
-        int rowTop = treeTop()
-                + (unlockTargetLevel - 1) * ROW_HEIGHT
-                - scrollOffset;
-        int buttonY = rowTop + (ROW_HEIGHT - unlockButton.getHeight()) / 2;
-        boolean fullyVisible = buttonY >= treeTop()
-                && buttonY + unlockButton.getHeight() <= treeBottom();
-
-        unlockButton.setY(buttonY);
-        unlockButton.visible = fullyVisible;
-        unlockButton.active = fullyVisible
-                && !unlocking
-                && state.experienceLevel()
-                >= RadiantProgression.experienceCost(unlockTargetLevel);
     }
 
     private void drawOrderSelection(
@@ -710,10 +877,6 @@ public final class RadiantProgressionScreen extends Screen {
                 colour,
                 false
         );
-    }
-
-    private static int clamp(int value, int minimum, int maximum) {
-        return Math.max(minimum, Math.min(maximum, value));
     }
 
     @Override
