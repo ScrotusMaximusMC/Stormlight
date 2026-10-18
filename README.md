@@ -22,11 +22,19 @@ A 3 wide, 2 deep, 2 tall glassworks: steps on one side, a brick hearth with an o
 middle, and a casting bench under a tap on the other side. Place it with that space clear. Fuel the
 hearth by right-clicking with a lava bucket (or any furnace fuel). Climb the steps and throw glass
 blocks into the crucible, or right-click with glass; each block melts into one unit of molten glass
-while the fire burns. Right-click with a gem nugget, gem or large gem to set it in the mould, then
-right-click the casting bench with an empty hand to turn the tap. The glass pours over the gem and
-the sphere cools in the mould before you can take it: a nugget makes a chip (1 glass), a gem a mark
-(2 glass) and a large gem a broam (3 glass). Sneak-right-click with an empty hand to take a gem back.
-Craft it from iron ingots, a cauldron, a furnace and bricks (`ICI` / `BFB` / `BBB`).
+while the fire burns. Set a mould on the casting bench, then right-click with a gem to set it in the
+mould, and right-click the casting bench with an empty hand to turn the tap. The glass pours over
+the gem and the sphere cools in the mould before you can take it. Each size needs its own mould:
+
+| Gem | Mould | Sphere | Glass |
+|---|---|---|---|
+| Nugget | Chip Mould (`C C` / ` I `) | Chip | 1 |
+| Gem | Mark Mould (`C C` / `CIC`) | Mark | 2 |
+| Large gem | Broam Mould (`C C` / `CIC` / `CCC`) | Broam | 3 |
+
+Moulds are crafted from clay balls (`C`) and an iron ingot (`I`) and stay on the bench between
+pours. Sneak-right-click with an empty hand to take the gem back, then again for the mould.
+Craft the forge from iron ingots, a cauldron, a furnace and bricks (`ICI` / `BFB` / `BBB`).
 
 Run `./gradlew build` for the server game tests and `./gradlew runClientGameTest` for the rendering and
 interaction check. Client test screenshots are written to `build/run/clientGameTest/screenshots`.

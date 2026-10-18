@@ -1,8 +1,9 @@
 {
   "type": "stormlight:sphere_forging",
   "ingredient": "stormlight:ruby",
+  "mould": "stormlight:mark_mould",
+  "glass": 2,
   "result": {
     "id": "stormlight:ruby_mark"
-  },
-  "glass": 2
+  }
 }

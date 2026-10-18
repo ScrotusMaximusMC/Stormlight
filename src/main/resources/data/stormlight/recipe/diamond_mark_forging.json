@@ -1,8 +1,9 @@
 {
   "type": "stormlight:sphere_forging",
   "ingredient": "minecraft:diamond",
+  "mould": "stormlight:mark_mould",
+  "glass": 2,
   "result": {
     "id": "stormlight:diamond_mark"
-  },
-  "glass": 2
+  }
 }

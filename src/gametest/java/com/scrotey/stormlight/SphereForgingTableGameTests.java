@@ -49,6 +49,8 @@ public class SphereForgingTableGameTests {
         var glass = new ItemStack(Items.GLASS, 3);
         for (int i = 0; i < 3; i++) h.assertTrue(use(forge, player, glass), "Glass goes into the crucible");
         h.assertTrue(glass.isEmpty(), "Each glass block is consumed");
+        h.assertTrue(!use(forge, player, new ItemStack(ModItems.DIAMOND_NUGGET)), "A gem needs a mould");
+        h.assertTrue(use(forge, player, new ItemStack(ModItems.CHIP_MOULD)), "Chip mould goes on the bench");
         h.assertTrue(use(forge, player, new ItemStack(ModItems.DIAMOND_NUGGET)), "Nugget sets in the mould");
         h.assertTrue(!use(forge, player, ItemStack.EMPTY), "A cold forge cannot pour");
         h.assertTrue(!forge.isPouring(), "Nothing poured");
@@ -65,7 +67,7 @@ public class SphereForgingTableGameTests {
             h.assertTrue(!use(forge, player, ItemStack.EMPTY), "Cannot pour twice at once");
         });
         h.runAtTickTime(melted + POUR, () -> {
-            h.assertTrue(forge.getMould().isEmpty(), "Nugget is sealed in glass");
+            h.assertTrue(forge.getGem().isEmpty(), "Nugget is sealed in glass");
             h.assertTrue(forge.getResult().is(ModItems.DIAMOND_CHIP), "A diamond chip is cast");
             h.assertTrue(!use(forge, player, ItemStack.EMPTY), "Too hot to take");
         });
@@ -75,6 +77,7 @@ public class SphereForgingTableGameTests {
             var chip = player.getInventory().getItem(player.getInventory().findSlotMatchingItem(new ItemStack(ModItems.DIAMOND_CHIP)));
             h.assertValueEqual(((SphereItem) chip.getItem()).getCharge(chip), 0, "New spheres are dun");
             h.assertTrue(forge.getResult().isEmpty(), "Mould is clear");
+            h.assertTrue(forge.getMould().is(ModItems.CHIP_MOULD), "The mould stays on the bench for the next pour");
             h.succeed();
         });
     }
@@ -91,6 +94,7 @@ public class SphereForgingTableGameTests {
         int t = lumps * (MELT + 1) + 5;
         h.runAtTickTime(t, () -> {
             h.assertValueEqual(forge.getMolten(), lumps, "All the glass melted");
+            h.assertTrue(use(forge, player, new ItemStack(ModItems.MARK_MOULD)), "Mark mould goes on the bench");
             h.assertTrue(use(forge, player, new ItemStack(Items.DIAMOND)), "Gem sets in the mould");
             h.assertTrue(!use(forge, player, new ItemStack(Items.EMERALD)), "Mould holds one gem");
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Pour a mark");
@@ -99,6 +103,12 @@ public class SphereForgingTableGameTests {
         h.runAtTickTime(t + POUR + COOL, () -> {
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Take the mark");
             h.assertValueEqual(count(player, ModItems.DIAMOND_MARK), 1, "Diamond mark cast");
+            h.assertTrue(!use(forge, player, new ItemStack(ModItems.LARGE_RUBY)), "A large gem won't fit a mark mould");
+            player.setShiftKeyDown(true);
+            h.assertTrue(use(forge, player, ItemStack.EMPTY), "Sneak lifts the empty mould off");
+            player.setShiftKeyDown(false);
+            h.assertValueEqual(count(player, ModItems.MARK_MOULD), 1, "Mark mould returned");
+            h.assertTrue(use(forge, player, new ItemStack(ModItems.BROAM_MOULD)), "Broam mould goes on the bench");
             h.assertTrue(use(forge, player, new ItemStack(ModItems.LARGE_RUBY)), "Large gem sets");
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Pour a broam");
             h.assertValueEqual(forge.getMolten(), lumps - 5, "A broam takes three glass");
@@ -118,6 +128,8 @@ public class SphereForgingTableGameTests {
         var forge = forge(h);
         var vat = SphereForgingTableBlock.vatInterior(h.absolutePos(POS), Direction.EAST).getCenter();
         var thrown = new ItemEntity(h.getLevel(), vat.x, vat.y + 0.6, vat.z, new ItemStack(Items.GLASS, 3));
+        // A fresh item entity pops in a random direction; drop it straight in so the test is stable.
+        thrown.setDeltaMovement(0, 0, 0);
         h.getLevel().addFreshEntity(thrown);
         h.runAtTickTime(40, () -> {
             h.assertValueEqual(forge.getUnmelted(), 3, "Thrown glass lands in the crucible");
@@ -131,6 +143,7 @@ public class SphereForgingTableGameTests {
         var forge = forge(h);
         var player = h.makeMockPlayer(GameType.SURVIVAL);
         use(forge, player, new ItemStack(Items.LAVA_BUCKET));
+        use(forge, player, new ItemStack(ModItems.CHIP_MOULD));
         use(forge, player, new ItemStack(ModItems.RUBY_NUGGET));
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         h.assertTrue(!forge.interact(player, InteractionHand.MAIN_HAND, false), "Clicking the hearth does not pour");
@@ -144,12 +157,18 @@ public class SphereForgingTableGameTests {
         var player = h.makeMockPlayer(GameType.SURVIVAL);
         h.assertTrue(!use(forge, player, new ItemStack(Items.DIRT)), "Dirt is not a gem");
         h.assertTrue(!use(forge, player, new ItemStack(ModItems.CHISEL)), "Tools are ignored");
+        h.assertTrue(use(forge, player, new ItemStack(ModItems.CHIP_MOULD)), "Mould sets");
+        h.assertTrue(!use(forge, player, new ItemStack(ModItems.MARK_MOULD)), "Only one mould at a time");
+        h.assertTrue(!use(forge, player, new ItemStack(ModItems.SAPPHIRE)), "A full gem won't fit a chip mould");
         h.assertTrue(use(forge, player, new ItemStack(ModItems.SAPPHIRE_NUGGET)), "Nugget sets");
         player.setShiftKeyDown(true);
         h.assertTrue(use(forge, player, ItemStack.EMPTY), "Sneak takes the gem back");
-        player.setShiftKeyDown(false);
-        h.assertTrue(forge.getMould().isEmpty(), "Mould is empty");
+        h.assertTrue(forge.getGem().isEmpty() && !forge.getMould().isEmpty(), "Gem comes out before the mould");
         h.assertValueEqual(count(player, ModItems.SAPPHIRE_NUGGET), 1, "Nugget returned");
+        h.assertTrue(use(forge, player, ItemStack.EMPTY), "Sneak again takes the mould");
+        player.setShiftKeyDown(false);
+        h.assertTrue(forge.getMould().isEmpty(), "Bench is clear");
+        h.assertValueEqual(count(player, ModItems.CHIP_MOULD), 1, "Mould returned");
         h.succeed();
     }
 
@@ -160,6 +179,7 @@ public class SphereForgingTableGameTests {
         use(forge, player, new ItemStack(Items.COAL));
         use(forge, player, new ItemStack(Items.GLASS, 2));
         use(forge, player, new ItemStack(Items.GLASS));
+        use(forge, player, new ItemStack(ModItems.MARK_MOULD));
         use(forge, player, new ItemStack(ModItems.GARNET));
         var restored = new SphereForgingTableBlockEntity(forge.getBlockPos(), forge.getBlockState());
         restored.setLevel(h.getLevel());
@@ -167,7 +187,8 @@ public class SphereForgingTableGameTests {
                 h.getLevel().registryAccess(), forge.saveWithoutMetadata(h.getLevel().registryAccess())));
         h.assertTrue(restored.isLit(), "Fuel survives saving");
         h.assertValueEqual(restored.getUnmelted(), 2, "Unmelted glass survives saving");
-        h.assertTrue(restored.getMould().is(ModItems.GARNET), "Mould survives saving");
+        h.assertTrue(restored.getMould().is(ModItems.MARK_MOULD), "Mould survives saving");
+        h.assertTrue(restored.getGem().is(ModItems.GARNET), "Gem survives saving");
         h.succeed();
     }
 
@@ -180,6 +201,7 @@ public class SphereForgingTableGameTests {
             var player = h.makeMockPlayer(GameType.SURVIVAL);
             use(forge, player, new ItemStack(Items.GLASS));
             use(forge, player, new ItemStack(Items.GLASS));
+            use(forge, player, new ItemStack(ModItems.MARK_MOULD));
             use(forge, player, new ItemStack(ModItems.RUBY));
             BlockPos target = SphereForgingTableBlock.partPos(h.absolutePos(POS), Direction.EAST, part[0], part[1], part[2]);
             h.assertValueEqual(SphereForgingTableBlock.corePos(target, h.getLevel().getBlockState(target)),
@@ -190,6 +212,7 @@ public class SphereForgingTableGameTests {
             h.assertItemEntityCountIs(ModBlocks.SPHERE_FORGING_TABLE.asItem(), POS, 4, 1);
             h.assertItemEntityCountIs(Items.GLASS, POS, 4, 2);
             h.assertItemEntityCountIs(ModItems.RUBY, POS, 4, 1);
+            h.assertItemEntityCountIs(ModItems.MARK_MOULD, POS, 4, 1);
         }
         h.succeed();
     }

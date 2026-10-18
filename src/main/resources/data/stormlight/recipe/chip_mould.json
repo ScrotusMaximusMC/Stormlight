@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "C C",
+    " I "
+  ],
+  "key": {
+    "C": "minecraft:clay_ball",
+    "I": "minecraft:iron_ingot"
+  },
+  "result": {
+    "id": "stormlight:chip_mould",
+    "count": 1
+  }
+}
