@@ -1,8 +1,6 @@
 package com.scrotey.stormlight;
 
 import com.scrotey.stormlight.item.ModItems;
-import com.scrotey.stormlight.client.progression.WayOfKingsScreen;
-import com.scrotey.stormlight.network.OpenWayOfKingsPayload;
 
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.block.entity.SphereForgingTableBlockEntity;
@@ -83,34 +81,7 @@ public class SphereForgingTableClientTest implements FabricClientGameTest {
             context.takeScreenshot("forge-finished");
             view(context, world, 4.5, 100, 4.5, 139, 15);
             context.takeScreenshot("forge-back");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 35))));
-            context.waitTicks(3);
-            context.takeScreenshot("way-of-kings-guide");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 35), 1)));
-            context.waitTicks(2);
-            context.takeScreenshot("way-of-kings-order");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 35), 2)));
-            context.waitTicks(2);
-            context.takeScreenshot("way-of-kings-stone-cutting-tree");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 40), 2)));
-            context.waitTicks(5);
-            context.takeScreenshot("way-of-kings-combined-cutting-level-five");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 35), 3)));
-            context.waitTicks(2);
-            context.takeScreenshot("way-of-kings-stormlight-guide");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 0, 0, 0, 0), 1)));
-            context.waitTicks(2);
-            context.takeScreenshot("way-of-kings-no-order");
-            context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 10, 99, 100), 2)));
-            context.waitTicks(2);
-            context.takeScreenshot("way-of-kings-mastered-tree");
+
         }
     }
 

@@ -55,6 +55,7 @@ public class Stormlight implements ModInitializer {
         HighstormManager.initialize();
         SphereDecayManager.initialize();
         HighstormCommands.initialize();
+        com.scrotey.stormlight.debug.DebugUiCommands.initialize();
         ChrysalisCommands.initialize();
         StormlightManager.initialize();
         LashingManager.initialize();

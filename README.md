@@ -38,7 +38,7 @@ Craft the forge from iron ingots, a cauldron, a furnace and bricks (`ICI` / `BFB
 Run `./gradlew build` for the server game tests and `./gradlew runClientGameTest` for the rendering and
 interaction check. Client test screenshots are written to `build/run/clientGameTest/screenshots`.
 
-## Stone Cutting progression
+## Gem Cutting progression
 
 The player landing the final strike earns one completed cut. Creative cuts produce items but do not
 award progress. Rank and practice persist through logout and death. Sneak-right-click an empty
@@ -77,8 +77,36 @@ Large gems cannot be forged directly; use a raw broam with a broam mould and thr
 ## The Way of Kings
 
 Craft a book with lapis lazuli to make The Way of Kings. Put it on a lectern and open it to read the
-field guide, a Stormlight reference page, your current Radiant order and next XP milestone, and a visual Stone Cutting tree with
-all ten levels, cut requirements, and chip, mark, and broam odds on one Stone Cutting tree.
+Field Guide contents page with clickable chapters for Stormlight, Crafting Spheres, Highstorms,
+Storage & Lighting, Radiants & Lashings, and Spren & Ore Seeking. Each chapter returns to Contents
+and supports scrolling when needed. Separate tabs retain your current Radiant order and next XP
+milestone, and a visual Gem Cutting tree with
+all ten levels, cut requirements, and chip, mark, and broam odds on one Gem Cutting tree.
 The same page shows the level 5 broam unlock and diamond chisel requirement. Scroll or use the
 arrow buttons to explore the tree on smaller screens. The displayed progress belongs to the reader,
 so two players using the same lectern see their own levels. Use **Take Book** to retrieve it.
+
+## Sphere wear visuals
+
+Sphere items use a shared crack overlay over their existing gemstone and charge model. Cracks
+appear at 1% wear, branch at 40%, and become heavy at 75%. Three shared models in
+`assets/stormlight/models/item/sphere_cracks_*.json` draw the cracks as small faces using the
+vanilla gray concrete texture, so no gemstone, denomination, or charge-specific sprites are needed.
+The overlay reads normalized item damage, including wear already saved on existing spheres.
+
+## UI debug commands
+
+Enable cheats in singleplayer or use an operator account. Commands affect the player running them.
+
+| Command | Use |
+| --- | --- |
+| `/stormlightdebug guide` | Open the Way of Kings using your current progress, without a lectern. |
+| `/stormlightdebug guide 5 3` | Preview Gem Cutting level 5 and Radiant level 3; saved progression stays unchanged. Use Radiant level 0 to preview no order. |
+| `/stormlightdebug spheres broam 100` | Get twenty broams: every gemstone at pristine, light, moderate and heavy wear, fully charged. |
+| `/stormlightdebug spheres chip 0` | Get the same comparison set of dun chips. `mark` also works; charge accepts 0–100 and defaults to 100. |
+| `/stormlightdebug wear 95` | Set the main-hand sphere to 95% wear without changing charge. Accepts 0–99; 0 restores pristine health. |
+| `/stormlightdebug gemlevel 5` | Set your saved Gem Cutting rank to 5 so you can test the broam unlock. Accepts 1–10 and resets completed cuts to that rank's threshold. |
+| `/stormlightdebug books` | Get The Way of Kings, a Mysterious Book and Words of Radiance for lectern/ritual checks. |
+
+For the complete crack comparison, run the sphere command with charge values 0, 25, 50, 75 and 100.
+Sample items that do not fit in your inventory drop at your feet. `/stormlightdebug` lists the shortcuts.

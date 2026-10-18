@@ -8,6 +8,11 @@ import com.scrotey.stormlight.progression.StonecuttingProgression;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.PlainTextButton;
+import net.minecraft.util.FormattedCharSequence;
+
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -18,6 +23,10 @@ public final class WayOfKingsScreen extends Screen {
     private static final int BLUE = 0xFF24677A;
     private static final int GOLD = 0xFF9C6B21;
     private static final int LOCKED = 0xFF9A8B72;
+    private static final String[] TOPICS = {"stormlight", "crafting", "storms", "storage", "radiants", "spren"};
+    private final List<PlainTextButton> contentsLinks = new ArrayList<>();
+    private PlainTextButton contentsBack;
+    private int articleRow;
     private final OpenWayOfKingsPayload progress;
     private int page, left, top, panelWidth, panelHeight, cuttingRow;
     private Button cuttingUp, cuttingDown;
@@ -29,7 +38,7 @@ public final class WayOfKingsScreen extends Screen {
     public WayOfKingsScreen(OpenWayOfKingsPayload progress, int initialPage) {
         super(Component.translatable("screen.stormlight.way_of_kings.title"));
         this.progress = progress;
-        this.page = Math.clamp(initialPage, 0, 3);
+        this.page = Math.clamp(initialPage, 0, 2 + TOPICS.length);
         this.cuttingRow = (StonecuttingProgression.levelForCuts(progress.completedCuts()) - 1) / 2;
     }
 
@@ -38,25 +47,37 @@ public final class WayOfKingsScreen extends Screen {
         panelHeight = Math.min(350, height - 20);
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
-        int tabWidth = Math.min(100, (panelWidth - 44) / 4);
+        int tabWidth = Math.min(100, (panelWidth - 44) / 3);
         int gap = 5;
-        int start = width / 2 - (tabWidth * 4 + gap * 3) / 2;
-        for (int i = 0; i < 4; i++) {
+        int start = width / 2 - (tabWidth * 3 + gap * 2) / 2;
+        for (int i = 0; i < 3; i++) {
             final int target = i;
             addRenderableWidget(Button.builder(Component.translatable(
-                    "screen.stormlight.way_of_kings.tab." + i), b -> page = target)
+                    "screen.stormlight.way_of_kings.tab." + i), b -> openPage(target))
                     .bounds(start + i * (tabWidth + gap), top + 38, tabWidth, 20).build());
         }
+        contentsLinks.clear();
+        for (int i = 0; i < TOPICS.length; i++) {
+            final int target = 3 + i;
+            Component label = topicText(TOPICS[i], "title");
+            int x = i % 2 == 0 ? left + 18 : width / 2 + 18;
+            contentsLinks.add(addRenderableWidget(new GuideLink(x, top + 91 + (i / 2) * 30,
+                    font.width(label), 14, label, b -> openPage(target), font)));
+        }
+        Component back = Component.translatable("screen.stormlight.way_of_kings.contents.back");
+        contentsBack = addRenderableWidget(new GuideLink(left + 12, top + 65,
+                font.width(back), 14, back, b -> openPage(0), font));
         addRenderableWidget(Button.builder(Component.translatable("screen.stormlight.way_of_kings.take"),
                 b -> { ClientPlayNetworking.send(new TakeLecternBookPayload(progress.lecternPos())); onClose(); })
                 .bounds(width / 2 - 96, top + panelHeight - 27, 90, 20).build());
         cuttingUp = addRenderableWidget(Button.builder(Component.literal("▲"),
-                b -> cuttingRow = Math.max(0, cuttingRow - 1))
+                b -> scrollPage(-1))
                 .bounds(left + 12, top + panelHeight - 27, 20, 20).build());
         cuttingDown = addRenderableWidget(Button.builder(Component.literal("▼"),
-                b -> cuttingRow = Math.min(maxCuttingRow(), cuttingRow + 1))
+                b -> scrollPage(1))
                 .bounds(left + panelWidth - 32, top + panelHeight - 27, 20, 20).build());
         cuttingRow = Math.min(cuttingRow, maxCuttingRow());
+        updateNavigation();
         addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
                 .bounds(width / 2 + 6, top + panelHeight - 27, 90, 20).build());
     }
@@ -72,24 +93,52 @@ public final class WayOfKingsScreen extends Screen {
             case 0 -> overview(graphics);
             case 1 -> radiant(graphics);
             case 2 -> cuttingTree(graphics);
-            default -> stormlightGuide(graphics);
+            default -> article(graphics);
         }
-        cuttingUp.visible = cuttingDown.visible = page == 2 && maxCuttingRow() > 0;
-        cuttingUp.active = cuttingRow > 0;
-        cuttingDown.active = cuttingRow < maxCuttingRow();
+        updateNavigation();
         super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
+    /** Book links use flat ink: the vanilla text button adds a heavy shadow. */
+    private final class GuideLink extends PlainTextButton {
+        private GuideLink(int x, int y, int width, int height, Component label, Button.OnPress onPress,
+                          net.minecraft.client.gui.Font font) {
+            super(x, y, width, height, label, onPress, font);
+        }
+
+        @Override public void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+            boolean highlighted = isHoveredOrFocused();
+            graphics.text(WayOfKingsScreen.this.font,
+                    getMessage().copy().withStyle(style -> style.withUnderlined(true)),
+                    getX(), getY(), highlighted ? GOLD : INK, false);
+        }
+    }
+
+    private void openPage(int target) {
+        page = target;
+        articleRow = 0;
+        updateNavigation();
+    }
+
+    private void updateNavigation() {
+        for (PlainTextButton link : contentsLinks) link.visible = page == 0;
+        contentsBack.visible = page >= 3;
+        if (cuttingUp != null && cuttingDown != null) {
+            int max = page == 2 ? maxCuttingRow() : page >= 3 ? maxArticleRow() : 0;
+            int row = page == 2 ? cuttingRow : articleRow;
+            cuttingUp.visible = cuttingDown.visible = max > 0;
+            cuttingUp.active = row > 0;
+            cuttingDown.active = row < max;
+        }
+    }
+
     private void overview(GuiGraphicsExtractor g) {
-        int x = left + 18, right = width / 2 + 18, y = top + 73;
-        heading(g, "radiants", x, y);
-        line(g, "guide.radiants", x, y + 21, INK);
-        line(g, "guide.radiants_2", x, y + 39, INK);
-        heading(g, "spheres", right, y);
-        line(g, "guide.spheres", right, y + 21, INK);
-        line(g, "guide.spheres_2", right, y + 39, INK);
-        heading(g, "storms", right, y + 75);
-        line(g, "guide.storms", right, y + 96, INK);
+        centered(g, Component.translatable("screen.stormlight.way_of_kings.contents.title"),
+                width / 2, top + 70, BLUE);
+        for (int i = 0; i < TOPICS.length; i++) {
+            int x = i % 2 == 0 ? left + 26 : width / 2 + 26;
+            g.text(font, topicText(TOPICS[i], "summary"), x, top + 107 + (i / 2) * 30, MUTED, false);
+        }
     }
 
     private void radiant(GuiGraphicsExtractor g) {
@@ -131,20 +180,39 @@ public final class WayOfKingsScreen extends Screen {
         }
     }
 
-    private void stormlightGuide(GuiGraphicsExtractor g) {
-        int x = left + 18, right = width / 2 + 18, y = top + 73;
-        heading(g, "stormlight", x, y);
-        line(g, "guide.charge", x, y + 21, INK);
-        line(g, "guide.capacity", x, y + 39, INK);
-        heading(g, "pouch", right, y);
-        line(g, "guide.pouch", right, y + 21, INK);
-        line(g, "guide.pouch_2", right, y + 39, INK);
-        heading(g, "controls", x, y + 72);
-        line(g, "guide.breathe", x, y + 92, INK);
-        line(g, "guide.exhale", x, y + 109, INK);
-        heading(g, "storage", right, y + 72);
-        line(g, "guide.storage", right, y + 92, INK);
-        line(g, "guide.lashing", right, y + 109, INK);
+    private net.minecraft.network.chat.MutableComponent topicText(String topic, String part) {
+        return Component.translatable("screen.stormlight.way_of_kings.article." + topic + "." + part);
+    }
+
+    private List<FormattedCharSequence> articleLines(String side) {
+        return font.split(topicText(TOPICS[page - 3], side + "_body"), panelWidth / 2 - 36);
+    }
+
+    private int visibleArticleRows() {
+        return Math.max(1, (panelHeight - 137) / 11);
+    }
+
+    private int maxArticleRow() {
+        return Math.max(0, Math.max(articleLines("left").size(), articleLines("right").size()) - visibleArticleRows());
+    }
+
+    private void article(GuiGraphicsExtractor g) {
+        String topic = TOPICS[page - 3];
+        centered(g, topicText(topic, "title"), width / 2, top + 72, BLUE);
+        for (String side : List.of("left", "right")) {
+            int x = side.equals("left") ? left + 18 : width / 2 + 18;
+            g.text(font, topicText(topic, side + "_title"), x, top + 92, BLUE, false);
+            List<FormattedCharSequence> lines = articleLines(side);
+            for (int row = articleRow; row < Math.min(lines.size(), articleRow + visibleArticleRows()); row++) {
+                g.text(font, lines.get(row), x, top + 106 + (row - articleRow) * 11, INK, false);
+            }
+        }
+    }
+
+    private void scrollPage(int direction) {
+        if (page == 2) cuttingRow = Math.clamp(cuttingRow + direction, 0, maxCuttingRow());
+        else if (page >= 3) articleRow = Math.clamp(articleRow + direction, 0, maxArticleRow());
+        updateNavigation();
     }
 
     private void cuttingTree(GuiGraphicsExtractor g) {
@@ -198,9 +266,9 @@ public final class WayOfKingsScreen extends Screen {
     }
 
     @Override public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (page == 2 && mouseX >= left && mouseX < left + panelWidth
+        if ((page == 2 || page >= 3) && mouseX >= left && mouseX < left + panelWidth
                 && mouseY >= top + 65 && mouseY < top + panelHeight - 30 && scrollY != 0) {
-            cuttingRow = Math.clamp(cuttingRow + (scrollY > 0 ? -1 : 1), 0, maxCuttingRow());
+            scrollPage(scrollY > 0 ? -1 : 1);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
