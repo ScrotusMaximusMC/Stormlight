@@ -56,8 +56,6 @@
   "screen.stormlight.radiant.order_cost": "Level 1 costs %s XP levels | You have %s",
   "screen.stormlight.radiant.xp_available": "Available XP levels: %s",
   "screen.stormlight.radiant.capacity": "Capacity: %s",
-<<<<<<< Updated upstream
-=======
   "screen.stormlight.spren_bond.title": "Spren Bond",
   "screen.stormlight.spren_bond.current": "Current bond: %s",
   "screen.stormlight.spren_bond.level": "Bond %s - %s",
@@ -79,7 +77,6 @@
   "message.stormlight.spren_seek.cancelled": "Spren Seek cancelled.",
   "message.stormlight.spren_seek.blade": "Your spren is a Shardblade right now.",
   "message.stormlight.shardblade.locked": "Unlock Spren Bond 3 to summon your Shardblade.",
->>>>>>> Stashed changes
   "button.stormlight.choose_windrunner": "Choose Windrunner",
   "button.stormlight.choosing": "Choosing...",
   "button.stormlight.radiant.unlock": "Unlock %s (%s XP)",
@@ -103,10 +100,7 @@
   "progression.stormlight.windrunner.expert_windrunning.title": "Expert Windrunning",
   "progression.stormlight.windrunner.expert_windrunning.description": "Speed III | Strength II",
   "progression.stormlight.windrunner.radiant_mastery.title": "Radiant Mastery",
-<<<<<<< Updated upstream
   "progression.stormlight.windrunner.radiant_mastery.description": "Speed III | Strength III | Reabsorption | External Lashing",
-=======
-  "progression.stormlight.windrunner.radiant_mastery.description": "Speed III | Strength III | Reabsorption",
   "progression.stormlight.windrunner.radiant_mastery.mob_lashing": "Mob Lashing (H): mark a mob, aim, then press H to launch it up to 100 blocks. Shift+H cancels.",
   "progression.stormlight.spren_bond.first_ideal.title": "First Ideal",
   "progression.stormlight.spren_bond.first_ideal.words": "Life before death. Strength before weakness. Journey before destination.",
@@ -119,7 +113,6 @@
   "progression.stormlight.spren_bond.fifth_ideal.title": "Fifth Ideal",
   "progression.stormlight.spren_bond.fifth_ideal.words": "The words escape you, like whispers in wind",
   "item.stormlight.diamond_nugget": "Diamond Nugget",
->>>>>>> Stashed changes
   "item.stormlight.diamond_chip.dun": "Dun Diamond Chip",
   "item.stormlight.diamond_chip.infused": "Infused Diamond Chip",
   "item.stormlight.diamond_mark.dun": "Dun Diamond Mark",
@@ -163,12 +156,9 @@
   "key.stormlight.breathe": "Breathe Stormlight",
   "key.stormlight.lashing": "Toggle Lashing",
   "key.stormlight.external_lashing": "External Lashing",
-<<<<<<< Updated upstream
-=======
   "key.stormlight.spren_seek": "Spren Seek",
   "key.stormlight.shardblade_slot": "Summon Shardblade",
   "item.stormlight.shardblade": "Shardblade",
->>>>>>> Stashed changes
   "hud.stormlight.lashing.active": "Lashing",
   "hud.stormlight.stabilising": "Stabilising",
   "block.stormlight.sphere_jar": "Sphere Jar",
