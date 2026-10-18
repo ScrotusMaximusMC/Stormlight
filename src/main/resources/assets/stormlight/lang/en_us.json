@@ -285,5 +285,6 @@
   "screen.stormlight.way_of_kings.article.spren.left_title": "The Spren Bond",
   "screen.stormlight.way_of_kings.article.spren.left_body": "Your Spren Bond grows with your Radiant progression. Bond levels unlock at Radiant levels 1, 3, 5, 7 and 9. This is a different progression from Gem Cutting. Words of Radiance shows the bond and its ideals.",
   "screen.stormlight.way_of_kings.article.spren.right_title": "Spren Seek",
-  "screen.stormlight.way_of_kings.article.spren.right_body": "At Spren Bond 1, press V by default to send your nearby spren searching for gemstone ore within 75 blocks. If it finds a lead, it returns to guide you. Follow its trail. Spren Seek has a cooldown; messages report when it is searching, returning or ready again. Use the control again to cancel an active search."
+  "screen.stormlight.way_of_kings.article.spren.right_body": "At Spren Bond 1, press V by default to send your nearby spren searching for gemstone ore within 75 blocks. If it finds a lead, it returns to guide you. Follow its trail. Spren Seek has a cooldown; messages report when it is searching, returning or ready again. Use the control again to cancel an active search.",
+  "biome.stormlight.shattered_plains": "Shattered Plains"
 }
