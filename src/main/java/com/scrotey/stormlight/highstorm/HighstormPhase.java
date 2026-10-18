@@ -2,6 +2,7 @@ package com.scrotey.stormlight.highstorm;
 
 public enum HighstormPhase {
     CALM("Calm"),
+    GATHERING("Gathering"),
     APPROACHING("Approaching"),
     HIGHSTORM("Highstorm"),
     PASSING("Passing");

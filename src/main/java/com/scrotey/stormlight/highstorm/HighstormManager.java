@@ -63,6 +63,26 @@ public final class HighstormManager {
         ChrysalisSpawner.beginHighstormSearch(server);
     }
 
+    public static void startGatheringNow(
+            MinecraftServer server
+    ) {
+        ServerLevel level =
+                server.overworld();
+
+        HighstormSavedData data =
+                HighstormSavedData.get(server);
+
+        data.setPhase(
+                HighstormPhase.GATHERING,
+                HighstormTimings.GATHERING_TICKS
+        );
+
+        holdClearSky(
+                level,
+                HighstormTimings.GATHERING_TICKS
+        );
+    }
+
     public static void startApproachNow(
             MinecraftServer server
     ) {
@@ -77,15 +97,9 @@ public final class HighstormManager {
                 HighstormTimings.APPROACHING_TICKS
         );
 
-        setRainWithoutThunder(
+        holdClearSky(
                 level,
-                HighstormTimings.APPROACHING_TICKS
-        );
-
-        announce(
-                server,
-                "A Highstorm is approaching!",
-                ChatFormatting.YELLOW
+                HighstormTimings.APPROACH_RAIN_START_TICK
         );
     }
 
@@ -277,21 +291,31 @@ public final class HighstormManager {
             HighstormSavedData data
     ) {
         switch (data.getPhase()) {
+            /*
+             * No chat warning: the lull, the haze, the distant rumbles and
+             * the line on the eastern horizon are the warning.
+             */
             case CALM -> {
+                data.setPhase(
+                        HighstormPhase.GATHERING,
+                        HighstormTimings.GATHERING_TICKS
+                );
+
+                holdClearSky(
+                        level,
+                        HighstormTimings.GATHERING_TICKS
+                );
+            }
+
+            case GATHERING -> {
                 data.setPhase(
                         HighstormPhase.APPROACHING,
                         HighstormTimings.APPROACHING_TICKS
                 );
 
-                setRainWithoutThunder(
+                holdClearSky(
                         level,
-                        HighstormTimings.APPROACHING_TICKS
-                );
-
-                announce(
-                        server,
-                        "A Highstorm is approaching!",
-                        ChatFormatting.YELLOW
+                        HighstormTimings.APPROACH_RAIN_START_TICK
                 );
             }
 
@@ -388,7 +412,52 @@ public final class HighstormManager {
             case CALM ->
                     suppressVanillaThunder(level);
 
-            case APPROACHING, PASSING -> {
+            /*
+             * The sky stays clear ahead of the stormwall. Rain begins only
+             * as its leading edge passes overhead.
+             */
+            case GATHERING -> {
+                if (level.isRaining()
+                        || level.isThundering()) {
+
+                    holdClearSky(
+                            level,
+                            remaining
+                    );
+                }
+            }
+
+            case APPROACHING -> {
+                long elapsed =
+                        HighstormTimings.APPROACHING_TICKS
+                                - data.getTicksRemaining();
+
+                if (elapsed
+                        < HighstormTimings.APPROACH_RAIN_START_TICK) {
+
+                    if (level.isRaining()
+                            || level.isThundering()) {
+
+                        holdClearSky(
+                                level,
+                                (int) (
+                                        HighstormTimings
+                                                .APPROACH_RAIN_START_TICK
+                                                - elapsed
+                                )
+                        );
+                    }
+                } else if (!level.isRaining()
+                        || level.isThundering()) {
+
+                    setRainWithoutThunder(
+                            level,
+                            remaining
+                    );
+                }
+            }
+
+            case PASSING -> {
                 if (!level.isRaining()
                         || level.isThundering()) {
 
@@ -436,6 +505,20 @@ public final class HighstormManager {
                             false
                     );
         }
+    }
+
+    private static void holdClearSky(
+            ServerLevel level,
+            int duration
+    ) {
+        level.getServer()
+                .setWeatherParameters(
+                        Math.max(1, duration)
+                                + WEATHER_BUFFER_TICKS,
+                        0,
+                        false,
+                        false
+                );
     }
 
     private static void setRainWithoutThunder(
@@ -513,6 +596,9 @@ public final class HighstormManager {
         return switch (phase) {
             case CALM ->
                     ChatFormatting.GREEN;
+
+            case GATHERING ->
+                    ChatFormatting.DARK_GRAY;
 
             case APPROACHING ->
                     ChatFormatting.YELLOW;
