@@ -17,6 +17,7 @@ public final class StormlightHud {
 
     private static int reserve;
     private static int capacity;
+    private static int radiantLevel;
 
     private StormlightHud() {
     }
@@ -24,6 +25,11 @@ public final class StormlightHud {
     public static void update(StormlightStatusPayload payload) {
         reserve = Math.max(0, payload.reserve());
         capacity = Math.max(0, payload.capacity());
+        radiantLevel = Math.max(0, payload.radiantLevel());
+    }
+
+    public static boolean canUseExternalLashing() {
+        return reserve > 0 && radiantLevel >= 10;
     }
 
     public static void render(

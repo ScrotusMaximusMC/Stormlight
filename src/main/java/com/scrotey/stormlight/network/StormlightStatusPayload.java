@@ -8,7 +8,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record StormlightStatusPayload(
         int reserve,
-        int capacity
+        int capacity,
+        int radiantLevel
 ) implements CustomPacketPayload {
 
     public static final Type<StormlightStatusPayload> TYPE =
@@ -22,6 +23,8 @@ public record StormlightStatusPayload(
                     StormlightStatusPayload::reserve,
                     ByteBufCodecs.VAR_INT,
                     StormlightStatusPayload::capacity,
+                    ByteBufCodecs.VAR_INT,
+                    StormlightStatusPayload::radiantLevel,
                     StormlightStatusPayload::new
             );
 

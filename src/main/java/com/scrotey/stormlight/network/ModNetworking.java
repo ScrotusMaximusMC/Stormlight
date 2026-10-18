@@ -4,6 +4,7 @@ import com.scrotey.stormlight.breathing.StormlightManager;
 import com.scrotey.stormlight.attachment.ModAttachments;
 import com.scrotey.stormlight.item.SpherePouchItem;
 import com.scrotey.stormlight.lashing.LashingManager;
+import com.scrotey.stormlight.lashing.ExternalLashingManager;
 import com.scrotey.stormlight.progression.RadiantLecternInteraction;
 
 import net.minecraft.network.chat.Component;
@@ -31,6 +32,11 @@ public final class ModNetworking {
                 ToggleLashingPayload.CODEC
         );
 
+        PayloadTypeRegistry.serverboundPlay().register(
+                ExternalLashingInputPayload.TYPE,
+                ExternalLashingInputPayload.CODEC
+        );
+
         PayloadTypeRegistry.clientboundPlay().register(
                 StormlightStatusPayload.TYPE,
                 StormlightStatusPayload.CODEC
@@ -39,6 +45,11 @@ public final class ModNetworking {
         PayloadTypeRegistry.clientboundPlay().register(
                 LashingStatePayload.TYPE,
                 LashingStatePayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
+                ExternalLashingTargetPayload.TYPE,
+                ExternalLashingTargetPayload.CODEC
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
@@ -98,6 +109,15 @@ public final class ModNetworking {
                         LashingManager.handleInput(
                                 context.player(),
                                 payload.pressed()
+                        )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                ExternalLashingInputPayload.TYPE,
+                (payload, context) ->
+                        ExternalLashingManager.handleInput(
+                                context.player(),
+                                payload.cancel()
                         )
         );
 
