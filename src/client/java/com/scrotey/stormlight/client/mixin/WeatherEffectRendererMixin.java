@@ -29,7 +29,6 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
  */
 @Mixin(WeatherEffectRenderer.class)
 public abstract class WeatherEffectRendererMixin {
-    private static final float APPROACH_MAX_ANGLE_DEGREES = 20.0F;
     private static final float HIGHSTORM_ANGLE_DEGREES = 45.0F;
 
     /*
@@ -189,7 +188,11 @@ public abstract class WeatherEffectRendererMixin {
                                     .getApproachProgress()
                     );
 
-            return APPROACH_MAX_ANGLE_DEGREES
+            /*
+             * Rain only falls once the wall is overhead; by the end of the
+             * approach it is already at the Highstorm's full slant.
+             */
+            return HIGHSTORM_ANGLE_DEGREES
                     * progress;
         }
 

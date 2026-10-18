@@ -69,11 +69,32 @@ public final class HighstormAtmosphere {
     private static final int APPROACH_GUST_INTERVAL_TICKS = 120;
     private static final int PASSING_GUST_INTERVAL_TICKS = 90;
 
+    /*
+     * The Gathering lull. The westward wind has dropped away, leaving only a
+     * few windspren drifting aimlessly. Faint thunder starts partway through,
+     * played east of each player so the warning has a direction.
+     */
+    private static final int LULL_WINDSPREN_INTERVAL_TICKS = 40;
+    private static final int LULL_WINDSPREN_PER_BURST = 2;
+    private static final double LULL_WINDSPREN_DRIFT = 0.035;
+
+    private static final float DISTANT_THUNDER_START_PROGRESS = 0.35F;
+    private static final int DISTANT_THUNDER_CHECK_INTERVAL_TICKS = 60;
+    private static final float DISTANT_THUNDER_CHANCE = 0.45F;
+    private static final double DISTANT_THUNDER_EAST_OFFSET = 14.0;
+
     private static final int THUNDER_SOUND_INTERVAL_TICKS = 75;
     private static final int RUMBLE_SOUND_INTERVAL_TICKS = 90;
     private static final int WARNING_RUMBLE_INTERVAL_TICKS = 180;
 
-
+    /*
+     * The storm's own wind, thunder and lightning build up while the wall
+     * rolls over the player at the start of the Highstorm instead of all
+     * starting in its first tick, and die away over the first half of the
+     * Passing phase.
+     */
+    private static final float PASSING_STORM_FADE_PROGRESS = 0.50F;
+    private static final float MIN_STORM_SOUND_VOLUME = 0.25F;
 
     private HighstormAtmosphere() {
     }
@@ -83,6 +104,11 @@ public final class HighstormAtmosphere {
             HighstormPhase phase,
             long ticksRemaining
     ) {
+        if (phase == HighstormPhase.GATHERING) {
+            tickGathering(level, ticksRemaining);
+            return;
+        }
+
         float intensity = getIntensity(phase, ticksRemaining);
 
         if (intensity <= 0.0F) {
@@ -100,40 +126,89 @@ public final class HighstormAtmosphere {
             witherExposedPlayers(level);
         }
 
-        if (phase == HighstormPhase.HIGHSTORM) {
+        float stormStrength =
+                getStormStrength(phase, ticksRemaining);
+
+        if (stormStrength > 0.0F) {
+            float volume =
+                    MIN_STORM_SOUND_VOLUME
+                            + (1.0F - MIN_STORM_SOUND_VOLUME)
+                            * stormStrength;
+
             if (gameTime % LIGHTNING_CHECK_INTERVAL_TICKS == 0) {
-                spawnLightning(level);
+                spawnLightning(level, stormStrength);
             }
 
             if (gameTime % HIGHSTORM_WIND_INTERVAL_TICKS == 0) {
-                playHighstormWindSounds(level);
+                playHighstormWindSounds(level, volume);
             }
 
             if (gameTime
                     % HIGHSTORM_DEEP_GUST_INTERVAL_TICKS == 0) {
-                playHighstormDeepGustSounds(level);
+                playHighstormDeepGustSounds(level, volume);
             }
 
             if (gameTime % THUNDER_SOUND_INTERVAL_TICKS == 0) {
-                playThunderSounds(level);
+                playThunderSounds(level, volume);
             }
 
             if (gameTime % RUMBLE_SOUND_INTERVAL_TICKS == 0) {
-                playRumbleSounds(level);
+                playRumbleSounds(level, volume);
             }
-        } else {
+        }
+
+        // The distant gusts and warnings give way as the storm takes over.
+        float outerGusts = 1.0F - stormStrength;
+
+        if (phase != HighstormPhase.HIGHSTORM
+                && outerGusts > 0.0F) {
             int gustInterval = phase == HighstormPhase.APPROACHING
                     ? APPROACH_GUST_INTERVAL_TICKS
                     : PASSING_GUST_INTERVAL_TICKS;
 
             if (gameTime % gustInterval == 0) {
-                playDistantGustSounds(level, phase, intensity);
+                playDistantGustSounds(
+                        level, phase, intensity, outerGusts
+                );
             }
 
             if (gameTime % WARNING_RUMBLE_INTERVAL_TICKS == 0) {
-                playWarningRumbleSounds(level, intensity);
+                playWarningRumbleSounds(
+                        level, intensity, outerGusts
+                );
             }
         }
+    }
+
+    /*
+     * 0 = only the outer gusts of an approaching or departing storm
+     * 1 = the full Highstorm
+     */
+    private static float getStormStrength(
+            HighstormPhase phase,
+            long ticksRemaining
+    ) {
+        return switch (phase) {
+            case CALM, GATHERING, APPROACHING -> 0.0F;
+            case HIGHSTORM -> smoothstep(
+                    (HighstormTimings.HIGHSTORM_TICKS - ticksRemaining)
+                            / (float) HighstormTimings.WALL_PASS_TICKS
+            );
+            case PASSING -> {
+                float progress =
+                        1.0F - ticksRemaining
+                                / (float) HighstormTimings.PASSING_TICKS;
+
+                yield 1.0F - smoothstep(
+                        progress / PASSING_STORM_FADE_PROGRESS
+                );
+            }
+        };
+    }
+
+    private static float smoothstep(float progress) {
+        float clamped = clamp(progress, 0.0F, 1.0F);
+        return clamped * clamped * (3.0F - 2.0F * clamped);
     }
 
     private static float getIntensity(
@@ -141,20 +216,112 @@ public final class HighstormAtmosphere {
             long ticksRemaining
     ) {
         return switch (phase) {
-            case CALM -> 0.0F;
+            case CALM, GATHERING -> 0.0F;
             case APPROACHING -> clamp(
                     1.0F - ticksRemaining
                             / (float) HighstormTimings.APPROACHING_TICKS,
                     0.15F,
-                    0.75F
+                    1.0F
             );
             case HIGHSTORM -> 1.0F;
             case PASSING -> clamp(
                     ticksRemaining / (float) HighstormTimings.PASSING_TICKS,
                     0.10F,
-                    0.65F
+                    1.0F
             );
         };
+    }
+
+    private static void tickGathering(
+            ServerLevel level,
+            long ticksRemaining
+    ) {
+        long gameTime = level.getGameTime();
+
+        float progress = clamp(
+                1.0F - ticksRemaining
+                        / (float) HighstormTimings.GATHERING_TICKS,
+                0.0F,
+                1.0F
+        );
+
+        if (gameTime % LULL_WINDSPREN_INTERVAL_TICKS == 0) {
+            spawnLullWindspren(level);
+        }
+
+        if (progress >= DISTANT_THUNDER_START_PROGRESS
+                && gameTime
+                % DISTANT_THUNDER_CHECK_INTERVAL_TICKS == 0) {
+            float warning =
+                    (progress - DISTANT_THUNDER_START_PROGRESS)
+                            / (1.0F - DISTANT_THUNDER_START_PROGRESS);
+
+            playDistantThunder(level, warning);
+        }
+    }
+
+    private static void spawnLullWindspren(
+            ServerLevel level
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (!isExposed(level, player)) {
+                continue;
+            }
+
+            for (int i = 0; i < LULL_WINDSPREN_PER_BURST; i++) {
+                double angle = level.getRandom().nextDouble()
+                        * Math.PI * 2.0;
+
+                double distance = WINDSPREN_MIN_DISTANCE
+                        + level.getRandom().nextDouble()
+                        * (WINDSPREN_MAX_DISTANCE * 0.5
+                        - WINDSPREN_MIN_DISTANCE);
+
+                double driftAngle = level.getRandom().nextDouble()
+                        * Math.PI * 2.0;
+
+                level.sendParticles(
+                        ModParticles.WINDSPREN,
+                        player.getX() + Math.cos(angle) * distance,
+                        player.getY() + 0.5
+                                + level.getRandom().nextDouble() * 5.0,
+                        player.getZ() + Math.sin(angle) * distance,
+                        0,
+                        Math.cos(driftAngle) * LULL_WINDSPREN_DRIFT,
+                        (level.getRandom().nextDouble() - 0.5)
+                                * WINDSPREN_VERTICAL_WISP * 0.5,
+                        Math.sin(driftAngle) * LULL_WINDSPREN_DRIFT,
+                        1.0
+                );
+            }
+        }
+    }
+
+    private static void playDistantThunder(
+            ServerLevel level,
+            float warning
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (level.getRandom().nextFloat()
+                    > DISTANT_THUNDER_CHANCE * (0.4F + warning * 0.6F)) {
+                continue;
+            }
+
+            float shelterMultiplier = isExposed(level, player)
+                    ? 1.0F
+                    : 0.5F;
+
+            level.playSound(
+                    null,
+                    player.getX() + DISTANT_THUNDER_EAST_OFFSET,
+                    player.getY(),
+                    player.getZ(),
+                    SoundEvents.LIGHTNING_BOLT_THUNDER,
+                    SoundSource.WEATHER,
+                    (0.18F + warning * 0.32F) * shelterMultiplier,
+                    0.42F + level.getRandom().nextFloat() * 0.12F
+            );
+        }
     }
 
     private static void spawnWindParticles(
@@ -218,14 +385,15 @@ public final class HighstormAtmosphere {
     }
 
     private static void spawnLightning(
-            ServerLevel level
+            ServerLevel level,
+            float strength
     ) {
         for (ServerPlayer player : level.players()) {
             /*
              * Preserve the existing overall strike frequency.
              */
             if (level.getRandom().nextFloat()
-                    > LIGHTNING_CHANCE_PER_CHECK) {
+                    > LIGHTNING_CHANCE_PER_CHECK * strength) {
                 continue;
             }
 
@@ -319,25 +487,9 @@ public final class HighstormAtmosphere {
                 && isExposed(level, player);
     }
 
-    private static void playHighstormWindSounds(ServerLevel level) {
-        for (ServerPlayer player : level.players()) {
-            if (!isExposed(level, player)) {
-                continue;
-            }
-
-            level.playSound(
-                    null,
-                    player.blockPosition(),
-                    SoundEvents.ELYTRA_FLYING,
-                    SoundSource.WEATHER,
-                    2.20F,
-                    0.48F + level.getRandom().nextFloat() * 0.12F
-            );
-        }
-    }
-
-    private static void playHighstormDeepGustSounds(
-            ServerLevel level
+    private static void playHighstormWindSounds(
+            ServerLevel level,
+            float volume
     ) {
         for (ServerPlayer player : level.players()) {
             if (!isExposed(level, player)) {
@@ -349,13 +501,36 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.ELYTRA_FLYING,
                     SoundSource.WEATHER,
-                    1.65F,
+                    2.20F * volume,
+                    0.48F + level.getRandom().nextFloat() * 0.12F
+            );
+        }
+    }
+
+    private static void playHighstormDeepGustSounds(
+            ServerLevel level,
+            float volume
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (!isExposed(level, player)) {
+                continue;
+            }
+
+            level.playSound(
+                    null,
+                    player.blockPosition(),
+                    SoundEvents.ELYTRA_FLYING,
+                    SoundSource.WEATHER,
+                    1.65F * volume,
                     0.27F + level.getRandom().nextFloat() * 0.09F
             );
         }
     }
 
-    private static void playThunderSounds(ServerLevel level) {
+    private static void playThunderSounds(
+            ServerLevel level,
+            float volume
+    ) {
         for (ServerPlayer player : level.players()) {
             float shelterMultiplier = isExposed(level, player)
                     ? 1.0F
@@ -366,13 +541,16 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.LIGHTNING_BOLT_THUNDER,
                     SoundSource.WEATHER,
-                    1.9F * shelterMultiplier,
+                    1.9F * shelterMultiplier * volume,
                     0.60F + level.getRandom().nextFloat() * 0.22F
             );
         }
     }
 
-    private static void playRumbleSounds(ServerLevel level) {
+    private static void playRumbleSounds(
+            ServerLevel level,
+            float volume
+    ) {
         for (ServerPlayer player : level.players()) {
             float shelterMultiplier = isExposed(level, player)
                     ? 1.0F
@@ -383,7 +561,7 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.AMBIENT_CAVE.value(),
                     SoundSource.WEATHER,
-                    1.15F * shelterMultiplier,
+                    1.15F * shelterMultiplier * volume,
                     0.42F + level.getRandom().nextFloat() * 0.14F
             );
         }
@@ -392,7 +570,8 @@ public final class HighstormAtmosphere {
     private static void playDistantGustSounds(
             ServerLevel level,
             HighstormPhase phase,
-            float intensity
+            float intensity,
+            float volume
     ) {
         for (ServerPlayer player : level.players()) {
             if (!isExposed(level, player)) {
@@ -408,7 +587,7 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.ELYTRA_FLYING,
                     SoundSource.WEATHER,
-                    phaseMultiplier,
+                    phaseMultiplier * volume,
                     0.24F + level.getRandom().nextFloat() * 0.09F
             );
         }
@@ -416,7 +595,8 @@ public final class HighstormAtmosphere {
 
     private static void playWarningRumbleSounds(
             ServerLevel level,
-            float intensity
+            float intensity,
+            float volume
     ) {
         for (ServerPlayer player : level.players()) {
             if (!isExposed(level, player)) {
@@ -428,7 +608,7 @@ public final class HighstormAtmosphere {
                     player.blockPosition(),
                     SoundEvents.AMBIENT_CAVE.value(),
                     SoundSource.WEATHER,
-                    0.55F + intensity * 0.65F,
+                    (0.55F + intensity * 0.65F) * volume,
                     0.48F + level.getRandom().nextFloat() * 0.14F
             );
         }

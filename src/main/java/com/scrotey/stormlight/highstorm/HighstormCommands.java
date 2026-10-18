@@ -32,6 +32,12 @@ public final class HighstormCommands {
                                                         .executes(HighstormCommands::stop)
                                         )
                                         .then(
+                                                Commands.literal("gathering")
+                                                        .executes(
+                                                                HighstormCommands::gathering
+                                                        )
+                                        )
+                                        .then(
                                                 Commands.literal("approach")
                                                         .executes(
                                                                 HighstormCommands::approach
@@ -78,6 +84,23 @@ public final class HighstormCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal(
                         "Stopped the Highstorm and scheduled the next one."
+                ),
+                true
+        );
+
+        return 1;
+    }
+
+    private static int gathering(
+            CommandContext<CommandSourceStack> context
+    ) {
+        HighstormManager.startGatheringNow(
+                context.getSource().getServer()
+        );
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Started the Highstorm gathering lull."
                 ),
                 true
         );

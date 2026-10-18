@@ -3,10 +3,12 @@ package com.scrotey.stormlight.client.mixin;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.renderer.CloudRenderer;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CloudRenderer.class)
@@ -30,8 +32,35 @@ public abstract class CloudRendererMixin {
             float partialTicks,
             CallbackInfo callback
     ) {
-        if (ClientHighstormState.isStormfrontVisible()) {
+        if (ClientHighstormState.getVanillaCloudOpacity()
+                <= 0.0F) {
             callback.cancel();
         }
+    }
+
+    /*
+     * During the Gathering lull, the sky clears gradually rather than the
+     * clouds vanishing in a single frame.
+     */
+    @ModifyVariable(
+            method = "render",
+            at = @At("HEAD"),
+            argsOnly = true,
+            ordinal = 0
+    )
+    private int stormlight$fadeVanillaClouds(
+            int color
+    ) {
+        float opacity =
+                ClientHighstormState.getVanillaCloudOpacity();
+
+        if (opacity >= 1.0F) {
+            return color;
+        }
+
+        return ARGB.color(
+                Math.round(ARGB.alpha(color) * opacity),
+                color
+        );
     }
 }
