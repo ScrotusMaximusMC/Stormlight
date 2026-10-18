@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "stormlight:large_diamond",
+  "result": {
+    "id": "stormlight:diamond_broam"
+  },
+  "glass": 3
+}

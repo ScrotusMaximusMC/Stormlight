@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "stormlight:sphere_forging_table",
+          "properties": {
+            "x": "0",
+            "y": "0",
+            "z": "0"
+          }
+        },
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "stormlight:sphere_forging_table"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "stormlight:blocks/sphere_forging_table"
+}

@@ -5,6 +5,7 @@ import com.scrotey.stormlight.block.custom.SphereJarBlock;
 import com.scrotey.stormlight.block.custom.SphereLanternBlock;
 import com.scrotey.stormlight.block.custom.GemheartBlock;
 import com.scrotey.stormlight.block.custom.GemcuttingTableBlock;
+import com.scrotey.stormlight.block.custom.SphereForgingTableBlock;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
@@ -25,6 +26,33 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 public final class ModBlocks {
 
     public static final Block GEMCUTTING_TABLE = registerGemcuttingTable();
+    public static final Block SPHERE_FORGING_TABLE = registerSphereForgingTable();
+
+    private static Block registerSphereForgingTable() {
+        Identifier id = Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "sphere_forging_table");
+        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
+
+        Block block = Registry.register(
+                BuiltInRegistries.BLOCK,
+                blockKey,
+                new SphereForgingTableBlock(
+                        BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)
+                                .setId(blockKey)
+                                .noOcclusion()
+                                .lightLevel(state -> state.getValue(SphereForgingTableBlock.LIT)
+                                        && state.getValue(SphereForgingTableBlock.PART_Y) == 0 ? 13 : 0)
+                )
+        );
+        Registry.register(
+                BuiltInRegistries.ITEM,
+                itemKey,
+                new BlockItem(block, new Item.Properties()
+                        .setId(itemKey)
+                        .useBlockDescriptionPrefix())
+        );
+        return block;
+    }
 
     private static Block registerGemcuttingTable() {
         Identifier id = Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "gemcutting_table");
@@ -545,6 +573,7 @@ public final class ModBlocks {
                 CreativeModeTabs.FUNCTIONAL_BLOCKS
         ).register(entries -> {
             entries.accept(GEMCUTTING_TABLE);
+            entries.accept(SPHERE_FORGING_TABLE);
             entries.accept(SPHERE_JAR_ITEM);
             entries.accept(SPHERE_LANTERN_ITEM);
         });

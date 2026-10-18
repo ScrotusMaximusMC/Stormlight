@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ICI",
+    "BFB",
+    "BBB"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "C": "minecraft:cauldron",
+    "F": "minecraft:furnace",
+    "B": "minecraft:bricks"
+  },
+  "result": {
+    "id": "stormlight:sphere_forging_table",
+    "count": 1
+  }
+}

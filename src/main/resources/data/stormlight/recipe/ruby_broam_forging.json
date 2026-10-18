@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "stormlight:large_ruby",
+  "result": {
+    "id": "stormlight:ruby_broam"
+  },
+  "glass": 3
+}

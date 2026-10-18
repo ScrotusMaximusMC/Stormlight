@@ -19,6 +19,16 @@ public class ModRecipes {
             BuiltInRegistries.RECIPE_SERIALIZER, Identifier.fromNamespaceAndPath(MOD_ID, "gemcutting"),
             new RecipeSerializer<>(GemcuttingRecipe.CODEC, GemcuttingRecipe.STREAM_CODEC));
 
+    public static final RecipeType<SphereForgingRecipe> SPHERE_FORGING_TYPE = Registry.register(
+            BuiltInRegistries.RECIPE_TYPE, Identifier.fromNamespaceAndPath(MOD_ID, "sphere_forging"),
+            new RecipeType<SphereForgingRecipe>() {
+                @Override
+                public String toString() { return "stormlight:sphere_forging"; }
+            });
+    public static final RecipeSerializer<SphereForgingRecipe> SPHERE_FORGING = Registry.register(
+            BuiltInRegistries.RECIPE_SERIALIZER, Identifier.fromNamespaceAndPath(MOD_ID, "sphere_forging"),
+            new RecipeSerializer<>(SphereForgingRecipe.CODEC, SphereForgingRecipe.STREAM_CODEC));
+
     public static final RecipeSerializer<SphereUpgradeRecipe> DIAMOND_CHIP_TO_MARK =
             register(
                     "diamond_chip_to_mark",

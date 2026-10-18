@@ -15,6 +15,11 @@ public final class ModBlockEntities {
                     Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "gemcutting_table"),
                     FabricBlockEntityTypeBuilder.create(GemcuttingTableBlockEntity::new,
                             ModBlocks.GEMCUTTING_TABLE).build());
+    public static final BlockEntityType<SphereForgingTableBlockEntity> SPHERE_FORGING_TABLE =
+            Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath(Stormlight.MOD_ID, "sphere_forging_table"),
+                    FabricBlockEntityTypeBuilder.create(SphereForgingTableBlockEntity::new,
+                            ModBlocks.SPHERE_FORGING_TABLE).build());
     public static final BlockEntityType<SphereJarBlockEntity>
             SPHERE_JAR_BLOCK_ENTITY =
             Registry.register(
