@@ -57,6 +57,33 @@ processResources {
 	}
 }
 
+// Run a subset of game tests with -Ptests=Highstorm,Gemcutting (matched against test class
+// name prefixes). scripts/test-affected.sh picks the subset from the files you've changed.
+def testFilter = providers.gradleProperty("tests").orNull?.split(',')*.trim()?.findAll()
+def selectTests = { List<String> classes ->
+	testFilter ? classes.findAll { c -> testFilter.any { c.substring(c.lastIndexOf('.') + 1).startsWith(it) } } : classes
+}
+def gametestEntrypoints = new groovy.json.JsonSlurper().parse(file("src/gametest/resources/fabric.mod.json")).entrypoints
+
+processGametestResources {
+	inputs.property "tests", testFilter?.join(',') ?: ""
+	doLast {
+		if (!testFilter) return
+		def out = new File(destinationDir, "fabric.mod.json")
+		def json = new groovy.json.JsonSlurper().parse(out)
+		json.entrypoints = json.entrypoints.collectEntries { k, v -> [k, selectTests(v)] }
+		out.text = groovy.json.JsonOutput.toJson(json)
+	}
+}
+
+[runGameTest: "fabric-gametest", runClientGameTest: "fabric-client-gametest"].each { task, entrypoint ->
+	tasks.named(task) {
+		onlyIf("no ${entrypoint} tests match -Ptests=${testFilter?.join(',')}") {
+			!selectTests(gametestEntrypoints[entrypoint] ?: []).isEmpty()
+		}
+	}
+}
+
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 25
 }
