@@ -3,6 +3,10 @@
 	"package": "com.scrotey.stormlight.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"MouseShardbladeScrollMixin",
+		"HudShardbladeSelectionMixin",
+		"ClientBladeInventoryMixin",
+		"MinecraftBladeKeysMixin",
 		"AbstractContainerScreenAccessor",
 		"InventoryScreenMixin",
 		"SpherePouchClickBoundsMixin",

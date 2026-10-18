@@ -5,6 +5,7 @@
 	"mixins": [
 		"ChunkMapShatteredPlainsMixin",
 		"DensityFunctionsHolderHolderMixin",
+		"BladeInventoryMixin",
 		"InventoryMenuMixin",
 		"LivingEntitySurefootMixin",
 		"MultiNoiseBiomeSourceMixin",

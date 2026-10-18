@@ -42,6 +42,10 @@ public final class SprenSeekManager {
     }
 
     public static void toggle(ServerPlayer player) {
+        if (ShardbladeManager.isSummoned(player)) {
+            message(player, "spren_seek.blade");
+            return;
+        }
         UUID id = player.getUUID();
         if (SESSIONS.containsKey(id)) {
             cancel(player);
@@ -62,6 +66,10 @@ public final class SprenSeekManager {
         SprenEntity spren = SprenManager.getFor(player);
         if (spren == null) {
             message(player, "spren_seek.no_spren");
+            return;
+        }
+        if (spren.isGuarding()) {
+            message(player, "spren_seek.defending");
             return;
         }
 

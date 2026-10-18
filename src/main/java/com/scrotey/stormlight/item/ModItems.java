@@ -3,11 +3,16 @@ import com.scrotey.stormlight.component.ModComponents;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.Tool;
+import net.minecraft.util.Unit;
 
+import java.util.List;
 import java.util.function.Function;
 
 public class ModItems {
@@ -48,6 +53,17 @@ public class ModItems {
 
     public static final Item CHISEL = register(
             ModItemIds.CHISEL, Item::new, new Item.Properties().durability(128));
+
+    // A virtual, bound weapon: never added to ordinary inventory or creative tabs.
+    public static final Item SHARDBLADE = register(
+            ModItemIds.SHARDBLADE,
+            ShardbladeItem::new,
+            new Item.Properties()
+                    .sword(ToolMaterial.NETHERITE, 3.0F, -2.4F)
+                    // Sword defaults can refuse to start breaking blocks. The
+                    // Shardblade is also a mining tool, including in creative.
+                    .component(DataComponents.TOOL, new Tool(List.of(), 25.0F, 0, true))
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 
     // Sphere forge moulds, one for each sphere size. They are reused for every pour.
     public static final Item CHIP_MOULD = register(

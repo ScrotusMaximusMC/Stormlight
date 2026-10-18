@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/handheld",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [-35, -90, -20],
+      "translation": [1.13, 2.8, -1.0],
+      "scale": [0.98, 1.16, 0.98]
+    },
+    "firstperson_lefthand": {
+      "rotation": [-35, 90, 20],
+      "translation": [1.13, 2.8, -1.0],
+      "scale": [0.98, 1.16, 0.98]
+    },
+    "thirdperson_righthand": {
+      "rotation": [-30, -90, 25],
+      "translation": [0, 4.0, 0.5],
+      "scale": [0.98, 1.18, 0.98]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [-30, 90, -25],
+      "translation": [0, 4.0, 0.5],
+      "scale": [0.98, 1.18, 0.98]
+    }
+  },
+  "textures": {
+    "layer0": "stormlight:item/shardblade"
+  }
+}
