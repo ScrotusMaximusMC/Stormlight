@@ -16,6 +16,7 @@ RULES=(
   "Highstorm|highstorm|stormfront|cloudrenderermixin|soundenginelull"
   "Gemcutting|gemcut"
   "SphereForging|sphereforg|sphereitem|mould"
+  "ShatteredPlains|shatteredplains|multinoisebiomesource"
 )
 # Changes here can break anything, so they run every test.
 SHARED='^(build\.gradle|settings\.gradle|gradle\.properties|gradle/|src/main/resources/fabric\.mod\.json|src/main/java/com/scrotey/stormlight/[^/]+\.java|src/main/java/com/scrotey/stormlight/(block/ModBlocks|block/entity/ModBlockEntities|item/ModItems|recipe/ModRecipes|screen/ModMenuTypes)\.java|src/client/java/com/scrotey/stormlight/client/StormlightClient\.java)$'

@@ -21,6 +21,7 @@ import com.scrotey.stormlight.highstorm.SphereDecayManager;
 import com.scrotey.stormlight.worldgen.ModWorldGeneration;
 import com.scrotey.stormlight.worldgen.ModFeatures;
 import com.scrotey.stormlight.worldgen.chrysalis.ChrysalisCommands;
+import com.scrotey.stormlight.worldgen.biome.ShatteredPlainsCommands;
 
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -52,6 +53,7 @@ public class Stormlight implements ModInitializer {
         SphereDecayManager.initialize();
         HighstormCommands.initialize();
         ChrysalisCommands.initialize();
+        ShatteredPlainsCommands.initialize();
         StormlightManager.initialize();
         LashingManager.initialize();
 

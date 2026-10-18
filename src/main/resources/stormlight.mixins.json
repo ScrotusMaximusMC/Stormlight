@@ -3,8 +3,15 @@
 	"package": "com.scrotey.stormlight.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"ChunkMapShatteredPlainsMixin",
+		"DensityFunctionsHolderHolderMixin",
 		"InventoryMenuMixin",
-		"LivingEntitySurefootMixin"
+		"LivingEntitySurefootMixin",
+		"MultiNoiseBiomeSourceMixin",
+		"MultiNoiseBiomeSourceParameterListMixin",
+		"NoiseBasedChunkGeneratorMixin",
+		"NoiseChunkMixin",
+		"RandomStateMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
