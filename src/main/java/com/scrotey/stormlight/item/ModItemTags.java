@@ -15,6 +15,9 @@ public final class ModItemTags {
     public static final TagKey<Item> BROAMS =
             create("broams");
 
+    public static final TagKey<Item> SPHERE_MOULDS =
+            create("sphere_moulds");
+
     private static TagKey<Item> create(String path) {
         return TagKey.create(
                 Registries.ITEM,

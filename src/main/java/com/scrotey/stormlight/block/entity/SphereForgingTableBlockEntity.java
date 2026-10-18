@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.block.entity;
 
 import com.scrotey.stormlight.block.custom.SphereForgingTableBlock;
+import com.scrotey.stormlight.item.ModItemTags;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.recipe.SphereForgingRecipe;
 import net.minecraft.core.BlockPos;
@@ -42,6 +43,7 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
 
     private int burnTime, unmelted, meltProgress, molten, pourTicks, pourCost, coolTicks, valveTicks, previousValveTicks;
     private ItemStack mould = ItemStack.EMPTY;
+    private ItemStack gem = ItemStack.EMPTY;
     private ItemStack result = ItemStack.EMPTY;
 
     public SphereForgingTableBlockEntity(BlockPos pos, BlockState state) {
@@ -66,6 +68,7 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
         return (previousValveTicks + (valveTicks - previousValveTicks) * partialTick) / VALVE_TICKS;
     }
     public ItemStack getMould() { return mould.copy(); }
+    public ItemStack getGem() { return gem.copy(); }
     public ItemStack getResult() { return result.copy(); }
 
     public static void tick(Level level, BlockPos pos, BlockState state, SphereForgingTableBlockEntity forge) {
@@ -146,6 +149,7 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
         if (held.is(Items.GLASS)) return addGlass(player, held);
         int fuel = server.fuelValues().burnDuration(held);
         if (fuel > 0) return addFuel(player, hand, held, fuel);
+        if (held.is(ModItemTags.SPHERE_MOULDS)) return insertMould(player, held);
         return insertGem(player, held, server);
     }
 
@@ -175,10 +179,32 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
         return true;
     }
 
-    private boolean insertGem(Player player, ItemStack held, ServerLevel server) {
-        if (!mould.isEmpty() || !result.isEmpty() || isPouring()) return false;
-        if (recipeFor(held, server).isEmpty()) return false;
+    private boolean insertMould(Player player, ItemStack held) {
+        if (!mould.isEmpty()) {
+            tell(player, "mould_in_place");
+            return false;
+        }
         mould = held.copyWithCount(1);
+        if (!player.isCreative()) held.shrink(1);
+        sound(SoundEvents.STONE_PLACE, 0.8F, 0.9F);
+        sync();
+        return true;
+    }
+
+    private boolean insertGem(Player player, ItemStack held, ServerLevel server) {
+        if (!gem.isEmpty() || !result.isEmpty() || isPouring()) return false;
+        var recipe = recipeFor(held, server).orElse(null);
+        if (recipe == null) return false;
+        if (mould.isEmpty()) {
+            tell(player, "no_mould");
+            return false;
+        }
+        if (!recipe.value().fitsMould(mould)) {
+            player.sendOverlayMessage(Component.translatable("message.stormlight.sphere_forge.wrong_mould",
+                    recipe.value().mould().value().getDefaultInstance().getHoverName()));
+            return false;
+        }
+        gem = held.copyWithCount(1);
         if (!player.isCreative()) held.shrink(1);
         sound(SoundEvents.STONE_PLACE, 0.6F, 1.5F);
         sync();
@@ -198,12 +224,12 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
             return true;
         }
         if (isPouring()) return false;
-        if (mould.isEmpty()) {
-            tell(player, "empty_mould");
+        if (gem.isEmpty()) {
+            tell(player, mould.isEmpty() ? "no_mould" : "empty_mould");
             return false;
         }
-        var recipe = recipeFor(mould, server).orElse(null);
-        if (recipe == null) return false;
+        var recipe = recipeFor(gem, server).orElse(null);
+        if (recipe == null || !recipe.value().fitsMould(mould)) return false;
         int cost = recipe.value().glass();
         if (!isLit()) {
             tell(player, "cold");
@@ -225,19 +251,26 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
     private boolean takeBack(Player player) {
         if (isPouring()) return false;
         if (!result.isEmpty()) return useEmptyHand(player, (ServerLevel) level);
-        if (mould.isEmpty()) return false;
-        player.getInventory().placeItemBackInInventory(mould);
-        mould = ItemStack.EMPTY;
+        // The gem comes out first, then the empty mould.
+        if (!gem.isEmpty()) {
+            player.getInventory().placeItemBackInInventory(gem);
+            gem = ItemStack.EMPTY;
+        } else if (!mould.isEmpty()) {
+            player.getInventory().placeItemBackInInventory(mould);
+            mould = ItemStack.EMPTY;
+        } else {
+            return false;
+        }
         sync();
         return true;
     }
 
     private void finishPour(ServerLevel server) {
-        var recipe = recipeFor(mould, server);
-        result = recipe.map(r -> r.value().assemble(new SingleRecipeInput(mould))).orElse(ItemStack.EMPTY);
+        var recipe = recipeFor(gem, server);
+        result = recipe.map(r -> r.value().assemble(new SingleRecipeInput(gem))).orElse(ItemStack.EMPTY);
         // A recipe removed mid-pour by a datapack reload returns the gem rather than eating it.
-        if (result.isEmpty()) result = mould;
-        mould = ItemStack.EMPTY;
+        if (result.isEmpty()) result = gem;
+        gem = ItemStack.EMPTY;
         pourTicks = 0;
         pourCost = 0;
         coolTicks = COOL_TICKS;
@@ -271,6 +304,7 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
     @Override protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         if (!mould.isEmpty()) output.store("Mould", ItemStack.CODEC, mould);
+        if (!gem.isEmpty()) output.store("Gem", ItemStack.CODEC, gem);
         if (!result.isEmpty()) output.store("Result", ItemStack.CODEC, result);
         output.putInt("BurnTime", burnTime);
         output.putInt("Unmelted", unmelted);
@@ -283,12 +317,13 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
     @Override protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         mould = input.read("Mould", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        gem = input.read("Gem", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         result = input.read("Result", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         burnTime = Math.clamp(input.getIntOr("BurnTime", 0), 0, MAX_BURN);
         unmelted = Math.clamp(input.getIntOr("Unmelted", 0), 0, MAX_UNMELTED);
         meltProgress = Math.clamp(input.getIntOr("MeltProgress", 0), 0, MELT_TICKS);
         molten = Math.clamp(input.getIntOr("Molten", 0), 0, CAPACITY - unmelted);
-        pourTicks = mould.isEmpty() ? 0 : Math.clamp(input.getIntOr("PourTicks", 0), 0, POUR_TICKS);
+        pourTicks = gem.isEmpty() ? 0 : Math.clamp(input.getIntOr("PourTicks", 0), 0, POUR_TICKS);
         pourCost = pourTicks == 0 ? 0 : Math.clamp(input.getIntOr("PourCost", 0), 0, CAPACITY);
         coolTicks = result.isEmpty() ? 0 : Math.clamp(input.getIntOr("CoolTicks", 0), 0, COOL_TICKS);
         previousValveTicks = valveTicks = pourTicks > 0 ? VALVE_TICKS : 0;
@@ -297,9 +332,10 @@ public class SphereForgingTableBlockEntity extends BlockEntity {
         if (level != null && !level.isClientSide()) {
             // Molten glass and fuel are lost with the forge; solid items come back.
             Block.popResource(level, pos, mould);
+            Block.popResource(level, pos, gem);
             Block.popResource(level, pos, result);
             if (unmelted > 0) Block.popResource(level, pos, new ItemStack(Items.GLASS, unmelted));
-            mould = result = ItemStack.EMPTY;
+            mould = gem = result = ItemStack.EMPTY;
             unmelted = 0;
         }
         super.preRemoveSideEffects(pos, state);

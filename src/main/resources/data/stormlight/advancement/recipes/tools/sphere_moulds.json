@@ -1,0 +1,38 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_forge": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "stormlight:sphere_forging_table"
+          }
+        ]
+      }
+    },
+    "has_clay": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:clay_ball"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_forge",
+      "has_clay"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "stormlight:chip_mould",
+      "stormlight:mark_mould",
+      "stormlight:broam_mould"
+    ]
+  }
+}

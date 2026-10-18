@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.scrotey.stormlight.block.custom.SphereForgingTableBlock;
 import com.scrotey.stormlight.block.entity.SphereForgingTableBlockEntity;
+import com.scrotey.stormlight.item.ModItems;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -30,7 +31,10 @@ public class SphereForgingTableRenderer implements BlockEntityRenderer<SphereFor
     private static final Identifier IRON = Identifier.withDefaultNamespace("textures/block/iron_block.png");
     private static final Identifier COPPER = Identifier.withDefaultNamespace("textures/block/copper_block.png");
     private static final int MOLTEN = 0xffffa23a, MOLTEN_CORE = 0xffffe08a, SET_GLASS = 0xff8fa79a;
-    private static final float POOL_FLOOR = 17.5F, POOL_TOP = 31, NOZZLE_Y = 15, MOULD_X = 39, MOULD_Y = 6, MID_Z = 16;
+    private static final float POOL_FLOOR = 17.5F, POOL_TOP = 31, NOZZLE_Y = 15, MOULD_X = 39, MOULD_Y = 5.5F, MID_Z = 16;
+    /** Bead radius and gem scale for the chip, mark and broam moulds. */
+    private static final float[] BEAD = {2.1F, 2.7F, 3.3F}, GEM_SCALE = {0.3F, 0.36F, 0.43F};
+    private static final float MOULD_SCALE = 0.55F, CUP_FLOOR = 2 * MOULD_SCALE;
     private static final float[][] LUMPS = {{22, 10}, {27.5F, 15}, {22.5F, 21.5F}, {27, 22}, {25, 9}, {21.5F, 15.5F}};
     private final ItemModelResolver items;
 
@@ -42,9 +46,10 @@ public class SphereForgingTableRenderer implements BlockEntityRenderer<SphereFor
         Direction direction;
         boolean lit, pouring;
         float liquid, melt, pour, heat, valve;
-        int unmelted;
+        int unmelted, size;
         final ItemStackRenderState glass = new ItemStackRenderState();
         final ItemStackRenderState mould = new ItemStackRenderState();
+        final ItemStackRenderState gem = new ItemStackRenderState();
         final ItemStackRenderState result = new ItemStackRenderState();
     }
 
@@ -66,7 +71,10 @@ public class SphereForgingTableRenderer implements BlockEntityRenderer<SphereFor
         s.liquid = forge.getMolten() + forge.getPourCost() * (1 - s.pour) + s.melt;
         int seed = (int) forge.getBlockPos().asLong();
         items.updateForTopItem(s.glass, new ItemStack(Items.GLASS), ItemDisplayContext.FIXED, forge.getLevel(), null, seed);
-        items.updateForTopItem(s.mould, forge.getMould(), ItemDisplayContext.FIXED, forge.getLevel(), null, seed + 1);
+        ItemStack mould = forge.getMould();
+        s.size = mould.is(ModItems.CHIP_MOULD) ? 0 : mould.is(ModItems.BROAM_MOULD) ? 2 : 1;
+        items.updateForTopItem(s.mould, mould, ItemDisplayContext.NONE, forge.getLevel(), null, seed + 1);
+        items.updateForTopItem(s.gem, forge.getGem(), ItemDisplayContext.FIXED, forge.getLevel(), null, seed + 3);
         items.updateForTopItem(s.result, forge.getResult(), ItemDisplayContext.FIXED, forge.getLevel(), null, seed + 2);
     }
 
@@ -105,7 +113,15 @@ public class SphereForgingTableRenderer implements BlockEntityRenderer<SphereFor
         cuboid(pose, out, RenderTypes.entitySolid(COPPER), -3, 0, -0.5F, 3, 0.8F, 0.5F, 0xffffffff, s.lightCoords);
         pose.popPose();
 
-        float target = MOULD_Y + 2.4F + 2.6F * Math.min(1, s.pour * 1.25F);
+        if (!s.mould.isEmpty()) {
+            pose.pushPose();
+            pose.translate(MOULD_X, MOULD_Y + 8 * MOULD_SCALE, MID_Z);
+            pose.scale(16 * MOULD_SCALE, 16 * MOULD_SCALE, 16 * MOULD_SCALE);
+            s.mould.submit(pose, out, s.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+            pose.popPose();
+        }
+        float bead = BEAD[s.size], centre = MOULD_Y + CUP_FLOOR + bead * 0.8F;
+        float target = centre + bead * Math.min(1, s.pour * 1.25F);
         if (s.pouring) {
             // The stream reaches down over the first few ticks and breaks off from the top at the end.
             float top = s.pour > 0.85F ? NOZZLE_Y - (NOZZLE_Y - target) * (s.pour - 0.85F) / 0.15F : NOZZLE_Y;
@@ -115,22 +131,23 @@ public class SphereForgingTableRenderer implements BlockEntityRenderer<SphereFor
                     MOULD_X - w, bottom, MID_Z - w, MOULD_X + w, top, MID_Z + w, MOLTEN_CORE, LightCoordsUtil.FULL_BRIGHT);
         }
 
-        ItemStackRenderState shown = s.result.isEmpty() ? s.mould : s.result;
+        ItemStackRenderState shown = s.result.isEmpty() ? s.gem : s.result;
         if (!shown.isEmpty()) {
+            float scale = 16 * GEM_SCALE[s.size];
             pose.pushPose();
-            pose.translate(MOULD_X, MOULD_Y + 2.4F, MID_Z);
+            pose.translate(MOULD_X, centre, MID_Z);
             pose.mulPose(Axis.YP.rotationDegrees(180));
-            pose.scale(16 * 0.36F, 16 * 0.36F, 16 * 0.36F);
+            pose.scale(scale, scale, scale);
             shown.submit(pose, out, s.heat > 0 ? LightCoordsUtil.FULL_BRIGHT : s.lightCoords, OverlayTexture.NO_OVERLAY, 0);
             pose.popPose();
         }
         if (s.heat > 0) {
             // A glowing bead of glass gathers around the gem, then cools to clear.
-            float radius = 2.6F * (s.pouring ? Math.min(1, s.pour * 1.25F) : 1);
+            float radius = bead * (s.pouring ? Math.min(1, s.pour * 1.25F) : 1);
             int alpha = (int) (200 * s.heat);
             int color = alpha << 24 | (MOLTEN & 0xffffff);
             pose.pushPose();
-            pose.translate(MOULD_X, MOULD_Y + 2.4F, MID_Z);
+            pose.translate(MOULD_X, centre, MID_Z);
             final float r = radius;
             out.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(WHITE),
                     (matrix, vertices) -> bead(matrix, vertices, r, color));

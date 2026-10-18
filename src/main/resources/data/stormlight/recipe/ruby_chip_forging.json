@@ -1,8 +1,9 @@
 {
   "type": "stormlight:sphere_forging",
   "ingredient": "stormlight:ruby_nugget",
+  "mould": "stormlight:chip_mould",
+  "glass": 1,
   "result": {
     "id": "stormlight:ruby_chip"
-  },
-  "glass": 1
+  }
 }
