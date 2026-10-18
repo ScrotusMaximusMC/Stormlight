@@ -28,7 +28,7 @@ public final class WayOfKingsScreen extends Screen {
     public WayOfKingsScreen(OpenWayOfKingsPayload progress, int initialPage) {
         super(Component.translatable("screen.stormlight.way_of_kings.title"));
         this.progress = progress;
-        this.page = Math.clamp(initialPage, 0, 3);
+        this.page = Math.clamp(initialPage, 0, 4);
     }
 
     @Override protected void init() {
@@ -36,10 +36,10 @@ public final class WayOfKingsScreen extends Screen {
         panelHeight = Math.min(350, height - 20);
         left = (width - panelWidth) / 2;
         top = (height - panelHeight) / 2;
-        int tabWidth = Math.min(100, (panelWidth - 44) / 4);
+        int tabWidth = Math.min(100, (panelWidth - 44) / 5);
         int gap = 5;
-        int start = width / 2 - (tabWidth * 4 + gap * 3) / 2;
-        for (int i = 0; i < 4; i++) {
+        int start = width / 2 - (tabWidth * 5 + gap * 4) / 2;
+        for (int i = 0; i < 5; i++) {
             final int target = i;
             addRenderableWidget(Button.builder(Component.translatable(
                     "screen.stormlight.way_of_kings.tab." + i), b -> page = target)
@@ -62,7 +62,8 @@ public final class WayOfKingsScreen extends Screen {
         switch (page) {
             case 0 -> overview(graphics);
             case 1 -> radiant(graphics);
-            case 2 -> cuttingTree(graphics);
+            case 2 -> cuttingTree(graphics, false);
+            case 4 -> cuttingTree(graphics, true);
             default -> stormlightGuide(graphics);
         }
         super.extractRenderState(graphics, mouseX, mouseY, delta);
@@ -135,7 +136,7 @@ public final class WayOfKingsScreen extends Screen {
         line(g, "guide.lashing", right, y + 109, INK);
     }
 
-    private void cuttingTree(GuiGraphicsExtractor g) {
+    private void cuttingTree(GuiGraphicsExtractor g, boolean broams) {
         int level = StonecuttingProgression.levelForCuts(progress.completedCuts());
         int remaining = level == StonecuttingProgression.MAX_LEVEL ? 0
                 : StonecuttingProgression.cutsForLevel(level + 1) - progress.completedCuts();
@@ -145,7 +146,8 @@ public final class WayOfKingsScreen extends Screen {
                 : Component.translatable("screen.stormlight.way_of_kings.cutting.progress",
                         level, progress.completedCuts(), StonecuttingProgression.MAX_CUTS, remaining);
         centered(g, progressText, width / 2, top + 65, BLUE);
-        centered(g, Component.translatable("screen.stormlight.way_of_kings.cutting.legend"),
+        centered(g, Component.translatable(broams ? "screen.stormlight.way_of_kings.cutting.broam_legend"
+                : "screen.stormlight.way_of_kings.cutting.legend"),
                 width / 2, top + 77, MUTED);
         int rowGap = Math.max(20, Math.min(38, (panelHeight - 136) / 4));
         int firstY = top + 95;
@@ -157,13 +159,18 @@ public final class WayOfKingsScreen extends Screen {
             boolean right = (rank & 1) == 0;
             int x = right ? secondX : firstX;
             int y = firstY + row * rowGap;
-            int colour = rank <= level ? BLUE : rank == level + 1 ? GOLD : LOCKED;
+            int colour = broams && rank < StonecuttingProgression.BROAM_UNLOCK_LEVEL ? LOCKED
+                    : rank <= level ? BLUE : rank == level + 1 ? GOLD : LOCKED;
             g.fill(x - halfWidth, y - 9, x + halfWidth, y + 9, colour);
             g.fill(x - halfWidth + 2, y - 7, x + halfWidth - 2, y + 7, 0xFFE7D1A0);
-            centered(g, Component.translatable("screen.stormlight.way_of_kings.cutting.node",
-                    rank, StonecuttingProgression.cutsForLevel(rank),
-                    StonecuttingProgression.chipChance(rank), StonecuttingProgression.singleMarkChance(rank),
-                    StonecuttingProgression.doubleMarkChance(rank)), x, y - 4, colour);
+            Component node = broams && rank < StonecuttingProgression.BROAM_UNLOCK_LEVEL
+                    ? Component.translatable("screen.stormlight.way_of_kings.cutting.broam_locked", rank)
+                    : Component.translatable("screen.stormlight.way_of_kings.cutting.node",
+                            rank, StonecuttingProgression.cutsForLevel(rank),
+                            broams ? StonecuttingProgression.singleBroamChance(rank) : StonecuttingProgression.chipChance(rank),
+                            broams ? StonecuttingProgression.doubleBroamChance(rank) : StonecuttingProgression.singleMarkChance(rank),
+                            broams ? StonecuttingProgression.tripleBroamChance(rank) : StonecuttingProgression.doubleMarkChance(rank));
+            centered(g, node, x, y - 4, colour);
             if (right) g.fill(firstX + halfWidth, y, secondX - halfWidth, y + 2, colour);
             if (rank > 2) g.fill(x - 1, y - rowGap + 9, x + 1, y - 9, colour);
         }

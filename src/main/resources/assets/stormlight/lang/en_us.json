@@ -214,5 +214,16 @@
   "screen.stormlight.way_of_kings.guide.storage": "Keep spare spheres in jars.",
   "screen.stormlight.way_of_kings.guide.lashing": "G controls your lashing.",
   "screen.stormlight.way_of_kings.order.first": "Choose your first order",
-  "screen.stormlight.way_of_kings.cutting.master_progress": "Stone Cutting mastered | %s/%s cuts"
+  "screen.stormlight.way_of_kings.cutting.master_progress": "Stone Cutting mastered | %s/%s cuts",
+  "item.stormlight.raw_diamond_broam": "Raw Diamond Broam",
+  "item.stormlight.raw_garnet_broam": "Raw Garnet Broam",
+  "item.stormlight.raw_ruby_broam": "Raw Ruby Broam",
+  "item.stormlight.raw_sapphire_broam": "Raw Sapphire Broam",
+  "item.stormlight.raw_emerald_broam": "Raw Emerald Broam",
+  "item.stormlight.diamond_chisel": "Diamond Chisel",
+  "message.stormlight.stonecutting.broam_locked": "Raw broam cutting unlocks at Stone Cutting level 5.",
+  "message.stormlight.stonecutting.broam_requirements": "Cutting large gemstones requires Stone Cutting level 5 and a diamond chisel.",
+  "screen.stormlight.way_of_kings.tab.4": "Broam Cutting",
+  "screen.stormlight.way_of_kings.cutting.broam_legend": "Large gems + diamond chisel | Odds: one / two / three broams",
+  "screen.stormlight.way_of_kings.cutting.broam_locked": "%s: unlocks at level 5"
 }

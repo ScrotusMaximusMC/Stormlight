@@ -109,14 +109,15 @@ public class SphereForgingTableGameTests {
             player.setShiftKeyDown(false);
             h.assertValueEqual(count(player, ModItems.MARK_MOULD), 1, "Mark mould returned");
             h.assertTrue(use(forge, player, new ItemStack(ModItems.BROAM_MOULD)), "Broam mould goes on the bench");
-            h.assertTrue(use(forge, player, new ItemStack(ModItems.LARGE_RUBY)), "Large gem sets");
+            h.assertTrue(!use(forge, player, new ItemStack(ModItems.LARGE_RUBY)), "Uncut large gems cannot bypass broam cutting");
+            h.assertTrue(use(forge, player, new ItemStack(ModItems.RAW_RUBY_BROAM)), "Raw broam sets");
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Pour a broam");
             h.assertValueEqual(forge.getMolten(), lumps - 5, "A broam takes three glass");
         });
         h.runAtTickTime(t + 2 * (POUR + COOL), () -> {
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Take the broam");
             h.assertValueEqual(count(player, ModItems.RUBY_BROAM), 1, "Ruby broam cast");
-            h.assertTrue(use(forge, player, new ItemStack(ModItems.LARGE_GARNET)), "Another large gem sets");
+            h.assertTrue(use(forge, player, new ItemStack(ModItems.RAW_GARNET_BROAM)), "Another raw broam sets");
             h.assertTrue(!use(forge, player, ItemStack.EMPTY), "Not enough glass left for a broam");
             h.assertTrue(!forge.isPouring() && forge.getMolten() == lumps - 5, "Short pour leaves glass untouched");
             h.succeed();

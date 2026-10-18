@@ -22,14 +22,14 @@ A 3 wide, 2 deep, 2 tall glassworks: steps on one side, a brick hearth with an o
 middle, and a casting bench under a tap on the other side. Place it with that space clear. Fuel the
 hearth by right-clicking with a lava bucket (or any furnace fuel). Climb the steps and throw glass
 blocks into the crucible, or right-click with glass; each block melts into one unit of molten glass
-while the fire burns. Set a mould on the casting bench, then right-click with a raw chip, raw mark or large gem to set it in the mould, and right-click the casting bench with an empty hand to turn the tap. The glass pours over
+while the fire burns. Set a mould on the casting bench, then right-click with a raw chip, raw mark or raw broam to set it in the mould, and right-click the casting bench with an empty hand to turn the tap. The glass pours over
 the cut gem and the sphere cools in the mould before you can take it. Each size needs its own mould:
 
 | Gem | Mould | Sphere | Glass |
 |---|---|---|---|
 | Raw chip | Chip Mould (`C C` / ` I `) | Chip | 1 |
 | Raw mark | Mark Mould (`C C` / `CIC`) | Mark | 2 |
-| Large gem | Broam Mould (`C C` / `CIC` / `CCC`) | Broam | 3 |
+| Raw broam | Broam Mould (`C C` / `CIC` / `CCC`) | Broam | 3 |
 
 Moulds are crafted from clay balls (`C`) and an iron ingot (`I`) and stay on the bench between
 pours. Sneak-right-click with an empty hand to take the gem back, then again for the mould.
@@ -60,11 +60,24 @@ Existing saved practice counts are retained.
 | 10 | 100 | 50% | 35% | 15% |
 
 Chip outcomes split evenly between one, two and three. Raw gems stack to 64 and hold no Stormlight;
-forge them to create spheres. Broams retain their large-gem forging recipes.
+forge them to create spheres. At level 5, large gemstones can be cut into raw broams on the gemcutting table using a diamond
+chisel (crafted like the iron chisel, with a diamond in place of iron; 1,561 durability). Each cut
+takes ten strikes and awards one completed cut. The diamond chisel also cuts ordinary gemstones.
+Large gems cannot be forged directly; use a raw broam with a broam mould and three glass.
+
+| Level | One raw broam | Two raw broams | Three raw broams |
+| --- | --- | --- | --- |
+| 5 | 95% | 5% | 0% |
+| 6 | 86% | 12% | 2% |
+| 7 | 77% | 19% | 4% |
+| 8 | 68% | 26% | 6% |
+| 9 | 59% | 33% | 8% |
+| 10 | 50% | 40% | 10% |
 
 ## The Way of Kings
 
 Craft a book with lapis lazuli to make The Way of Kings. Put it on a lectern and open it to read the
 field guide, a Stormlight reference page, your current Radiant order and next XP milestone, and a visual Stone Cutting tree with
-all ten levels, cut requirements, and outcome odds. The displayed progress belongs to the reader,
+all ten levels, cut requirements, and outcome odds, plus a Broam Cutting tab with the level 5 unlock,
+diamond chisel requirement, and broam yields. The displayed progress belongs to the reader,
 so two players using the same lectern see their own levels. Use **Take Book** to retrieve it.

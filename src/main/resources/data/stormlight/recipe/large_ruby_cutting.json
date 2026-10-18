@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:large_ruby",
+  "result": {
+    "id": "stormlight:raw_ruby_broam",
+    "count": 1
+  }
+}

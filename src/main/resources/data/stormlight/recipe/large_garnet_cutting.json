@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:large_garnet",
+  "result": {
+    "id": "stormlight:raw_garnet_broam",
+    "count": 1
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:large_sapphire",
+  "result": {
+    "id": "stormlight:raw_sapphire_broam",
+    "count": 1
+  }
+}

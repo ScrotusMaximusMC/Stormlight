@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:large_emerald",
+  "result": {
+    "id": "stormlight:raw_emerald_broam",
+    "count": 1
+  }
+}

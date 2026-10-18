@@ -159,6 +159,76 @@ public class GemcuttingTableGameTests {
     }
 
     @GameTest
+    public void exactBroamOddsForEveryGemAndRank(GameTestHelper h) {
+        Item[] gems = {ModItems.LARGE_DIAMOND, ModItems.LARGE_GARNET, ModItems.LARGE_RUBY,
+                ModItems.LARGE_SAPPHIRE, ModItems.LARGE_EMERALD};
+        Item[] broams = {ModItems.RAW_DIAMOND_BROAM, ModItems.RAW_GARNET_BROAM, ModItems.RAW_RUBY_BROAM,
+                ModItems.RAW_SAPPHIRE_BROAM, ModItems.RAW_EMERALD_BROAM};
+        int[] doubles = {5, 12, 19, 26, 33, 40}, triples = {0, 2, 4, 6, 8, 10};
+        for (int g = 0; g < gems.length; g++) {
+            for (int rank = 1; rank <= 10; rank++) {
+                int[] counts = new int[4];
+                for (int roll = 0; roll < 100; roll++) {
+                    var result = StonecuttingProgression.broamResultForRoll(new ItemStack(gems[g]), rank, roll);
+                    if (rank < 5) h.assertTrue(result.isEmpty(), "Broams locked before level 5");
+                    else {
+                        h.assertTrue(result.is(broams[g]), "Cut keeps gemstone type");
+                        h.assertTrue(result.getCount() >= 1 && result.getCount() <= 3, "Guaranteed broam yield");
+                        counts[result.getCount()]++;
+                    }
+                }
+                if (rank >= 5) {
+                    h.assertValueEqual(counts[2], doubles[rank - 5], "Exact double broam odds");
+                    h.assertValueEqual(counts[3], triples[rank - 5], "Exact triple broam odds");
+                    h.assertValueEqual(counts[1], 100 - doubles[rank - 5] - triples[rank - 5], "Remaining rolls give one broam");
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(maxTicks = 100)
+    public void broamCuttingRequiresRankAndDiamondChiselOnEveryStrike(GameTestHelper h) {
+        var table = bench(h);
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var lowRank = h.makeMockPlayer(GameType.SURVIVAL);
+        player.setAttached(StonecuttingProgression.COMPLETED_CUTS, 39);
+        var largeGem = new ItemStack(ModItems.LARGE_DIAMOND, 2);
+        player.setItemInHand(InteractionHand.MAIN_HAND, largeGem);
+        h.assertTrue(!table.interact(player, InteractionHand.MAIN_HAND), "Level 4 cannot load large gems");
+        h.assertValueEqual(largeGem.getCount(), 2, "Rejected gem is preserved");
+        player.setAttached(StonecuttingProgression.COMPLETED_CUTS, 40);
+        h.assertTrue(table.interact(player, InteractionHand.MAIN_HAND), "Level 5 loads a large gem");
+        h.assertValueEqual(largeGem.getCount(), 1, "One large gem is consumed");
+        var diamondChisel = new ItemStack(ModItems.DIAMOND_CHISEL);
+        h.runAtTickTime(25, () -> {
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CHISEL));
+            h.assertTrue(!table.interact(player, InteractionHand.MAIN_HAND), "Iron chisel cannot cut broams");
+            h.assertValueEqual(player.getMainHandItem().getDamageValue(), 0, "Rejected strike does not damage tool");
+            lowRank.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DIAMOND_CHISEL));
+            h.assertTrue(!table.interact(lowRank, InteractionHand.MAIN_HAND), "Low rank cannot work another player's gem");
+            h.assertValueEqual(table.getStrikes(), 0, "Rejected strikes give no progress");
+            player.setItemInHand(InteractionHand.MAIN_HAND, diamondChisel);
+        });
+        for (int hit = 0; hit < 10; hit++) {
+            int strike = hit;
+            h.runAtTickTime(26 + hit * 4, () -> {
+                h.assertTrue(table.interact(player, InteractionHand.MAIN_HAND), "Diamond chisel strike accepted");
+                h.assertValueEqual(diamondChisel.getDamageValue(), strike + 1, "Diamond chisel wears per strike");
+                if (strike == 9) {
+                    h.assertTrue(table.getGem().isEmpty(), "Ten strikes finish the large gem");
+                    h.assertValueEqual(StonecuttingProgression.getCompletedCuts(player), 41, "Broam cut earns practice");
+                    var drops = h.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(h.absolutePos(POS)).inflate(4),
+                            e -> e.getItem().is(ModItems.RAW_DIAMOND_BROAM));
+                    h.assertValueEqual(drops.size(), 1, "Raw broams dropped");
+                    h.assertTrue(drops.getFirst().getItem().getCount() >= 1, "At least one broam guaranteed");
+                    h.succeed();
+                }
+            });
+        }
+    }
+
+    @GameTest
     public void wayOfKingsCanBeTakenFromLectern(GameTestHelper h) {
         h.setBlock(POS, Blocks.LECTERN);
         var lectern = h.getBlockEntity(POS, LecternBlockEntity.class);

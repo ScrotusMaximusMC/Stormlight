@@ -14,24 +14,37 @@ public class ModItems {
 
     public static final Item RAW_DIAMOND_CHIP = register(
             ModItemIds.RAW_DIAMOND_CHIP, Item::new, new Item.Properties());
+    public static final Item RAW_DIAMOND_BROAM = register(
+            ModItemIds.RAW_DIAMOND_BROAM, Item::new, new Item.Properties());
     public static final Item RAW_DIAMOND_MARK = register(
             ModItemIds.RAW_DIAMOND_MARK, Item::new, new Item.Properties());
     public static final Item RAW_GARNET_CHIP = register(
             ModItemIds.RAW_GARNET_CHIP, Item::new, new Item.Properties());
+    public static final Item RAW_GARNET_BROAM = register(
+            ModItemIds.RAW_GARNET_BROAM, Item::new, new Item.Properties());
     public static final Item RAW_GARNET_MARK = register(
             ModItemIds.RAW_GARNET_MARK, Item::new, new Item.Properties());
     public static final Item RAW_RUBY_CHIP = register(
             ModItemIds.RAW_RUBY_CHIP, Item::new, new Item.Properties());
+    public static final Item RAW_RUBY_BROAM = register(
+            ModItemIds.RAW_RUBY_BROAM, Item::new, new Item.Properties());
     public static final Item RAW_RUBY_MARK = register(
             ModItemIds.RAW_RUBY_MARK, Item::new, new Item.Properties());
     public static final Item RAW_SAPPHIRE_CHIP = register(
             ModItemIds.RAW_SAPPHIRE_CHIP, Item::new, new Item.Properties());
+    public static final Item RAW_SAPPHIRE_BROAM = register(
+            ModItemIds.RAW_SAPPHIRE_BROAM, Item::new, new Item.Properties());
     public static final Item RAW_SAPPHIRE_MARK = register(
             ModItemIds.RAW_SAPPHIRE_MARK, Item::new, new Item.Properties());
     public static final Item RAW_EMERALD_CHIP = register(
             ModItemIds.RAW_EMERALD_CHIP, Item::new, new Item.Properties());
+    public static final Item RAW_EMERALD_BROAM = register(
+            ModItemIds.RAW_EMERALD_BROAM, Item::new, new Item.Properties());
     public static final Item RAW_EMERALD_MARK = register(
             ModItemIds.RAW_EMERALD_MARK, Item::new, new Item.Properties());
+
+    public static final Item DIAMOND_CHISEL = register(
+            ModItemIds.DIAMOND_CHISEL, Item::new, new Item.Properties().durability(1561));
 
     public static final Item CHISEL = register(
             ModItemIds.CHISEL, Item::new, new Item.Properties().durability(128));
@@ -268,6 +281,7 @@ public class ModItems {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES)
                 .register(entries -> {
                     entries.accept(CHISEL);
+                    entries.accept(DIAMOND_CHISEL);
                     entries.accept(CHIP_MOULD);
                     entries.accept(MARK_MOULD);
                     entries.accept(BROAM_MOULD);
@@ -281,14 +295,19 @@ public class ModItems {
 
                     entries.accept(RAW_DIAMOND_CHIP);
                     entries.accept(RAW_DIAMOND_MARK);
+                    entries.accept(RAW_DIAMOND_BROAM);
                     entries.accept(RAW_GARNET_CHIP);
                     entries.accept(RAW_GARNET_MARK);
+                    entries.accept(RAW_GARNET_BROAM);
                     entries.accept(RAW_RUBY_CHIP);
                     entries.accept(RAW_RUBY_MARK);
+                    entries.accept(RAW_RUBY_BROAM);
                     entries.accept(RAW_SAPPHIRE_CHIP);
                     entries.accept(RAW_SAPPHIRE_MARK);
+                    entries.accept(RAW_SAPPHIRE_BROAM);
                     entries.accept(RAW_EMERALD_CHIP);
                     entries.accept(RAW_EMERALD_MARK);
+                    entries.accept(RAW_EMERALD_BROAM);
 
                     entries.accept(LARGE_DIAMOND);
                     entries.accept(LARGE_GARNET);

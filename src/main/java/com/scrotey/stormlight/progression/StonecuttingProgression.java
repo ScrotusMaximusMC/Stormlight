@@ -37,6 +37,37 @@ public final class StonecuttingProgression {
     public static int chipChance(int level) { return 100 - Math.clamp(level, 1, MAX_LEVEL) * 5; }
     public static int doubleMarkChance(int level) { return DOUBLE_MARK_CHANCES[Math.clamp(level, 1, MAX_LEVEL) - 1]; }
     public static int singleMarkChance(int level) { return 100 - chipChance(level) - doubleMarkChance(level); }
+    public static final int BROAM_UNLOCK_LEVEL = 5;
+    public static int doubleBroamChance(int level) {
+        return level < BROAM_UNLOCK_LEVEL ? 0 : 5 + (Math.min(level, MAX_LEVEL) - BROAM_UNLOCK_LEVEL) * 7;
+    }
+    public static int tripleBroamChance(int level) {
+        return level < BROAM_UNLOCK_LEVEL ? 0 : (Math.min(level, MAX_LEVEL) - BROAM_UNLOCK_LEVEL) * 2;
+    }
+    public static int singleBroamChance(int level) {
+        return level < BROAM_UNLOCK_LEVEL ? 0 : 100 - doubleBroamChance(level) - tripleBroamChance(level);
+    }
+    public static boolean isLargeGem(ItemStack gem) {
+        return gem.is(ModItems.LARGE_DIAMOND) || gem.is(ModItems.LARGE_GARNET)
+                || gem.is(ModItems.LARGE_RUBY) || gem.is(ModItems.LARGE_SAPPHIRE) || gem.is(ModItems.LARGE_EMERALD);
+    }
+    public static boolean canCutLargeGem(Player player, ItemStack chisel) {
+        return getLevel(player) >= BROAM_UNLOCK_LEVEL && chisel.is(ModItems.DIAMOND_CHISEL) && !chisel.isBroken();
+    }
+    public static ItemStack broamResultForRoll(ItemStack gem, int level, int roll) {
+        if (roll < 0 || roll >= 100) throw new IllegalArgumentException("Roll must be 0..99");
+        if (level < BROAM_UNLOCK_LEVEL) return ItemStack.EMPTY;
+        Item broam;
+        if (gem.is(ModItems.LARGE_DIAMOND)) broam = ModItems.RAW_DIAMOND_BROAM;
+        else if (gem.is(ModItems.LARGE_GARNET)) broam = ModItems.RAW_GARNET_BROAM;
+        else if (gem.is(ModItems.LARGE_RUBY)) broam = ModItems.RAW_RUBY_BROAM;
+        else if (gem.is(ModItems.LARGE_SAPPHIRE)) broam = ModItems.RAW_SAPPHIRE_BROAM;
+        else if (gem.is(ModItems.LARGE_EMERALD)) broam = ModItems.RAW_EMERALD_BROAM;
+        else return ItemStack.EMPTY;
+        int count = roll >= 100 - tripleBroamChance(level) ? 3
+                : roll >= singleBroamChance(level) ? 2 : 1;
+        return new ItemStack(broam, count);
+    }
     public static int getCompletedCuts(Player player) {
         return player.getAttachedOrElse(COMPLETED_CUTS, 0);
     }
@@ -63,7 +94,8 @@ public final class StonecuttingProgression {
                 : new ItemStack(chip, chipCount);
     }
     public static ItemStack rollResult(ItemStack gem, Player player, RandomSource random) {
-        return resultForRoll(gem, getLevel(player), random.nextInt(100), 1 + random.nextInt(3));
+        return isLargeGem(gem) ? broamResultForRoll(gem, getLevel(player), random.nextInt(100))
+                : resultForRoll(gem, getLevel(player), random.nextInt(100), 1 + random.nextInt(3));
     }
     public static void completeCut(Player player) {
         if (player.isCreative()) return;

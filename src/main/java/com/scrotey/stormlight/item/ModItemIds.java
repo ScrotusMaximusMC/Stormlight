@@ -9,16 +9,22 @@ import net.minecraft.world.item.Item;
 public class ModItemIds {
 
     public static final ResourceKey<Item> RAW_DIAMOND_CHIP = create("raw_diamond_chip");
+    public static final ResourceKey<Item> RAW_DIAMOND_BROAM = create("raw_diamond_broam");
     public static final ResourceKey<Item> RAW_DIAMOND_MARK = create("raw_diamond_mark");
     public static final ResourceKey<Item> RAW_GARNET_CHIP = create("raw_garnet_chip");
+    public static final ResourceKey<Item> RAW_GARNET_BROAM = create("raw_garnet_broam");
     public static final ResourceKey<Item> RAW_GARNET_MARK = create("raw_garnet_mark");
     public static final ResourceKey<Item> RAW_RUBY_CHIP = create("raw_ruby_chip");
+    public static final ResourceKey<Item> RAW_RUBY_BROAM = create("raw_ruby_broam");
     public static final ResourceKey<Item> RAW_RUBY_MARK = create("raw_ruby_mark");
     public static final ResourceKey<Item> RAW_SAPPHIRE_CHIP = create("raw_sapphire_chip");
+    public static final ResourceKey<Item> RAW_SAPPHIRE_BROAM = create("raw_sapphire_broam");
     public static final ResourceKey<Item> RAW_SAPPHIRE_MARK = create("raw_sapphire_mark");
     public static final ResourceKey<Item> RAW_EMERALD_CHIP = create("raw_emerald_chip");
+    public static final ResourceKey<Item> RAW_EMERALD_BROAM = create("raw_emerald_broam");
     public static final ResourceKey<Item> RAW_EMERALD_MARK = create("raw_emerald_mark");
 
+    public static final ResourceKey<Item> DIAMOND_CHISEL = create("diamond_chisel");
     public static final ResourceKey<Item> CHISEL = create("chisel");
     public static final ResourceKey<Item> CHIP_MOULD = create("chip_mould");
     public static final ResourceKey<Item> MARK_MOULD = create("mark_mould");
