@@ -36,6 +36,13 @@ public final class ModParticles {
                     FabricParticleTypes.simple()
             );
 
+    public static final SimpleParticleType SPREN_SEEK_TRAIL =
+            Registry.register(
+                    BuiltInRegistries.PARTICLE_TYPE,
+                    Stormlight.id("spren_seek_trail"),
+                    FabricParticleTypes.simple()
+            );
+
     private ModParticles() {
     }
 

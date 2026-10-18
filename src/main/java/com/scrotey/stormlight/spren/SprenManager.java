@@ -123,6 +123,16 @@ public final class SprenManager {
         );
     }
 
+    public static SprenEntity getFor(ServerPlayer player) {
+        UUID id = ACTIVE.get(player.getUUID());
+        if (id == null) {
+            return null;
+        }
+        var entity = player.level().getEntity(id);
+        return entity instanceof SprenEntity spren
+                && spren.isOwnedBy(player) ? spren : null;
+    }
+
     private static void spawnSpren(ServerPlayer player) {
         ServerLevel level = player.level();
         SprenEntity spren = new SprenEntity(
