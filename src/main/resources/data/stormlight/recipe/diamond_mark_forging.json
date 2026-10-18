@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "minecraft:diamond",
+  "result": {
+    "id": "stormlight:diamond_mark"
+  },
+  "glass": 2
+}

@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "stormlight:large_garnet",
+  "result": {
+    "id": "stormlight:garnet_broam"
+  },
+  "glass": 3
+}

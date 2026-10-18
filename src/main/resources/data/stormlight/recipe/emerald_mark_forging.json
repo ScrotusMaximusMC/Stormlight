@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "minecraft:emerald",
+  "result": {
+    "id": "stormlight:emerald_mark"
+  },
+  "glass": 2
+}

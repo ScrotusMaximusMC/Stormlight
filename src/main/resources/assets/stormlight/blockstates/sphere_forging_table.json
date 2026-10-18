@@ -1,0 +1,388 @@
+{
+  "variants": {
+    "facing=east,lit=false,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 0
+    },
+    "facing=south,lit=false,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 90
+    },
+    "facing=west,lit=false,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 180
+    },
+    "facing=north,lit=false,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=0,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z0",
+      "y": 270
+    },
+    "facing=east,lit=false,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=0,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y0_z1",
+      "y": 270
+    },
+    "facing=east,lit=false,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 0
+    },
+    "facing=south,lit=false,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 90
+    },
+    "facing=west,lit=false,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 180
+    },
+    "facing=north,lit=false,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=0,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z0",
+      "y": 270
+    },
+    "facing=east,lit=false,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=0,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x0_y1_z1",
+      "y": 270
+    },
+    "facing=east,lit=false,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0_lit",
+      "y": 0
+    },
+    "facing=south,lit=false,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0_lit",
+      "y": 90
+    },
+    "facing=west,lit=false,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0_lit",
+      "y": 180
+    },
+    "facing=north,lit=false,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=1,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z0_lit",
+      "y": 270
+    },
+    "facing=east,lit=false,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=1,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y0_z1",
+      "y": 270
+    },
+    "facing=east,lit=false,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 0
+    },
+    "facing=south,lit=false,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 90
+    },
+    "facing=west,lit=false,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 180
+    },
+    "facing=north,lit=false,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=1,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z0",
+      "y": 270
+    },
+    "facing=east,lit=false,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=1,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x1_y1_z1",
+      "y": 270
+    },
+    "facing=east,lit=false,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 0
+    },
+    "facing=south,lit=false,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 90
+    },
+    "facing=west,lit=false,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 180
+    },
+    "facing=north,lit=false,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=2,y=0,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z0",
+      "y": 270
+    },
+    "facing=east,lit=false,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=2,y=0,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y0_z1",
+      "y": 270
+    },
+    "facing=east,lit=false,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 0
+    },
+    "facing=east,lit=true,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 0
+    },
+    "facing=south,lit=false,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 90
+    },
+    "facing=south,lit=true,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 90
+    },
+    "facing=west,lit=false,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 180
+    },
+    "facing=west,lit=true,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 180
+    },
+    "facing=north,lit=false,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 270
+    },
+    "facing=north,lit=true,x=2,y=1,z=0": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z0",
+      "y": 270
+    },
+    "facing=east,lit=false,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 0
+    },
+    "facing=east,lit=true,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 0
+    },
+    "facing=south,lit=false,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 90
+    },
+    "facing=south,lit=true,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 90
+    },
+    "facing=west,lit=false,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 180
+    },
+    "facing=west,lit=true,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 180
+    },
+    "facing=north,lit=false,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 270
+    },
+    "facing=north,lit=true,x=2,y=1,z=1": {
+      "model": "stormlight:block/sphere_forging_table/part_x2_y1_z1",
+      "y": 270
+    }
+  }
+}

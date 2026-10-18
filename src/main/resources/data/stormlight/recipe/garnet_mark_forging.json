@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "stormlight:garnet",
+  "result": {
+    "id": "stormlight:garnet_mark"
+  },
+  "glass": 2
+}

@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:sphere_forging",
+  "ingredient": "stormlight:emerald_nugget",
+  "result": {
+    "id": "stormlight:emerald_chip"
+  },
+  "glass": 1
+}
