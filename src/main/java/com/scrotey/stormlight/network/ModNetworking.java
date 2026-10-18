@@ -6,6 +6,7 @@ import com.scrotey.stormlight.item.SpherePouchItem;
 import com.scrotey.stormlight.lashing.LashingManager;
 import com.scrotey.stormlight.lashing.ExternalLashingManager;
 import com.scrotey.stormlight.progression.RadiantLecternInteraction;
+import com.scrotey.stormlight.spren.SprenSeekManager;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -35,6 +36,16 @@ public final class ModNetworking {
         PayloadTypeRegistry.serverboundPlay().register(
                 ExternalLashingInputPayload.TYPE,
                 ExternalLashingInputPayload.CODEC
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                ToggleSprenSeekPayload.TYPE,
+                ToggleSprenSeekPayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
+                SprenSeekStatePayload.TYPE,
+                SprenSeekStatePayload.CODEC
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
@@ -123,6 +134,12 @@ public final class ModNetworking {
                                 context.player(),
                                 payload.cancel()
                         )
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                ToggleSprenSeekPayload.TYPE,
+                (payload, context) ->
+                        SprenSeekManager.toggle(context.player())
         );
 
         ServerPlayNetworking.registerGlobalReceiver(
