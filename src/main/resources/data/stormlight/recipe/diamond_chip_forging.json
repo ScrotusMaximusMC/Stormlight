@@ -1,9 +1,8 @@
 {
   "type": "stormlight:sphere_forging",
   "ingredient": "stormlight:diamond_nugget",
-  "mould": "stormlight:chip_mould",
-  "glass": 1,
   "result": {
     "id": "stormlight:diamond_chip"
-  }
+  },
+  "glass": 1
 }

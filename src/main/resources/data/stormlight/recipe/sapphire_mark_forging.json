@@ -1,9 +1,8 @@
 {
   "type": "stormlight:sphere_forging",
   "ingredient": "stormlight:sapphire",
-  "mould": "stormlight:mark_mould",
-  "glass": 2,
   "result": {
     "id": "stormlight:sapphire_mark"
-  }
+  },
+  "glass": 2
 }

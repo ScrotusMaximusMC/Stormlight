@@ -210,30 +210,120 @@
     },
     {
       "from": [
-        3,
+        3.5,
         5,
         0
       ],
       "to": [
-        11,
-        5.5,
-        4
+        10.5,
+        6,
+        3.5
       ],
       "faces": {
         "south": {
-          "texture": "#steel"
+          "texture": "#mould"
         },
         "east": {
-          "texture": "#steel"
+          "texture": "#mould"
         },
         "west": {
-          "texture": "#steel"
+          "texture": "#mould"
         },
         "up": {
-          "texture": "#steel"
+          "texture": "#mould"
         },
         "down": {
-          "texture": "#steel"
+          "texture": "#mould"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        6,
+        2
+      ],
+      "to": [
+        9.5,
+        6.75,
+        2.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#mould"
+        },
+        "south": {
+          "texture": "#mould"
+        },
+        "east": {
+          "texture": "#mould"
+        },
+        "west": {
+          "texture": "#mould"
+        },
+        "up": {
+          "texture": "#mould"
+        },
+        "down": {
+          "texture": "#mould"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        6,
+        0
+      ],
+      "to": [
+        5,
+        6.75,
+        2
+      ],
+      "faces": {
+        "south": {
+          "texture": "#mould"
+        },
+        "east": {
+          "texture": "#mould"
+        },
+        "west": {
+          "texture": "#mould"
+        },
+        "up": {
+          "texture": "#mould"
+        },
+        "down": {
+          "texture": "#mould"
+        }
+      }
+    },
+    {
+      "from": [
+        9,
+        6,
+        0
+      ],
+      "to": [
+        9.5,
+        6.75,
+        2
+      ],
+      "faces": {
+        "south": {
+          "texture": "#mould"
+        },
+        "east": {
+          "texture": "#mould"
+        },
+        "west": {
+          "texture": "#mould"
+        },
+        "up": {
+          "texture": "#mould"
+        },
+        "down": {
+          "texture": "#mould"
         }
       }
     },

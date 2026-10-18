@@ -15,14 +15,6 @@ public class ModItems {
     public static final Item CHISEL = register(
             ModItemIds.CHISEL, Item::new, new Item.Properties().durability(128));
 
-    // Sphere forge moulds, one for each sphere size. They are reused for every pour.
-    public static final Item CHIP_MOULD = register(
-            ModItemIds.CHIP_MOULD, Item::new, new Item.Properties().stacksTo(16));
-    public static final Item MARK_MOULD = register(
-            ModItemIds.MARK_MOULD, Item::new, new Item.Properties().stacksTo(16));
-    public static final Item BROAM_MOULD = register(
-            ModItemIds.BROAM_MOULD, Item::new, new Item.Properties().stacksTo(16));
-
     public static final Item SPHERE_POUCH = register(
             ModItemIds.SPHERE_POUCH,
             SpherePouchItem::new,
@@ -271,12 +263,7 @@ public class ModItems {
 
     public static void initialize() {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES)
-                .register(entries -> {
-                    entries.accept(CHISEL);
-                    entries.accept(CHIP_MOULD);
-                    entries.accept(MARK_MOULD);
-                    entries.accept(BROAM_MOULD);
-                });
+                .register(entries -> entries.accept(CHISEL));
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> {
                     entries.accept(SPHERE_POUCH);
