@@ -20,6 +20,9 @@ import com.scrotey.stormlight.client.highstorm.HighstormLeafParticle;
 import com.scrotey.stormlight.client.spren.HonorSprenMoteParticle;
 import com.scrotey.stormlight.client.spren.ClientSprenSeek;
 import com.scrotey.stormlight.client.spren.SprenSeekTrailParticle;
+import com.scrotey.stormlight.client.spren.ClientSprenShield;
+import com.scrotey.stormlight.client.spren.ClientShardblade;
+import com.scrotey.stormlight.network.ShardbladeStatePayload;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
@@ -34,6 +37,7 @@ import com.scrotey.stormlight.network.ExternalLashingInputPayload;
 import com.scrotey.stormlight.network.ExternalLashingTargetPayload;
 import com.scrotey.stormlight.network.ToggleSprenSeekPayload;
 import com.scrotey.stormlight.network.SprenSeekStatePayload;
+import com.scrotey.stormlight.network.SprenShieldBlockPayload;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
 import com.scrotey.stormlight.client.lashing.ClientExternalLashingState;
@@ -120,6 +124,13 @@ public class StormlightClient implements ClientModInitializer {
                     )
             );
 
+    private static final KeyMapping SHARDBLADE_SLOT_KEY =
+            KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                    "key.stormlight.shardblade_slot",
+                    InputConstants.Type.KEYSYM,
+                    InputConstants.KEY_0,
+                    STORMLIGHT_CATEGORY));
+
     @Override
     public void onInitializeClient() {
         ModSprenModelLayers.register();
@@ -188,6 +199,17 @@ public class StormlightClient implements ClientModInitializer {
         );
 
         ClientPlayNetworking.registerGlobalReceiver(
+                SprenShieldBlockPayload.TYPE,
+                (payload, context) ->
+                        ClientSprenShield.flash(context.client())
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShardbladeStatePayload.TYPE,
+                (payload, context) -> ClientShardblade.update(
+                        context.client(), payload));
+
+        ClientPlayNetworking.registerGlobalReceiver(
                 OpenRadiantProgressionPayload.TYPE,
                 (payload, context) ->
                         context.client().gui.setScreen(
@@ -224,6 +246,17 @@ public class StormlightClient implements ClientModInitializer {
                 StormlightHud::render
         );
 
+        HudElementRegistry.attachElementBefore(
+                VanillaHudElements.CHAT,
+                Stormlight.id("spren_shield"),
+                ClientSprenShield::render
+        );
+
+        HudElementRegistry.attachElementBefore(
+                VanillaHudElements.CHAT,
+                Stormlight.id("shardblade_slot"),
+                ClientShardblade::render);
+
         StormfrontCloudRenderer.register();
     }
 
@@ -234,6 +267,8 @@ public class StormlightClient implements ClientModInitializer {
         ClientLashingState.tick(client);
         ClientExternalLashingState.tick(client);
         ClientSprenSeek.tick(client);
+        ClientSprenShield.tick(client);
+        ClientShardblade.tick(client);
         if (client.player == null) {
             StormlightFovFeedback.setBreathingState(false, false);
             lashingKeyWasDown = false;
@@ -287,6 +322,12 @@ public class StormlightClient implements ClientModInitializer {
             if (client.gui.screen() == null) {
                 ClientPlayNetworking.send(
                         ToggleSprenSeekPayload.INSTANCE);
+            }
+        }
+
+        while (SHARDBLADE_SLOT_KEY.consumeClick()) {
+            if (client.gui.screen() == null) {
+                ClientShardblade.summon();
             }
         }
 

@@ -16,6 +16,8 @@ import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.spren.ModSprenEntities;
 import com.scrotey.stormlight.spren.SprenManager;
 import com.scrotey.stormlight.spren.SprenSeekManager;
+import com.scrotey.stormlight.spren.SprenShieldManager;
+import com.scrotey.stormlight.spren.ShardbladeManager;
 import com.scrotey.stormlight.particle.ModParticles;
 import com.scrotey.stormlight.progression.RadiantLecternInteraction;
 import com.scrotey.stormlight.progression.RadiantProgression;
@@ -43,6 +45,8 @@ public class Stormlight implements ModInitializer {
         ModSprenEntities.initialize();
         SprenManager.initialize();
         SprenSeekManager.initialize();
+        SprenShieldManager.initialize();
+        ShardbladeManager.initialize();
         ModAttachments.initialize();
         ModBlocks.initialize();
         ModFeatures.initialize();

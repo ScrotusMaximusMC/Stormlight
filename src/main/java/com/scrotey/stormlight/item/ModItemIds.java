@@ -26,6 +26,7 @@ public class ModItemIds {
 
     public static final ResourceKey<Item> DIAMOND_CHISEL = create("diamond_chisel");
     public static final ResourceKey<Item> CHISEL = create("chisel");
+    public static final ResourceKey<Item> SHARDBLADE = create("shardblade");
     public static final ResourceKey<Item> CHIP_MOULD = create("chip_mould");
     public static final ResourceKey<Item> MARK_MOULD = create("mark_mould");
     public static final ResourceKey<Item> BROAM_MOULD = create("broam_mould");

@@ -3,8 +3,12 @@
 	"package": "com.scrotey.stormlight.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+<<<<<<< Updated upstream
 		"ChunkMapShatteredPlainsMixin",
 		"DensityFunctionsHolderHolderMixin",
+=======
+		"BladeInventoryMixin",
+>>>>>>> Stashed changes
 		"InventoryMenuMixin",
 		"LivingEntitySurefootMixin",
 		"MultiNoiseBiomeSourceMixin",

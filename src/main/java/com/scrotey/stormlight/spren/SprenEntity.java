@@ -87,6 +87,10 @@ public final class SprenEntity extends Allay {
     private int seekIndex;
     private @Nullable BlockPos seekOre;
     private boolean seekReturning;
+    private boolean guarding;
+    private boolean guardArrived;
+    private boolean bladeForm;
+    private boolean bladeArrived;
 
     public SprenEntity(
             EntityType<? extends Allay> entityType,
@@ -149,6 +153,51 @@ public final class SprenEntity extends Allay {
         targetChosen = false;
     }
 
+    public void startGuard() {
+        guarding = true;
+        guardArrived = false;
+        setInvisible(true);
+        activity = Activity.GUARD;
+        clearInterest();
+        setDeltaMovement(Vec3.ZERO);
+    }
+
+    public void stopGuard() {
+        guarding = false;
+        guardArrived = false;
+        setInvisible(false);
+        setDeltaMovement(Vec3.ZERO);
+        targetChosen = false;
+    }
+
+    public boolean isGuardReady(ServerPlayer owner) {
+        return guarding && guardArrived && distanceToSqr(owner) < 64.0;
+    }
+
+    public boolean isGuarding() {
+        return guarding;
+    }
+
+    public void startBlade() {
+        bladeForm = true;
+        bladeArrived = false;
+        activity = Activity.BLADE;
+        clearInterest();
+        setDeltaMovement(Vec3.ZERO);
+    }
+
+    public void stopBlade() {
+        bladeForm = false;
+        bladeArrived = false;
+        setInvisible(false);
+        setDeltaMovement(Vec3.ZERO);
+        targetChosen = false;
+    }
+
+    public boolean isBladeArrived() {
+        return bladeForm && bladeArrived;
+    }
+
     @Override
     protected void customServerAiStep(ServerLevel level) {
         // No AllayAi: the Allay is only our placeholder visual shell.
@@ -207,6 +256,9 @@ public final class SprenEntity extends Allay {
      * twinkles rather than a uniform particle streak.
      */
     private void tickClientMagicParticles() {
+        if (isInvisible()) {
+            return;
+        }
         // Roughly 60% of the previous density. The random cadence also stops
         // the motes from appearing on a perfectly regular beat.
         if (random.nextFloat() >= 0.60F) {
@@ -255,6 +307,16 @@ public final class SprenEntity extends Allay {
                 tickSeek(owner);
                 return;
             }
+        }
+
+        if (bladeForm) {
+            tickBlade(owner);
+            return;
+        }
+
+        if (guarding) {
+            tickGuard(owner);
+            return;
         }
 
         if (distanceToSqr(owner) > HARD_RETURN_DISTANCE_SQR) {
@@ -336,6 +398,52 @@ public final class SprenEntity extends Allay {
         double speed = Math.min(0.30, direction.length());
         setDeltaMovement(direction.normalize().scale(speed));
         facePoint(seekRoute.get(seekIndex));
+    }
+
+    private void tickGuard(ServerPlayer owner) {
+        if (distanceToSqr(owner) >= 64.0) {
+            guardArrived = false;
+        }
+        Vec3 destination = guardPoint(owner);
+        Vec3 direction = destination.subtract(position());
+        double distance = direction.length();
+        if (distance < 1.25) {
+            guardArrived = true;
+        }
+        if (distance < 0.28) {
+            setDeltaMovement(Vec3.ZERO);
+        } else {
+            double speed = distance > 4.0 ? 1.2
+                    : distance > 1.5 ? 0.65 : 0.22;
+            setDeltaMovement(direction.scale(
+                    Math.min(speed, distance) / distance));
+            facePoint(destination);
+        }
+    }
+
+    private void tickBlade(ServerPlayer owner) {
+        Vec3 hand = owner.getEyePosition()
+                .add(owner.getLookAngle().scale(0.28))
+                .add(0, -0.35, 0);
+        Vec3 delta = hand.subtract(position());
+        if (delta.lengthSqr() < 0.7) {
+            bladeArrived = true;
+            setInvisible(true);
+            setDeltaMovement(Vec3.ZERO);
+        } else {
+            setDeltaMovement(delta.normalize().scale(
+                    Math.min(1.35, delta.length())));
+            facePoint(hand);
+        }
+    }
+
+    private Vec3 guardPoint(ServerPlayer owner) {
+        double yaw = Math.toRadians(owner.yBodyRot);
+        Vec3 forward = new Vec3(-Math.sin(yaw), 0,
+                Math.cos(yaw));
+        Vec3 left = new Vec3(forward.z, 0, -forward.x);
+        return owner.position().add(left.scale(0.45))
+                .subtract(forward.scale(0.18)).add(0, 1.55, 0);
     }
 
     private void tickCooldowns() {
@@ -1016,6 +1124,13 @@ public final class SprenEntity extends Allay {
     }
 
     @Override
+    public boolean isPickable() {
+        // In blade and shield form the spren sits close to the camera. Even
+        // invisible entities can intercept the crosshair's block targeting.
+        return false;
+    }
+
+    @Override
     protected void doPush(Entity entity) {
         // Spren have no physical collision response with entities.
     }
@@ -1081,6 +1196,8 @@ public final class SprenEntity extends Allay {
     }
 
     private enum Activity {
+        BLADE,
+        GUARD,
         SEEK,
         WANDER,
         VISIT,

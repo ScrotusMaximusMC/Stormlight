@@ -12,6 +12,7 @@ import com.scrotey.stormlight.progression.SprenBondLevel;
 import com.scrotey.stormlight.progression.SprenBondProgression;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -37,7 +38,9 @@ public final class RadiantProgressionScreen extends Screen {
     private static final int WINDRUNNER_BLUE = 0xFF276E83;
     private static final int WINDRUNNER_PALE = 0xFF8FC6CF;
     private static final int BOND_GOLD = 0xFF9A7135;
+    private static final int IDEAL_GOLD = 0xFF805927;
     private static final int LOCKED = 0xFF8B775B;
+    private static final int ABILITY_GAP = 6;
 
     private final OpenRadiantProgressionPayload state;
     private boolean choosing;
@@ -67,17 +70,31 @@ public final class RadiantProgressionScreen extends Screen {
         panelTop = (height - panelHeight) / 2;
         minimumRowHeight = MIN_ROW_HEIGHT;
         for (SprenBondLevel bond : SprenBondProgression.levels()) {
-            int lineCount = font.split(
-                    Component.translatable(bond.wordsTranslationKey()),
-                    bondWordsWidth()
-            ).size();
-            minimumRowHeight = Math.max(
-                    minimumRowHeight,
-                    bond.level() == 1 && state.level() >= 1
-                            ? 20 + 18 * lineCount
-                            : 20 + 18 * (lineCount - 1)
-            );
+            boolean unlocked = state.level()
+                    >= bond.requiredRadiantLevel();
+            int lineCount = font.split(idealWords(bond, unlocked),
+                    bondWordsWidth()).size();
+            if (unlocked && bond.level() <= 3) {
+                int detailLines = font.split(Component.translatable(
+                        abilityDescriptionKey(bond.level())
+                ), bondWordsWidth()).size();
+                minimumRowHeight = Math.max(minimumRowHeight,
+                        24 + 18 * (lineCount + detailLines)
+                                + 2 * ABILITY_GAP);
+            } else {
+                minimumRowHeight = Math.max(minimumRowHeight,
+                        20 + 18 * (lineCount - 1));
+            }
         }
+        int radiantTextWidth = Math.max(1, panelWidth / 2 - 65);
+        int masteryLines = font.split(Component.translatable(
+                "progression.stormlight.windrunner.radiant_mastery.description"
+        ), radiantTextWidth).size();
+        int mobLashingLines = font.split(Component.translatable(
+                "progression.stormlight.windrunner.radiant_mastery.mob_lashing"
+        ), radiantTextWidth).size();
+        minimumRowHeight = Math.max(minimumRowHeight,
+                24 + 18 * (masteryLines + mobLashingLines));
         int lockedLineCount = font.split(
                 Component.translatable(
                         "screen.stormlight.spren_bond.locked_words"
@@ -442,6 +459,26 @@ public final class RadiantProgressionScreen extends Screen {
         Component description = Component.translatable(
                 level.descriptionTranslationKey()
         );
+        if (level.level() == RadiantProgression.MAX_LEVEL) {
+            int lineY = nodeY - 4;
+            for (String key : List.of(
+                    level.descriptionTranslationKey(),
+                    "progression.stormlight.windrunner.radiant_mastery.mob_lashing"
+            )) {
+                for (FormattedCharSequence line : font.split(
+                        Component.translatable(key),
+                        Math.max(1, width / 2 - textX - 10))) {
+                    graphics.text(font, line, textX, lineY,
+                            unlocked ? WINDRUNNER_BLUE : MUTED_INK, false);
+                    lineY += 9;
+                }
+            }
+            graphics.text(font, Component.translatable(
+                    "screen.stormlight.radiant.capacity",
+                    level.stormlightCapacity()), textX, lineY,
+                    unlocked ? WINDRUNNER_BLUE : MUTED_INK, false);
+            return;
+        }
         if (roomyRow
                 && font.width(description) < width / 2 - textX - 10) {
             graphics.text(
@@ -553,11 +590,7 @@ public final class RadiantProgressionScreen extends Screen {
                     false
             );
 
-            Component wordsText = Component.translatable(
-                    unlocked
-                            ? bond.wordsTranslationKey()
-                            : "screen.stormlight.spren_bond.locked_words"
-            );
+            Component wordsText = idealWords(bond, unlocked);
             List<FormattedCharSequence> words = font.split(
                     wordsText,
                     bondWordsWidth()
@@ -571,23 +604,54 @@ public final class RadiantProgressionScreen extends Screen {
                         words.get(line),
                         textX,
                         nodeY + 1 + line * 9,
-                        unlocked ? WINDRUNNER_BLUE : MUTED_INK,
+                        unlocked ? IDEAL_GOLD : MUTED_INK,
                         false
                 );
             }
-            if (bond.level() == 1 && unlocked) {
+            if (bond.level() <= 3 && unlocked) {
+                int detailY = nodeY + 1 + words.size() * 9
+                        + ABILITY_GAP;
                 graphics.text(
                         font,
                         Component.translatable(
-                                "screen.stormlight.spren_bond.spren_seek"
+                                abilityKey(bond.level())
                         ),
                         textX,
-                        nodeY + 1 + words.size() * 9,
+                        detailY,
                         WINDRUNNER_BLUE,
                         false
                 );
+                List<FormattedCharSequence> detail = font.split(
+                        Component.translatable(
+                                abilityDescriptionKey(bond.level())),
+                        bondWordsWidth());
+                for (int line = 0; line < detail.size(); line++) {
+                    graphics.text(font, detail.get(line), textX,
+                            detailY + 9 + line * 9,
+                            INK, false);
+                }
             }
         }
+    }
+
+    private Component idealWords(SprenBondLevel bond, boolean unlocked) {
+        return Component.translatable(unlocked
+                ? bond.wordsTranslationKey()
+                : "screen.stormlight.spren_bond.locked_words")
+                .withStyle(ChatFormatting.ITALIC);
+    }
+
+    private String abilityKey(int bondLevel) {
+        return "screen.stormlight.spren_bond." + switch (bondLevel) {
+            case 1 -> "spren_seek";
+            case 2 -> "spren_shield";
+            case 3 -> "shardblade";
+            default -> throw new IllegalArgumentException();
+        };
+    }
+
+    private String abilityDescriptionKey(int bondLevel) {
+        return abilityKey(bondLevel) + ".description";
     }
 
     private int treeTop() {
