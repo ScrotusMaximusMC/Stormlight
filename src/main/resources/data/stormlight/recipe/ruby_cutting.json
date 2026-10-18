@@ -2,7 +2,7 @@
   "type": "stormlight:gemcutting",
   "ingredient": "stormlight:ruby",
   "result": {
-    "id": "stormlight:ruby_nugget",
-    "count": 9
+    "id": "stormlight:raw_ruby_chip",
+    "count": 1
   }
 }

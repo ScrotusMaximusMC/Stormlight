@@ -22,6 +22,8 @@ import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
 import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
+import com.scrotey.stormlight.network.OpenWayOfKingsPayload;
+import com.scrotey.stormlight.client.progression.WayOfKingsScreen;
 import com.scrotey.stormlight.network.OpenMysteriousBookPayload;
 import com.scrotey.stormlight.client.progression.MysteriousBookScreen;
 import com.scrotey.stormlight.network.LashingStatePayload;
@@ -165,6 +167,11 @@ public class StormlightClient implements ClientModInitializer {
                         context.client().gui.setScreen(
                                 new RadiantProgressionScreen(payload)
                         )
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                OpenWayOfKingsPayload.TYPE,
+                (payload, context) -> context.client().gui.setScreen(new WayOfKingsScreen(payload))
         );
 
         ClientPlayNetworking.registerGlobalReceiver(

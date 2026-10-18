@@ -1,6 +1,6 @@
 {
   "type": "stormlight:sphere_forging",
-  "ingredient": "stormlight:emerald_nugget",
+  "ingredient": "stormlight:raw_emerald_chip",
   "mould": "stormlight:chip_mould",
   "glass": 1,
   "result": {

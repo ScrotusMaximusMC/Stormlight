@@ -37,6 +37,7 @@ public class Stormlight implements ModInitializer {
         ModComponents.initialize();
         ModItems.initialize();
         RadiantProgression.initialize();
+        com.scrotey.stormlight.progression.StonecuttingProgression.initialize();
         ModSprenEntities.initialize();
         SprenManager.initialize();
         ModAttachments.initialize();

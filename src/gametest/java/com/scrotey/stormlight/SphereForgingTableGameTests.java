@@ -49,9 +49,9 @@ public class SphereForgingTableGameTests {
         var glass = new ItemStack(Items.GLASS, 3);
         for (int i = 0; i < 3; i++) h.assertTrue(use(forge, player, glass), "Glass goes into the crucible");
         h.assertTrue(glass.isEmpty(), "Each glass block is consumed");
-        h.assertTrue(!use(forge, player, new ItemStack(ModItems.DIAMOND_NUGGET)), "A gem needs a mould");
+        h.assertTrue(!use(forge, player, new ItemStack(ModItems.RAW_DIAMOND_CHIP)), "A raw chip needs a mould");
         h.assertTrue(use(forge, player, new ItemStack(ModItems.CHIP_MOULD)), "Chip mould goes on the bench");
-        h.assertTrue(use(forge, player, new ItemStack(ModItems.DIAMOND_NUGGET)), "Nugget sets in the mould");
+        h.assertTrue(use(forge, player, new ItemStack(ModItems.RAW_DIAMOND_CHIP)), "Raw chip sets in the mould");
         h.assertTrue(!use(forge, player, ItemStack.EMPTY), "A cold forge cannot pour");
         h.assertTrue(!forge.isPouring(), "Nothing poured");
         h.assertTrue(use(forge, player, new ItemStack(Items.LAVA_BUCKET)), "Lava fuels the forge");
@@ -67,7 +67,7 @@ public class SphereForgingTableGameTests {
             h.assertTrue(!use(forge, player, ItemStack.EMPTY), "Cannot pour twice at once");
         });
         h.runAtTickTime(melted + POUR, () -> {
-            h.assertTrue(forge.getGem().isEmpty(), "Nugget is sealed in glass");
+            h.assertTrue(forge.getGem().isEmpty(), "Raw chip is sealed in glass");
             h.assertTrue(forge.getResult().is(ModItems.DIAMOND_CHIP), "A diamond chip is cast");
             h.assertTrue(!use(forge, player, ItemStack.EMPTY), "Too hot to take");
         });
@@ -95,7 +95,7 @@ public class SphereForgingTableGameTests {
         h.runAtTickTime(t, () -> {
             h.assertValueEqual(forge.getMolten(), lumps, "All the glass melted");
             h.assertTrue(use(forge, player, new ItemStack(ModItems.MARK_MOULD)), "Mark mould goes on the bench");
-            h.assertTrue(use(forge, player, new ItemStack(Items.DIAMOND)), "Gem sets in the mould");
+            h.assertTrue(use(forge, player, new ItemStack(ModItems.RAW_DIAMOND_MARK)), "Raw mark sets in the mould");
             h.assertTrue(!use(forge, player, new ItemStack(Items.EMERALD)), "Mould holds one gem");
             h.assertTrue(use(forge, player, ItemStack.EMPTY), "Pour a mark");
             h.assertValueEqual(forge.getMolten(), lumps - 2, "A mark takes two glass");
@@ -144,7 +144,7 @@ public class SphereForgingTableGameTests {
         var player = h.makeMockPlayer(GameType.SURVIVAL);
         use(forge, player, new ItemStack(Items.LAVA_BUCKET));
         use(forge, player, new ItemStack(ModItems.CHIP_MOULD));
-        use(forge, player, new ItemStack(ModItems.RUBY_NUGGET));
+        use(forge, player, new ItemStack(ModItems.RAW_RUBY_CHIP));
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         h.assertTrue(!forge.interact(player, InteractionHand.MAIN_HAND, false), "Clicking the hearth does not pour");
         h.assertTrue(!forge.isPouring(), "Nothing poured");
@@ -159,12 +159,12 @@ public class SphereForgingTableGameTests {
         h.assertTrue(!use(forge, player, new ItemStack(ModItems.CHISEL)), "Tools are ignored");
         h.assertTrue(use(forge, player, new ItemStack(ModItems.CHIP_MOULD)), "Mould sets");
         h.assertTrue(!use(forge, player, new ItemStack(ModItems.MARK_MOULD)), "Only one mould at a time");
-        h.assertTrue(!use(forge, player, new ItemStack(ModItems.SAPPHIRE)), "A full gem won't fit a chip mould");
-        h.assertTrue(use(forge, player, new ItemStack(ModItems.SAPPHIRE_NUGGET)), "Nugget sets");
+        h.assertTrue(!use(forge, player, new ItemStack(ModItems.SAPPHIRE)), "An uncut gem cannot be forged");
+        h.assertTrue(use(forge, player, new ItemStack(ModItems.RAW_SAPPHIRE_CHIP)), "Raw chip sets");
         player.setShiftKeyDown(true);
         h.assertTrue(use(forge, player, ItemStack.EMPTY), "Sneak takes the gem back");
         h.assertTrue(forge.getGem().isEmpty() && !forge.getMould().isEmpty(), "Gem comes out before the mould");
-        h.assertValueEqual(count(player, ModItems.SAPPHIRE_NUGGET), 1, "Nugget returned");
+        h.assertValueEqual(count(player, ModItems.RAW_SAPPHIRE_CHIP), 1, "Raw chip returned");
         h.assertTrue(use(forge, player, ItemStack.EMPTY), "Sneak again takes the mould");
         player.setShiftKeyDown(false);
         h.assertTrue(forge.getMould().isEmpty(), "Bench is clear");
@@ -180,7 +180,7 @@ public class SphereForgingTableGameTests {
         use(forge, player, new ItemStack(Items.GLASS, 2));
         use(forge, player, new ItemStack(Items.GLASS));
         use(forge, player, new ItemStack(ModItems.MARK_MOULD));
-        use(forge, player, new ItemStack(ModItems.GARNET));
+        use(forge, player, new ItemStack(ModItems.RAW_GARNET_MARK));
         var restored = new SphereForgingTableBlockEntity(forge.getBlockPos(), forge.getBlockState());
         restored.setLevel(h.getLevel());
         restored.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING,
@@ -188,7 +188,7 @@ public class SphereForgingTableGameTests {
         h.assertTrue(restored.isLit(), "Fuel survives saving");
         h.assertValueEqual(restored.getUnmelted(), 2, "Unmelted glass survives saving");
         h.assertTrue(restored.getMould().is(ModItems.MARK_MOULD), "Mould survives saving");
-        h.assertTrue(restored.getGem().is(ModItems.GARNET), "Gem survives saving");
+        h.assertTrue(restored.getGem().is(ModItems.RAW_GARNET_MARK), "Raw mark survives saving");
         h.succeed();
     }
 
@@ -202,7 +202,7 @@ public class SphereForgingTableGameTests {
             use(forge, player, new ItemStack(Items.GLASS));
             use(forge, player, new ItemStack(Items.GLASS));
             use(forge, player, new ItemStack(ModItems.MARK_MOULD));
-            use(forge, player, new ItemStack(ModItems.RUBY));
+            use(forge, player, new ItemStack(ModItems.RAW_RUBY_MARK));
             BlockPos target = SphereForgingTableBlock.partPos(h.absolutePos(POS), Direction.EAST, part[0], part[1], part[2]);
             h.assertValueEqual(SphereForgingTableBlock.corePos(target, h.getLevel().getBlockState(target)),
                     h.absolutePos(POS), "Every part shares one forge");
@@ -211,7 +211,7 @@ public class SphereForgingTableGameTests {
                 h.assertBlockNotPresent(ModBlocks.SPHERE_FORGING_TABLE, POS.east(x).above(y).south(z));
             h.assertItemEntityCountIs(ModBlocks.SPHERE_FORGING_TABLE.asItem(), POS, 4, 1);
             h.assertItemEntityCountIs(Items.GLASS, POS, 4, 2);
-            h.assertItemEntityCountIs(ModItems.RUBY, POS, 4, 1);
+            h.assertItemEntityCountIs(ModItems.RAW_RUBY_MARK, POS, 4, 1);
             h.assertItemEntityCountIs(ModItems.MARK_MOULD, POS, 4, 1);
         }
         h.succeed();

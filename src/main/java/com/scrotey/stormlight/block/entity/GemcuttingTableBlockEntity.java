@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.block.entity;
 
 import com.scrotey.stormlight.item.ModItems;
+import com.scrotey.stormlight.progression.StonecuttingProgression;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -81,6 +82,10 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
             sync();
             return true;
         }
+        if (held.isEmpty() && player.isShiftKeyDown() && gem.isEmpty()) {
+            StonecuttingProgression.showStatus(player);
+            return true;
+        }
         if (held.isEmpty() && player.isShiftKeyDown() && !gem.isEmpty()) {
             player.getInventory().placeItemBackInInventory(gem);
             gem = ItemStack.EMPTY;
@@ -94,13 +99,14 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
         var input = new SingleRecipeInput(gem);
         var recipe = server.recipeAccess().getRecipeFor(ModRecipes.GEMCUTTING_TYPE, input, server).orElse(null);
         if (recipe == null) return false;
-        ItemStack result = recipe.value().assemble(input);
-        if (result.isEmpty()) return false;
+        if (recipe.value().assemble(input).isEmpty()) return false;
         lastStrike = now;
         held.hurtAndBreak(1, player, hand);
         sound(SoundEvents.STONE_HIT, 0.7F, 1.4F + strikes * 0.035F);
         sound(SoundEvents.ANVIL_HIT, 0.15F, 1.8F);
         if (++strikes == REQUIRED_STRIKES) {
+            ItemStack result = StonecuttingProgression.rollResult(gem, player, server.getRandom());
+            StonecuttingProgression.completeCut(player);
             ItemEntity drop = new ItemEntity(level, worldPosition.getX() + 0.5,
                     worldPosition.getY() + 1.4, worldPosition.getZ() + 0.5, result);
             drop.setDefaultPickUpDelay();

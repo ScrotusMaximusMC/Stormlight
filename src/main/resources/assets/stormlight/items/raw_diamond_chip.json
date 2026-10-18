@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "stormlight:item/ruby_nugget"
+    "model": "stormlight:item/raw_diamond_chip"
   }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "stormlight:item/garnet_nugget"
+    "layer0": "stormlight:item/raw_emerald_mark"
   }
 }
