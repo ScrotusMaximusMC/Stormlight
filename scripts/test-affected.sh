@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 # Test class prefix -> regex matched against changed paths (lowercased, underscores removed).
 # Add a line here when you add tests for a new feature.
 RULES=(
-  "Highstorm|highstorm|stormfront|cloudrenderermixin|soundenginelull"
+  "Highstorm|highstorm|stormfront|cloudrenderermixin|soundenginelull|stormfog|weathereffectrenderer|daylightdarkening"
   "Gemcutting|gemcut"
   "SphereForging|sphereforg|sphereitem|mould"
   "SprenSeek|sprenseek|sprenbond"
