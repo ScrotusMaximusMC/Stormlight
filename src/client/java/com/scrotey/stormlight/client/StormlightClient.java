@@ -18,6 +18,8 @@ import com.scrotey.stormlight.client.highstorm.ClientHighstormState;
 import com.scrotey.stormlight.client.highstorm.ClientHighstormWind;
 import com.scrotey.stormlight.client.highstorm.HighstormLeafParticle;
 import com.scrotey.stormlight.client.spren.HonorSprenMoteParticle;
+import com.scrotey.stormlight.client.spren.ClientSprenSeek;
+import com.scrotey.stormlight.client.spren.SprenSeekTrailParticle;
 import com.scrotey.stormlight.network.HighstormVisualPayload;
 import com.scrotey.stormlight.client.highstorm.StormfrontCloudRenderer;
 import com.scrotey.stormlight.client.progression.RadiantProgressionScreen;
@@ -26,8 +28,13 @@ import com.scrotey.stormlight.network.OpenMysteriousBookPayload;
 import com.scrotey.stormlight.client.progression.MysteriousBookScreen;
 import com.scrotey.stormlight.network.LashingStatePayload;
 import com.scrotey.stormlight.network.ToggleLashingPayload;
+import com.scrotey.stormlight.network.ExternalLashingInputPayload;
+import com.scrotey.stormlight.network.ExternalLashingTargetPayload;
+import com.scrotey.stormlight.network.ToggleSprenSeekPayload;
+import com.scrotey.stormlight.network.SprenSeekStatePayload;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
+import com.scrotey.stormlight.client.lashing.ClientExternalLashingState;
 import com.scrotey.stormlight.spren.ModSprenEntities;
 import com.scrotey.stormlight.client.spren.ModSprenModelLayers;
 import com.scrotey.stormlight.client.spren.SprenRenderer;
@@ -91,6 +98,26 @@ public class StormlightClient implements ClientModInitializer {
                     )
             );
 
+    private static final KeyMapping EXTERNAL_LASHING_KEY =
+            KeyMappingHelper.registerKeyMapping(
+                    new KeyMapping(
+                            "key.stormlight.external_lashing",
+                            InputConstants.Type.KEYSYM,
+                            InputConstants.KEY_H,
+                            STORMLIGHT_CATEGORY
+                    )
+            );
+
+    private static final KeyMapping SPREN_SEEK_KEY =
+            KeyMappingHelper.registerKeyMapping(
+                    new KeyMapping(
+                            "key.stormlight.spren_seek",
+                            InputConstants.Type.KEYSYM,
+                            InputConstants.KEY_V,
+                            STORMLIGHT_CATEGORY
+                    )
+            );
+
     @Override
     public void onInitializeClient() {
         ModSprenModelLayers.register();
@@ -120,6 +147,12 @@ public class StormlightClient implements ClientModInitializer {
                 HonorSprenMoteParticle.Provider::new
         );
 
+        ParticleProviderRegistry.getInstance().register(
+                ModParticles.SPREN_SEEK_TRAIL,
+                SprenSeekTrailParticle.Provider::new
+        );
+        ClientSprenSeek.register();
+
         MenuScreens.register(
                 ModMenuTypes.SPHERE_JAR,
                 SphereJarScreen::new
@@ -138,6 +171,18 @@ public class StormlightClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(
                 LashingStatePayload.TYPE,
                 (payload, context) -> ClientLashingState.update(payload)
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                ExternalLashingTargetPayload.TYPE,
+                (payload, context) ->
+                        ClientExternalLashingState.update(payload)
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                SprenSeekStatePayload.TYPE,
+                (payload, context) -> ClientSprenSeek.update(
+                        context.client(), payload)
         );
 
         ClientPlayNetworking.registerGlobalReceiver(
@@ -180,6 +225,8 @@ public class StormlightClient implements ClientModInitializer {
         ApproachingStormfrontEffects.tick(client);
         ClientHighstormWind.tick(client);
         ClientLashingState.tick(client);
+        ClientExternalLashingState.tick(client);
+        ClientSprenSeek.tick(client);
         if (client.player == null) {
             StormlightFovFeedback.setBreathingState(false, false);
             lashingKeyWasDown = false;
@@ -217,6 +264,23 @@ public class StormlightClient implements ClientModInitializer {
         while (LASHING_KEY.consumeClick()) {
             // Drain the click queue. Tap-versus-hold is determined from
             // the key's pressed and released state on the server.
+        }
+
+        while (EXTERNAL_LASHING_KEY.consumeClick()) {
+            if (client.gui.screen() == null) {
+                ClientPlayNetworking.send(
+                        new ExternalLashingInputPayload(
+                                client.options.keyShift.isDown()
+                        )
+                );
+            }
+        }
+
+        while (SPREN_SEEK_KEY.consumeClick()) {
+            if (client.gui.screen() == null) {
+                ClientPlayNetworking.send(
+                        ToggleSprenSeekPayload.INSTANCE);
+            }
         }
 
         if (breathingOut) {

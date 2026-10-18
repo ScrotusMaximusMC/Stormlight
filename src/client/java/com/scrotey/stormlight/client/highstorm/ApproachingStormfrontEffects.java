@@ -1,5 +1,6 @@
 package com.scrotey.stormlight.client.highstorm;
 
+import com.scrotey.stormlight.highstorm.HighstormTimings;
 import com.scrotey.stormlight.particle.ModParticles;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleOptions;
@@ -14,8 +15,15 @@ public final class ApproachingStormfrontEffects {
      * Minecraft east is positive X. The front therefore
      * appears at +X and advances towards the player.
      */
-    private static final double START_DISTANCE = 150.0;
-    private static final double END_DISTANCE = 16.0;
+    private static final double GROUND_EFFECTS_RANGE = 200.0;
+
+    /*
+     * The rain curtain keeps marking the wall's edge for a short distance
+     * after it has passed overhead and continues westwards.
+     */
+    private static final double TRAILING_CURTAIN_DISTANCE = 60.0;
+
+    private static final float AHEAD_OF_WALL_LEAF_INTENSITY = 0.35F;
 
     private static final double WALL_HALF_WIDTH = 105.0;
     private static final double WALL_THICKNESS = 15.0;
@@ -66,10 +74,11 @@ public final class ApproachingStormfrontEffects {
         }
 
         /*
-         * The active Highstorm emits a denser and faster-moving
-         * particle field every client tick.
+         * Once the wall has rolled past, the active Highstorm emits a denser
+         * and faster-moving particle field every client tick.
          */
-        if (ClientHighstormState.isHighstorm()) {
+        if (ClientHighstormState.isHighstorm()
+                && ClientHighstormState.getWallPassProgress() >= 1.0F) {
             spawnHighstormClouds(client, 1.0F);
             return;
         }
@@ -85,63 +94,109 @@ public final class ApproachingStormfrontEffects {
             return;
         }
 
-        if (!ClientHighstormState.isApproaching()) {
+        if (!ClientHighstormState.isApproaching()
+                && !ClientHighstormState.isHighstorm()) {
             return;
         }
 
         float progress =
-                ClientHighstormState.getApproachProgress();
-
-        float smoothProgress =
-                progress
-                        * progress
-                        * (3.0F - 2.0F * progress);
+                ClientHighstormState.getWallProgress();
 
         /*
-         * Loose leaves arrive ahead of the storm wall. Their density rises
-         * smoothly from none to the full Highstorm amount, avoiding a sudden
-         * burst when the phase changes to HIGHSTORM.
+         * Ground effects follow the leading edge of the rendered cloud wall,
+         * so the smoke, debris and rain curtain arrive with the clouds and
+         * the rain starts as that edge passes overhead.
          */
-        spawnHighstormLeaves(
-                client,
-                smoothProgress
-        );
+        double edgeDistance =
+                StormfrontCloudRenderer
+                        .getApproachLeadingEdgeDistance(progress);
+
+        if (edgeDistance > 0.0) {
+            float nearness =
+                    1.0F
+                            - Mth.clamp(
+                            (float) (edgeDistance
+                                    / GROUND_EFFECTS_RANGE),
+                            0.0F,
+                            1.0F
+                    );
+
+            /*
+             * Loose leaves are blown out ahead of the wall, thickening as
+             * it closes in.
+             */
+            spawnHighstormLeaves(
+                    client,
+                    smoothstep(nearness) * AHEAD_OF_WALL_LEAF_INTENSITY
+            );
+        } else {
+            /*
+             * Beneath the leading cloud mass, the debris stream builds
+             * towards the full Highstorm instead of starting at once.
+             */
+            float behindEdge =
+                    Mth.clamp(
+                            (progress
+                                    - HighstormTimings
+                                    .STORMWALL_ARRIVAL_PROGRESS)
+                                    / (1.0F
+                                    - HighstormTimings
+                                    .STORMWALL_ARRIVAL_PROGRESS),
+                            0.0F,
+                            1.0F
+                    );
+
+            spawnHighstormClouds(
+                    client,
+                    Mth.lerp(
+                            smoothstep(behindEdge),
+                            AHEAD_OF_WALL_LEAF_INTENSITY,
+                            1.0F
+                    )
+            );
+        }
 
         /*
          * The heavier smoke wall and rain retain their lighter,
          * every-second-tick emission rate.
          */
-        if ((client.level.getGameTime() & 1L) != 0L) {
+        if ((client.level.getGameTime() & 1L) != 0L
+                || edgeDistance > GROUND_EFFECTS_RANGE
+                || edgeDistance < -TRAILING_CURTAIN_DISTANCE) {
             return;
         }
 
-        double distance =
-                START_DISTANCE
-                        + (END_DISTANCE - START_DISTANCE)
-                        * smoothProgress;
-
-        int cloudCount =
-                Mth.floor(
-                        MIN_CLOUD_PARTICLES
-                                + (MAX_CLOUD_PARTICLES
-                                - MIN_CLOUD_PARTICLES)
-                                * progress
+        float wallStrength =
+                1.0F
+                        - Mth.clamp(
+                        (float) (Math.abs(edgeDistance)
+                                / GROUND_EFFECTS_RANGE),
+                        0.0F,
+                        1.0F
                 );
 
-        spawnCloudWall(
-                client,
-                progress,
-                distance,
-                cloudCount
-        );
+        if (edgeDistance > -WALL_THICKNESS) {
+            int cloudCount =
+                    Mth.floor(
+                            MIN_CLOUD_PARTICLES
+                                    + (MAX_CLOUD_PARTICLES
+                                    - MIN_CLOUD_PARTICLES)
+                                    * wallStrength
+                    );
 
-        if (progress >= 0.30F) {
-            spawnRainCurtain(
+            spawnCloudWall(
                     client,
-                    progress,
-                    distance
+                    wallStrength,
+                    edgeDistance,
+                    cloudCount
             );
         }
+
+        spawnRainCurtain(
+                client,
+                wallStrength,
+                edgeDistance
+        );
     }
 
     private static void spawnCloudWall(

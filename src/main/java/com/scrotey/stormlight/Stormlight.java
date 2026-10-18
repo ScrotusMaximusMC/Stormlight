@@ -9,11 +9,13 @@ import com.scrotey.stormlight.highstorm.HighstormCommands;
 import com.scrotey.stormlight.highstorm.HighstormManager;
 import com.scrotey.stormlight.item.ModItems;
 import com.scrotey.stormlight.lashing.LashingManager;
+import com.scrotey.stormlight.lashing.ExternalLashingManager;
 import com.scrotey.stormlight.network.ModNetworking;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
 import com.scrotey.stormlight.spren.ModSprenEntities;
 import com.scrotey.stormlight.spren.SprenManager;
+import com.scrotey.stormlight.spren.SprenSeekManager;
 import com.scrotey.stormlight.particle.ModParticles;
 import com.scrotey.stormlight.progression.RadiantLecternInteraction;
 import com.scrotey.stormlight.progression.RadiantProgression;
@@ -39,6 +41,7 @@ public class Stormlight implements ModInitializer {
         RadiantProgression.initialize();
         ModSprenEntities.initialize();
         SprenManager.initialize();
+        SprenSeekManager.initialize();
         ModAttachments.initialize();
         ModBlocks.initialize();
         ModFeatures.initialize();
@@ -56,6 +59,7 @@ public class Stormlight implements ModInitializer {
         ShatteredPlainsCommands.initialize();
         StormlightManager.initialize();
         LashingManager.initialize();
+        ExternalLashingManager.initialize();
 
         LOGGER.info("Hello Kaladin!");
     }

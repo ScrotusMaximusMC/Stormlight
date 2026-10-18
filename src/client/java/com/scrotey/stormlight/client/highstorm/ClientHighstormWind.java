@@ -1,8 +1,10 @@
 package com.scrotey.stormlight.client.highstorm;
 
+import com.scrotey.stormlight.highstorm.HighstormTimings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -19,6 +21,9 @@ public final class ClientHighstormWind {
     private static final double SNEAKING_WIND_MULTIPLIER = 0.30;
     private static final double MAX_GROUND_WEST_SPEED = 0.18;
     private static final double MAX_AIRBORNE_WEST_SPEED = 0.32;
+
+    // Share of full wind strength felt just before the wall arrives.
+    private static final float AHEAD_OF_WALL_WIND = 0.25F;
 
     /*
      * The storm comes from the east. Nine short rays sample a player-sized
@@ -127,13 +132,27 @@ public final class ClientHighstormWind {
     }
 
     private static float getWindIntensity() {
-        if (ClientHighstormState.isApproaching()) {
-            float progress = ClientHighstormState.getApproachProgress();
-            return progress * progress * 0.35F;
-        }
+        if (ClientHighstormState.isApproaching()
+                || ClientHighstormState.isHighstorm()) {
+            float progress = ClientHighstormState.getWallProgress();
+            float arrival = HighstormTimings.STORMWALL_ARRIVAL_PROGRESS;
 
-        if (ClientHighstormState.isHighstorm()) {
-            return 1.0F;
+            /*
+             * A light push builds ahead of the wall. Once it is overhead the
+             * gale rises steadily to full strength as the wall rolls past.
+             */
+            if (progress < arrival) {
+                return AHEAD_OF_WALL_WIND
+                        * (float) Mth.smoothstep(progress / arrival);
+            }
+
+            return Mth.lerp(
+                    (float) Mth.smoothstep(
+                            (progress - arrival) / (1.0F - arrival)
+                    ),
+                    AHEAD_OF_WALL_WIND,
+                    1.0F
+            );
         }
 
         if (ClientHighstormState.isPassing()) {

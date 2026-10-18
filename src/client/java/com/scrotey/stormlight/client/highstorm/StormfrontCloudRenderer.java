@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.scrotey.stormlight.Stormlight;
+import com.scrotey.stormlight.highstorm.HighstormTimings;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
@@ -31,14 +32,14 @@ import java.util.OptionalDouble;
 
 public final class StormfrontCloudRenderer {
     /*
-     * The distant storm is broad but shallow. As it reaches the
-     * player, it becomes narrower but considerably deeper.
+     * The detailed cloud field is NEAR_HALF_COLUMNS wide either side of the
+     * player and NEAR_HALF_LAYERS deep either side of its centre. FAR_HALF_LAYERS
+     * only sets how far the moving wall's faces travel: they follow the
+     * paths of the shallower formation the wall once started and ended as.
      */
-    private static final int FAR_HALF_COLUMNS = 65;
     private static final int NEAR_HALF_COLUMNS = 15;
 
     private static final int FAR_HALF_LAYERS = 4;
-    private static final int MID_HALF_LAYERS = 8;
     private static final int NEAR_HALF_LAYERS = 15;
 
     private static final int MIN_ROW = 2;
@@ -75,6 +76,9 @@ public final class StormfrontCloudRenderer {
     private static final int CAVE_ENTER_SUPPORTS = 3;
     private static final int CAVE_LEAVE_SUPPORTS = 2;
     private static final float CAVE_OFFSET_SMOOTHING = 0.18F;
+
+    private static float smoothedHorizonSlope;
+    private static boolean horizonSlopeSampled;
 
     private static boolean caveAnchoring;
     private static float smoothedCaveExtraOffset;
@@ -137,6 +141,186 @@ public final class StormfrontCloudRenderer {
     private static final float IMPACT_DISTANCE = 0.0F;
     private static final float DEPARTURE_DISTANCE = -800.0F;
 
+    /*
+     * While the wall forms, its upper rows grow in from the bottom, so the
+     * distant wall starts low and builds taller as it approaches.
+     */
+    private static final float FORMATION_MIN_ROWS = 1.5F;
+
+    /*
+     * During the Gathering lull the whole wall, curtain included, rises
+     * over the horizon. It starts sunk out of sight and anything below the
+     * horizon line is hidden, so its tops appear first, followed by the dark
+     * curtain beneath. After the rise, the hidden band below the horizon is
+     * let down early in the approach so the curtain can meet the terrain.
+     */
+    private static final float HORIZON_CLIP_Y = -12.0F;
+    private static final float RISE_DEPTH = 110.0F;
+
+    /*
+     * The visible horizon is where the furthest rendered terrain meets the
+     * sky, usually a little below eye level. Sampling the ground at the
+     * edge of render distance to the east gives its downward slope, which
+     * is projected out to the wall so it rises from behind the real
+     * horizon instead of floating above a band of sky.
+     */
+    private static final int HORIZON_SAMPLE_SPREAD = 48;
+    private static final int HORIZON_SAMPLE_INSET = 24;
+    private static final int HORIZON_SAMPLE_STEP = 32;
+    private static final int HORIZON_MIN_SAMPLE_DISTANCE = 32;
+    private static final float HORIZON_MAX_SLOPE = 2.0F;
+    private static final float HORIZON_SLOPE_SMOOTHING = 0.10F;
+
+    /*
+     * Fog blends the last stretch of terrain into the sky, so the line is
+     * pushed a little below the sampled ground. Terrain still hides anything
+     * behind it, so erring low cannot expose the hidden part of the wall.
+     */
+    private static final float HORIZON_SLOPE_BIAS = 1.4F;
+    private static final float RISE_COMPLETE_GATHERING_PROGRESS = 0.80F;
+
+
+    /*
+     * Faint flickers deep inside the distant line during the lull.
+     */
+    private static final float GATHERING_LIGHTNING_INTENSITY = 0.18F;
+
+    /*
+     * A dark curtain of rain and windblown debris hangs from the cloud base
+     * down past the horizon around the wall's footprint, so the storm reads
+     * as one dark mass rather than a ceiling with clear sky beneath it.
+     * It is lightest and streakiest near the ground, like rain shafts.
+     *
+     * The top sits inside the lowest cloud row; the bottom reaches well
+     * below the camera so it meets distant terrain, which hides the rest.
+     */
+    private static final float CURTAIN_TOP_Y =
+            MIN_ROW * 16.0F + CLOUD_VERTICAL_OFFSET;
+    private static final float CURTAIN_MIN_DEPTH = -200.0F;
+    private static final float CURTAIN_INSET = 12.0F;
+
+    /*
+     * The detailed cloud field is only a few hundred blocks wide near the
+     * player. Beyond it, coarse full-depth "wings" carry the wall north and
+     * south out to roughly this distance from the camera, so the stormwall
+     * fills the eastern horizon wherever the player looks. The curtain is
+     * stretched to match and hangs down to the bottom of the world, so it
+     * cannot be seen past from high ground either.
+     */
+    private static final float STORM_REACH = 20000.0F;
+    private static final float WING_CELL = 72.0F;
+    private static final float WING_CELL_GROWTH = 0.15F;
+    private static final float WING_OVERLAP = 10.0F;
+    private static final float WING_DEPTH_PIECE = 128.0F;
+
+    /*
+     * Geometry beyond the far clipping plane would be cut off, leaving a
+     * visible end to the wall. Any vertex further away than this fraction of
+     * the far plane is pulled straight towards the camera instead. Moving a
+     * point along its line of sight leaves it at exactly the same place on
+     * screen, so the wall looks unchanged but is never clipped.
+     */
+    private static final float FAR_PLANE_MARGIN = 0.85F;
+
+    /*
+     * Where one phase hands over to the next, the outgoing and incoming
+     * cloud formations are drawn together and crossfaded instead of
+     * switching in a single frame. The camera-relative wall becomes the
+     * world-anchored storm over the opening seconds of the Highstorm, and
+     * the reverse happens as it starts to pass.
+     */
+    private static final float WALL_PASS_BLEND_START = 0.60F;
+    private static final float PASSING_BLEND_PROGRESS = 0.15F;
+
+    private static float formationAlpha = 1.0F;
+
+    private static float pullInRadius = Float.MAX_VALUE;
+    private static float cameraLocalY;
+
+    /*
+     * Minecraft draws no terrain beyond render distance, so the real
+     * horizon sits below eye level. Far stretches of the curtain hang at
+     * least this far below eye level per block of distance, so its base
+     * always reaches the visible horizon instead of converging above it.
+     */
+    private static float horizonDropPerBlock;
+
+    /*
+     * 0 while the curtain is still cut off at the horizon during the rise,
+     * 1 once that cut-off has been let down completely.
+     */
+    private static float curtainHorizonRelease = 1.0F;
+
+    /*
+     * While the wall rises, each point is sunk in proportion to its distance,
+     * so the whole storm starts the same angle below the horizon and comes up
+     * together. A fixed depth would leave its deeper, more distant layers
+     * already above their own stretch of horizon at the start.
+     */
+    private static float sinkPerBlock;
+
+    /*
+     * The curtain's base hangs this many times as far below eye level as the
+     * horizon does, so it always reaches down behind the distant terrain.
+     */
+    private static final float CURTAIN_BASE_DEPTH_FACTOR = 2.0F;
+
+    /*
+     * The approaching wall wraps around the player. Each point is moved onto
+     * an arc at the distance of its own depth in the wall, its lateral offset
+     * becoming an angle that eases out to at most wrapAngle either side of
+     * due east. A small angle squeezes the whole storm into a distant blob;
+     * a large one closes it into a near-complete ring of even height, rather
+     * than a straight line sinking towards the horizon at either end.
+     *
+     * Close to the player the bend relaxes, since a near wall already fills
+     * the horizon, so the wall rolls over them as a straight front.
+     */
+    private static final float WRAP_BLOB_ANGLE = (float) Math.toRadians(15.0);
+    private static final float WRAP_GATHERED_ANGLE = (float) Math.toRadians(70.0);
+    private static final float WRAP_FULL_ANGLE = (float) Math.toRadians(85.0);
+    private static final float WRAP_FULL_ARRIVAL_SHARE = 0.75F;
+    private static final float WRAP_NEAR_FADE_DISTANCE = 150.0F;
+
+    private static float wrapWeight;
+    private static float wrapAngle = WRAP_FULL_ANGLE;
+    private static float wrappedX;
+    private static float wrappedZ;
+
+    /*
+     * Towards its ends the wrapped wall sinks to the horizon, rounding off
+     * the blob and softening the edges of the closing ring.
+     */
+    private static final int WRAP_END_TAPER_POWER = 6;
+    private static float wrappedHeightScale = 1.0F;
+    private static final float HORIZON_RELEASE_DEPTH = 4000.0F;
+
+    private static final float CURTAIN_TOP_GREY = 0.06F;
+    private static final float CURTAIN_BOTTOM_GREY = 0.14F;
+    private static final float CURTAIN_TOP_ALPHA = 0.97F;
+    private static final float CURTAIN_BOTTOM_ALPHA = 0.86F;
+
+    /*
+     * The distant curtain is a little lighter, reaching full strength
+     * early in the approach.
+     */
+    private static final float CURTAIN_DISTANT_OPACITY = 0.70F;
+    private static final float CURTAIN_FULL_FORMATION = 0.50F;
+
+    /*
+     * The camera-relative curtain fades out just before the world-anchored
+     * Highstorm takes over, and back in as the departing wall forms.
+     */
+    private static final float CURTAIN_FADE_PROGRESS = 0.15F;
+
+    /*
+     * The curtain thins to nothing near the player, so a sheet sweeping past
+     * opens a soft clear patch around them instead of switching from a dark
+     * wall to open air in a single frame. Distance is measured across the
+     * ground, so each column of the sheet fades as a whole.
+     */
+    private static final float CURTAIN_NEAR_FADE_DISTANCE = 100.0F;
+
     private static final RenderPipeline STORMFRONT_PIPELINE =
             RenderPipelines.register(
                     RenderPipeline.builder(
@@ -156,7 +340,7 @@ public final class StormfrontCloudRenderer {
     private static final StagedVertexBuffer STAGED_BUFFER =
             new StagedVertexBuffer(
                     () -> "Stormlight stormfront clouds",
-                    4 * 1024 * 1024
+                    8 * 1024 * 1024
             );
 
     private static final Vector4f COLOR_MODULATOR =
@@ -284,6 +468,19 @@ public final class StormfrontCloudRenderer {
                         targetCaveExtraOffset;
             }
 
+            float sampledSlope =
+                    sampleHorizonSlope(client, playerX, playerZ);
+
+            // A new storm starts from the real horizon, not from eye level.
+            if (horizonSlopeSampled) {
+                smoothedHorizonSlope +=
+                        (sampledSlope - smoothedHorizonSlope)
+                                * HORIZON_SLOPE_SMOOTHING;
+            } else {
+                smoothedHorizonSlope = sampledSlope;
+                horizonSlopeSampled = true;
+            }
+
             lastOffsetUpdateTick = gameTime;
         }
 
@@ -294,7 +491,15 @@ public final class StormfrontCloudRenderer {
         renderState =
                 new StormfrontRenderState(
                         ClientHighstormState
-                                .getApproachProgress(),
+                                .isGathering(),
+                        ClientHighstormState
+                                .getGatheringProgress(),
+                        ClientHighstormState
+                                .getStormfrontFormation(),
+                        ClientHighstormState
+                                .getWallProgress(),
+                        ClientHighstormState
+                                .getWallPassProgress(),
                         ClientHighstormState
                                 .getPassingProgress(),
                         ClientHighstormState
@@ -302,8 +507,59 @@ public final class StormfrontCloudRenderer {
                         ClientHighstormState
                                 .isPassing(),
                         gameTime,
-                        verticalOffset
+                        verticalOffset,
+                        smoothedHorizonSlope,
+                        (float) (client.level.getMinY()
+                                - client.player.getEyeY())
                 );
+    }
+
+    private static float sampleHorizonSlope(
+            Minecraft client,
+            int playerX,
+            int playerZ
+    ) {
+        int renderEdge =
+                client.options.getEffectiveRenderDistance()
+                        * 16
+                        - HORIZON_SAMPLE_INSET;
+
+        /*
+         * The client may not have loaded chunks right out to the render
+         * distance, so step inwards until loaded ground is found.
+         */
+        for (int sampleDistance = renderEdge;
+             sampleDistance >= HORIZON_MIN_SAMPLE_DISTANCE;
+             sampleDistance -= HORIZON_SAMPLE_STEP) {
+            int highest = Integer.MIN_VALUE;
+
+            for (int zOffset = -HORIZON_SAMPLE_SPREAD;
+                 zOffset <= HORIZON_SAMPLE_SPREAD;
+                 zOffset += HORIZON_SAMPLE_SPREAD) {
+                int height =
+                        client.level.getHeight(
+                                Heightmap.Types.MOTION_BLOCKING,
+                                playerX + sampleDistance,
+                                playerZ + zOffset
+                        );
+
+                // Unloaded columns report the bottom of the world.
+                if (height > client.level.getMinY()) {
+                    highest = Math.max(highest, height);
+                }
+            }
+
+            if (highest != Integer.MIN_VALUE) {
+                return Mth.clamp(
+                        (highest - (float) client.player.getEyeY())
+                                / sampleDistance,
+                        -HORIZON_MAX_SLOPE,
+                        0.0F
+                );
+            }
+        }
+
+        return 0.0F;
     }
 
     private static int[] sampleSurfaceHeights(
@@ -358,6 +614,8 @@ public final class StormfrontCloudRenderer {
     }
 
     private static void resetCaveAnchor() {
+        smoothedHorizonSlope = 0.0F;
+        horizonSlopeSampled = false;
         caveAnchoring = false;
         smoothedCaveExtraOffset = 0.0F;
         lastOffsetUpdateTick = Long.MIN_VALUE;
@@ -396,11 +654,53 @@ public final class StormfrontCloudRenderer {
                                 : null
                 );
 
-        renderStormfront(
-                context,
-                draw,
-                state
-        );
+        if (state.highstorm()
+                && state.wallPassProgress() < 1.0F) {
+            /*
+             * The moving wall keeps rolling over the player through the
+             * opening of the Highstorm, handing over to the world-anchored
+             * storm as its front sweeps away to the west.
+             */
+            float blend =
+                    smoothStep(
+                            Mth.clamp(
+                                    (state.wallPassProgress()
+                                            - WALL_PASS_BLEND_START)
+                                            / (1.0F
+                                            - WALL_PASS_BLEND_START),
+                                    0.0F,
+                                    1.0F
+                            )
+                    );
+
+            renderStormfront(
+                    context,
+                    draw,
+                    state.asArrivingWall(),
+                    1.0F - blend
+            );
+
+            renderStormfront(context, draw, state, blend);
+        } else if (state.passing()
+                && state.passingProgress()
+                < PASSING_BLEND_PROGRESS) {
+            float blend =
+                    smoothStep(
+                            state.passingProgress()
+                                    / PASSING_BLEND_PROGRESS
+                    );
+
+            renderStormfront(
+                    context,
+                    draw,
+                    state.asActiveStorm(),
+                    1.0F - blend
+            );
+
+            renderStormfront(context, draw, state, blend);
+        } else {
+            renderStormfront(context, draw, state, 1.0F);
+        }
 
         STAGED_BUFFER.upload();
 
@@ -420,8 +720,15 @@ public final class StormfrontCloudRenderer {
     private static void renderStormfront(
             LevelRenderContext context,
             StagedVertexBuffer.Draw draw,
-            StormfrontRenderState state
+            StormfrontRenderState state,
+            float alpha
     ) {
+        if (alpha <= 0.0F) {
+            return;
+        }
+
+        formationAlpha = alpha;
+
         PoseStack poseStack = context.poseStack();
 
         poseStack.pushPose();
@@ -441,6 +748,16 @@ public final class StormfrontCloudRenderer {
 
         Matrix4fc matrix =
                 poseStack.last().pose();
+
+        pullInRadius =
+                context.levelState()
+                        .cameraRenderState
+                        .depthFar
+                        * FAR_PLANE_MARGIN;
+
+        cameraLocalY = -state.verticalOffset();
+        horizonDropPerBlock =
+                state.horizonSlope() * HORIZON_SLOPE_BIAS;
 
         float cloudIntensity;
         float distance;
@@ -509,23 +826,14 @@ public final class StormfrontCloudRenderer {
                     1.0F - passingProgress;
 
             halfColumnRange =
-                    Math.round(
-                            NEAR_HALF_COLUMNS
-                                    + (
-                                    FAR_HALF_COLUMNS
-                                            - NEAR_HALF_COLUMNS
-                            ) * smoothProgress
-                    );
+                    NEAR_HALF_COLUMNS;
 
             halfLayerRange =
-                    selectDepartingLayerRange(
-                            passingProgress
-                    );
+                    NEAR_HALF_LAYERS;
 
             /*
-             * The retained layers are on the eastern side of the
-             * permanent formation. Gradually remove their positional
-             * bias as the departing wall becomes shallow again.
+             * Keeps the eastern face on the same path it has always taken
+             * as the departing wall shrinks into the distance.
              */
             layerPositionOffset =
                     -(
@@ -549,6 +857,30 @@ public final class StormfrontCloudRenderer {
                     NEAR_HALF_LAYERS;
 
             layerPositionOffset = 0.0F;
+        } else if (state.gathering()) {
+            /*
+             * The forming wall waits at the horizon in its broad, shallow
+             * starting arrangement. Only its formation and a faint inner
+             * flicker change until the approach begins.
+             */
+            distance = START_DISTANCE;
+
+            cloudIntensity =
+                    GATHERING_LIGHTNING_INTENSITY
+                            * state.gatheringProgress();
+
+            halfColumnRange =
+                    NEAR_HALF_COLUMNS;
+
+            halfLayerRange =
+                    NEAR_HALF_LAYERS;
+
+            layerPositionOffset =
+                    (
+                            NEAR_HALF_LAYERS
+                                    - FAR_HALF_LAYERS
+                    )
+                            * LAYER_SPACING;
         } else {
             float approachProgress =
                     state.approachProgress();
@@ -570,24 +902,20 @@ public final class StormfrontCloudRenderer {
             cloudIntensity =
                     approachProgress;
 
+            /*
+             * The wall keeps its full depth and a fixed detailed width
+             * throughout, so nothing is added or removed in steps as it
+             * closes in; the wings supply its breadth.
+             */
             halfColumnRange =
-                    Math.round(
-                            FAR_HALF_COLUMNS
-                                    + (
-                                    NEAR_HALF_COLUMNS
-                                            - FAR_HALF_COLUMNS
-                            ) * smoothProgress
-                    );
+                    NEAR_HALF_COLUMNS;
 
             halfLayerRange =
-                    selectApproachingLayerRange(
-                            approachProgress
-                    );
+                    NEAR_HALF_LAYERS;
 
             /*
-             * The initial shallow formation is centred on its travel
-             * position. This compensation disappears as layers are
-             * appended eastwards behind the visible front.
+             * Keeps the western face on the same path it has always taken
+             * as the wall closes in.
              */
             layerPositionOffset =
                     (
@@ -596,6 +924,126 @@ public final class StormfrontCloudRenderer {
                     )
                             * LAYER_SPACING
                             * (1.0F - smoothProgress);
+        }
+
+        int westCanonicalLayer =
+                state.passing()
+                        ? NEAR_HALF_LAYERS * 2
+                        - halfLayerRange * 2
+                        : 0;
+
+        int eastCanonicalLayer =
+                state.passing()
+                        ? NEAR_HALF_LAYERS * 2
+                        : halfLayerRange * 2;
+
+        float westEdgeX =
+                distance
+                        + (westCanonicalLayer
+                        - NEAR_HALF_LAYERS)
+                        * LAYER_SPACING
+                        + layerPositionOffset
+                        - CURTAIN_INSET;
+
+        float eastEdgeX =
+                distance
+                        + (eastCanonicalLayer
+                        - NEAR_HALF_LAYERS)
+                        * LAYER_SPACING
+                        + layerPositionOffset
+                        + CURTAIN_INSET;
+
+        /*
+         * The horizon line at the wall's front, in the same lifted
+         * coordinates as the clouds.
+         */
+        float horizonY =
+                state.horizonSlope()
+                        * HORIZON_SLOPE_BIAS
+                        * Math.max(0.0F, westEdgeX)
+                        + HORIZON_CLIP_Y
+                        - state.verticalOffset();
+
+        /*
+         * Camera-relative bottom of the world, in the same lifted coordinates
+         * as the clouds.
+         */
+        float curtainBottomY =
+                Math.min(
+                        CURTAIN_MIN_DEPTH,
+                        state.worldBottomY()
+                ) - state.verticalOffset();
+
+        sinkPerBlock = 0.0F;
+
+        if (state.gathering()) {
+            float riseProgress =
+                    Mth.clamp(
+                            state.gatheringProgress()
+                                    / RISE_COMPLETE_GATHERING_PROGRESS,
+                            0.0F,
+                            1.0F
+                    );
+
+            // Eases out: the tops appear early, then the wall settles.
+            float rise =
+                    1.0F
+                            - (1.0F - riseProgress)
+                            * (1.0F - riseProgress);
+
+            sinkPerBlock =
+                    (1.0F - rise)
+                            * (RISE_DEPTH - horizonY)
+                            / Math.max(1.0F, westEdgeX);
+
+            /*
+             * Once risen, the hidden band below the horizon is let down for
+             * the rest of the lull so the curtain reaches the ground.
+             */
+            float release =
+                    smoothStep(
+                            Mth.clamp(
+                                    (state.gatheringProgress()
+                                            - RISE_COMPLETE_GATHERING_PROGRESS)
+                                            / (1.0F
+                                            - RISE_COMPLETE_GATHERING_PROGRESS),
+                                    0.0F,
+                                    1.0F
+                            )
+                    );
+
+            curtainHorizonRelease = release;
+        } else {
+            curtainHorizonRelease = 1.0F;
+        }
+
+        if (state.gathering()) {
+            wrapWeight = 1.0F;
+            wrapAngle =
+                    Mth.lerp(
+                            smoothStep(state.gatheringProgress()),
+                            WRAP_BLOB_ANGLE,
+                            WRAP_GATHERED_ANGLE
+                    );
+        } else if (!state.highstorm() && !state.passing()) {
+            wrapWeight = 1.0F;
+            wrapAngle =
+                    Mth.lerp(
+                            smoothStep(
+                                    Mth.clamp(
+                                            state.approachProgress()
+                                                    / (HighstormTimings
+                                                    .STORMWALL_ARRIVAL_PROGRESS
+                                                    * WRAP_FULL_ARRIVAL_SHARE),
+                                            0.0F,
+                                            1.0F
+                                    )
+                            ),
+                            WRAP_GATHERED_ANGLE,
+                            WRAP_FULL_ANGLE
+                    );
+        } else {
+            wrapWeight = 0.0F;
         }
 
         /*
@@ -652,7 +1100,78 @@ public final class StormfrontCloudRenderer {
                     worldCentreLayer,
                     worldCentreColumn,
                     cameraX,
-                    cameraZ
+                    cameraZ,
+                    worldAnchored
+                            ? 1.0F
+                            : state.formation()
+            );
+        }
+
+        if (!worldAnchored) {
+            float detailedHalfWidth =
+                    halfColumnRange * COLUMN_SPACING;
+
+            float stormHalfWidth = STORM_REACH;
+
+            renderStormWings(
+                    matrix,
+                    builder,
+                    westEdgeX + CURTAIN_INSET,
+                    eastEdgeX - CURTAIN_INSET,
+                    detailedHalfWidth
+                            + COLUMN_SPACING * 0.5F,
+                    stormHalfWidth,
+                    state.formation(),
+                    cloudIntensity
+            );
+
+            float curtainFade;
+
+            if (state.passing()) {
+                curtainFade =
+                        smoothStep(
+                                Mth.clamp(
+                                        state.passingProgress()
+                                                / CURTAIN_FADE_PROGRESS,
+                                        0.0F,
+                                        1.0F
+                                )
+                        );
+            } else if (state.gathering()) {
+                curtainFade = 1.0F;
+            } else {
+                curtainFade =
+                        smoothStep(
+                                Mth.clamp(
+                                        (1.0F
+                                                - state.approachProgress())
+                                                / CURTAIN_FADE_PROGRESS,
+                                        0.0F,
+                                        1.0F
+                                )
+                        );
+            }
+
+            renderStormCurtain(
+                    matrix,
+                    builder,
+                    westEdgeX,
+                    eastEdgeX,
+                    stormHalfWidth,
+                    curtainFade
+                            * Mth.lerp(
+                            smoothStep(
+                                    Mth.clamp(
+                                            state.formation()
+                                                    / CURTAIN_FULL_FORMATION,
+                                            0.0F,
+                                            1.0F
+                                    )
+                            ),
+                            CURTAIN_DISTANT_OPACITY,
+                            1.0F
+                    ),
+                    curtainBottomY
             );
         }
 
@@ -1010,32 +1529,43 @@ public final class StormfrontCloudRenderer {
         }
     }
 
-    private static int selectApproachingLayerRange(
-            float progress
+    /*
+     * Camera-relative X of the approaching wall's leading edge, measured
+     * through the middle of its bulging face. Positive values are east of
+     * the player. Takes wall progress (see HighstormTimings) and reaches
+     * zero at STORMWALL_ARRIVAL_PROGRESS, as the Highstorm begins.
+     */
+    public static float getApproachLeadingEdgeDistance(
+            float approachProgress
     ) {
-        if (progress < 0.35F) {
-            return FAR_HALF_LAYERS;
-        }
+        float smoothProgress =
+                smoothStep(
+                        Mth.clamp(
+                                approachProgress,
+                                0.0F,
+                                1.0F
+                        )
+                );
 
-        if (progress < 0.70F) {
-            return MID_HALF_LAYERS;
-        }
+        float distance =
+                START_DISTANCE
+                        + (
+                        IMPACT_DISTANCE
+                                - START_DISTANCE
+                ) * smoothProgress;
 
-        return NEAR_HALF_LAYERS;
-    }
+        float layerPositionOffset =
+                (
+                        NEAR_HALF_LAYERS
+                                - FAR_HALF_LAYERS
+                )
+                        * LAYER_SPACING
+                        * (1.0F - smoothProgress);
 
-    private static int selectDepartingLayerRange(
-            float progress
-    ) {
-        if (progress < 0.35F) {
-            return NEAR_HALF_LAYERS;
-        }
-
-        if (progress < 0.70F) {
-            return MID_HALF_LAYERS;
-        }
-
-        return FAR_HALF_LAYERS;
+        return distance
+                - NEAR_HALF_LAYERS * LAYER_SPACING
+                + layerPositionOffset
+                - STORMFACE_MAX_BULGE * 0.5F;
     }
 
     private static void renderCloudLayer(
@@ -1054,8 +1584,15 @@ public final class StormfrontCloudRenderer {
             int worldCentreLayer,
             int worldCentreColumn,
             double cameraX,
-            double cameraZ
+            double cameraZ,
+            float formation
     ) {
+        float visibleRows =
+                FORMATION_MIN_ROWS
+                        + (
+                        MAX_ROW - MIN_ROW + 1
+                                - FORMATION_MIN_ROWS
+                ) * formation;
 
         /*
          * The complete storm has permanent layers 0–30:
@@ -1080,6 +1617,21 @@ public final class StormfrontCloudRenderer {
         for (int row = MIN_ROW;
              row <= MAX_ROW;
              row++) {
+            /*
+             * Rows above the forming wall's current height are absent; the
+             * topmost visible row grows upward from its base.
+             */
+            float rowGrowth =
+                    Mth.clamp(
+                            visibleRows - (row - MIN_ROW),
+                            0.0F,
+                            1.0F
+                    );
+
+            if (rowGrowth <= 0.0F) {
+                continue;
+            }
+
             /*
              * Produces a symmetrical vertical curve:
              *
@@ -1238,8 +1790,15 @@ public final class StormfrontCloudRenderer {
                                 : 1.0F;
 
                 xSize *= windowEdgeScale;
-                ySize *= windowEdgeScale;
+                ySize *= windowEdgeScale * rowGrowth;
                 zSize *= windowEdgeScale;
+
+                // Keep a growing row's base fixed while its top rises.
+                float growthDrop =
+                        ySize
+                                / rowGrowth
+                                * (1.0F - rowGrowth)
+                                * 0.5F;
 
                 float turbulence =
                         (float) Math.sin(
@@ -1273,7 +1832,8 @@ public final class StormfrontCloudRenderer {
                         row * 16.0F
                                 + CLOUD_VERTICAL_OFFSET
                                 + yJitter
-                                + turbulence;
+                                + turbulence
+                                - growthDrop;
 
                 float gridZ =
                         worldAnchored
@@ -1289,6 +1849,22 @@ public final class StormfrontCloudRenderer {
                         gridZ
                                 + zJitter
                                 + turbulence * 1.5F;
+
+                centreY -= sinkAt(centreX, centreZ);
+
+                float boxTop = centreY + ySize / 2.0F;
+                float clipY = horizonClipAt(centreX, centreZ);
+
+                // Still below the horizon while the wall rises.
+                if (boxTop <= clipY) {
+                    continue;
+                }
+
+                float boxBottom =
+                        Math.max(
+                                centreY - ySize / 2.0F,
+                                clipY
+                        );
 
                 /*
                  * Very dark charcoal cloud colour. Individual boxes still vary
@@ -1366,10 +1942,10 @@ public final class StormfrontCloudRenderer {
                         matrix,
                         builder,
                         centreX - xSize / 2.0F,
-                        centreY - ySize / 2.0F,
+                        boxBottom,
                         centreZ - zSize / 2.0F,
                         centreX + xSize / 2.0F,
-                        centreY + ySize / 2.0F,
+                        boxTop,
                         centreZ + zSize / 2.0F,
                         red,
                         green,
@@ -1408,6 +1984,482 @@ public final class StormfrontCloudRenderer {
                 }
             }
         }
+    }
+
+    private static void renderStormWings(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            float westX,
+            float eastX,
+            float innerHalfWidth,
+            float outerHalfWidth,
+            float formation,
+            float cloudIntensity
+    ) {
+        if (outerHalfWidth <= innerHalfWidth) {
+            return;
+        }
+
+        float visibleRows =
+                FORMATION_MIN_ROWS
+                        + (
+                        MAX_ROW - MIN_ROW + 1
+                                - FORMATION_MIN_ROWS
+                ) * formation;
+
+        float middleRow = (MIN_ROW + MAX_ROW) * 0.5F;
+        float halfRowRange = (MAX_ROW - MIN_ROW) * 0.5F;
+
+        for (int row = MIN_ROW; row <= MAX_ROW; row++) {
+            float rowGrowth =
+                    Mth.clamp(
+                            visibleRows - (row - MIN_ROW),
+                            0.0F,
+                            1.0F
+                    );
+
+            if (rowGrowth <= 0.0F) {
+                continue;
+            }
+
+            float distanceFromMiddle =
+                    Math.abs(row - middleRow) / halfRowRange;
+
+            // Matches the main wall's bulging face.
+            float rowBulge =
+                    STORMFACE_MAX_BULGE
+                            * (1.0F
+                            - distanceFromMiddle
+                            * distanceFromMiddle);
+
+            for (int side = -1; side <= 1; side += 2) {
+                float nearZ = innerHalfWidth;
+
+                /*
+                 * Cells widen with distance, where perspective shrinks them,
+                 * keeping the wing cheap however far it reaches.
+                 */
+                for (int cell = 0; nearZ < outerHalfWidth; cell++) {
+                    int cellHash = hash(cell * side, row, 911);
+
+                    float cellWidth =
+                            Math.max(
+                                    WING_CELL,
+                                    nearZ * WING_CELL_GROWTH
+                            );
+
+                    float farZ = nearZ + cellWidth + WING_OVERLAP;
+                    float nextNearZ = nearZ + cellWidth;
+
+                    float ySize =
+                            (26.0F
+                                    + randomFraction(
+                                    hash(cellHash, 5, 13)
+                            ) * 12.0F) * rowGrowth;
+
+                    float centreY =
+                            row * 16.0F
+                                    + CLOUD_VERTICAL_OFFSET
+                                    + randomFraction(
+                                    hash(cellHash, 7, 17)
+                            ) * 10.0F - 5.0F
+                                    - ySize
+                                    / rowGrowth
+                                    * (1.0F - rowGrowth)
+                                    * 0.5F;
+
+                    float wingNearZ = nearZ;
+                    nearZ = nextNearZ;
+
+                    float wingMidZ =
+                            side * (wingNearZ + cellWidth * 0.5F);
+
+                    float frontJitter =
+                            randomFraction(
+                                    hash(cellHash, 11, 19)
+                            ) * 14.0F;
+
+                    float grey =
+                            Mth.clamp(
+                                    0.085F
+                                            + randomFraction(
+                                            hash(cellHash, 23, 29)
+                                    ) * 0.06F
+                                            - cloudIntensity * 0.015F,
+                                    0.035F,
+                                    0.24F
+                            );
+
+                    float wingWestX = westX - rowBulge - 18.0F + frontJitter;
+                    float wingEastX = eastX + 18.0F - frontJitter;
+
+                    /*
+                     * The wing runs the wall's full depth. It is drawn in
+                     * pieces so each is sunk and hidden by the horizon at its
+                     * own distance; one long box would poke its far end up
+                     * above the lower horizon behind it while the wall rises.
+                     */
+                    int pieces =
+                            Math.max(
+                                    1,
+                                    Mth.ceil(
+                                            (wingEastX - wingWestX)
+                                                    / WING_DEPTH_PIECE
+                                    )
+                            );
+
+                    float pieceLength = (wingEastX - wingWestX) / pieces;
+
+                    for (int piece = 0; piece < pieces; piece++) {
+                        float pieceWestX = wingWestX + piece * pieceLength;
+                        float pieceEastX = pieceWestX + pieceLength;
+                        float pieceMidX = (pieceWestX + pieceEastX) * 0.5F;
+
+                        float pieceCentreY =
+                                centreY - sinkAt(pieceMidX, wingMidZ);
+
+                        float boxTop = pieceCentreY + ySize / 2.0F;
+                        float clipY = horizonClipAt(pieceMidX, wingMidZ);
+
+                        if (boxTop <= clipY) {
+                            continue;
+                        }
+
+                        float boxBottom =
+                                Math.max(
+                                        pieceCentreY - ySize / 2.0F,
+                                        clipY
+                                );
+
+                        renderCloudBox(
+                                matrix,
+                                builder,
+                                pieceWestX,
+                                boxBottom,
+                                side < 0 ? -farZ : wingNearZ,
+                                pieceEastX + WING_OVERLAP,
+                                boxTop,
+                                side < 0 ? -wingNearZ : farZ,
+                                grey,
+                                grey,
+                                grey
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private static void renderStormCurtain(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            float westX,
+            float eastX,
+            float halfWidth,
+            float opacity,
+            float curtainBottomY
+    ) {
+        if (opacity <= 0.0F) {
+            return;
+        }
+
+        int layers =
+                Math.max(
+                        1,
+                        Mth.ceil(
+                                (eastX - westX) / LAYER_SPACING
+                        )
+                );
+
+        float layerStep = (eastX - westX) / layers;
+
+        /*
+         * Front and back sheets run outwards from the middle in segments that
+         * widen with distance, like the wings.
+         */
+        for (int side = -1; side <= 1; side += 2) {
+            float nearZ = 0.0F;
+
+            for (int segment = 0; nearZ < halfWidth; segment++) {
+                float farZ =
+                        Math.min(
+                                halfWidth,
+                                nearZ
+                                        + Math.max(
+                                        COLUMN_SPACING,
+                                        nearZ * WING_CELL_GROWTH
+                                )
+                        );
+
+                float minZ = side < 0 ? -farZ : nearZ;
+                float maxZ = side < 0 ? -nearZ : farZ;
+                int signedSegment = side < 0 ? -1 - segment : segment;
+
+                renderCurtainSegment(
+                        matrix, builder,
+                        westX, minZ, westX, maxZ,
+                        curtainBottomY,
+                        opacity, hash(signedSegment, 17, -3)
+                );
+
+                renderCurtainSegment(
+                        matrix, builder,
+                        eastX, minZ, eastX, maxZ,
+                        curtainBottomY,
+                        opacity, hash(signedSegment, 29, 5)
+                );
+
+                nearZ = farZ;
+            }
+        }
+
+        for (int segment = 0; segment < layers; segment++) {
+            float minX = westX + segment * layerStep;
+            float maxX = minX + layerStep;
+
+            renderCurtainSegment(
+                    matrix, builder,
+                    minX, -halfWidth, maxX, -halfWidth,
+                    curtainBottomY,
+                    opacity, hash(segment, 41, -7)
+            );
+
+            renderCurtainSegment(
+                    matrix, builder,
+                    minX, halfWidth, maxX, halfWidth,
+                    curtainBottomY,
+                    opacity, hash(segment, 53, 11)
+            );
+        }
+    }
+
+    private static void renderCurtainSegment(
+            Matrix4fc matrix,
+            VertexConsumer builder,
+            float startX,
+            float startZ,
+            float endX,
+            float endZ,
+            float curtainBottomY,
+            float opacity,
+            int segmentHash
+    ) {
+        float startTop = CURTAIN_TOP_Y - sinkAt(startX, startZ);
+        float endTop = CURTAIN_TOP_Y - sinkAt(endX, endZ);
+
+        float startBottom =
+                curtainBottomAt(
+                        startX, startZ, startTop, curtainBottomY
+                );
+
+        float endBottom =
+                curtainBottomAt(
+                        endX, endZ, endTop, curtainBottomY
+                );
+
+        if (startBottom >= startTop && endBottom >= endTop) {
+            return;
+        }
+
+        /*
+         * Neighbouring segments differ slightly near the ground, producing
+         * soft vertical rain shafts instead of a flat painted sheet.
+         */
+        float shaft = randomFraction(segmentHash);
+
+        float topGrey =
+                CURTAIN_TOP_GREY
+                        + randomFraction(
+                        hash(segmentHash, 3, 7)
+                ) * 0.02F;
+
+        float topAlpha =
+                CURTAIN_TOP_ALPHA * opacity;
+
+        /*
+         * Where the horizon cuts the curtain off, its colour stops at the
+         * matching point of the top-to-bottom gradient.
+         */
+        float startFraction =
+                Mth.clamp(
+                        (startTop - startBottom)
+                                / (CURTAIN_TOP_Y - curtainBottomY),
+                        0.0F,
+                        1.0F
+                );
+
+        float endFraction =
+                Mth.clamp(
+                        (endTop - endBottom)
+                                / (CURTAIN_TOP_Y - curtainBottomY),
+                        0.0F,
+                        1.0F
+                );
+
+        float baseGrey = CURTAIN_BOTTOM_GREY + shaft * 0.05F;
+        float baseAlpha = CURTAIN_BOTTOM_ALPHA - shaft * 0.08F;
+
+        float startGrey = Mth.lerp(startFraction, topGrey, baseGrey);
+        float endGrey = Mth.lerp(endFraction, topGrey, baseGrey);
+
+        float startAlpha =
+                Mth.lerp(startFraction, CURTAIN_TOP_ALPHA, baseAlpha)
+                        * opacity;
+
+        float endAlpha =
+                Mth.lerp(endFraction, CURTAIN_TOP_ALPHA, baseAlpha)
+                        * opacity;
+
+        float startNearFade = curtainNearFade(startX, startZ);
+        float endNearFade = curtainNearFade(endX, endZ);
+
+        addVertex(builder, matrix, startX, startTop, startZ,
+                topGrey, topGrey, topGrey * 1.08F,
+                topAlpha * startNearFade);
+        addVertex(builder, matrix, startX, startBottom, startZ,
+                startGrey, startGrey, startGrey * 1.12F,
+                startAlpha * startNearFade);
+        addVertex(builder, matrix, endX, endBottom, endZ,
+                endGrey, endGrey, endGrey * 1.12F,
+                endAlpha * endNearFade);
+        addVertex(builder, matrix, endX, endTop, endZ,
+                topGrey, topGrey, topGrey * 1.08F,
+                topAlpha * endNearFade);
+    }
+
+    /*
+     * The visible horizon below a point of the storm, in the lifted
+     * coordinates the clouds are drawn in.
+     */
+    private static float horizonAt(
+            float x,
+            float z
+    ) {
+        return horizonDropPerBlock
+                * wrappedDistance(x, z)
+                + HORIZON_CLIP_Y
+                + cameraLocalY;
+    }
+
+    private static float sinkAt(
+            float x,
+            float z
+    ) {
+        return sinkPerBlock > 0.0F
+                ? sinkPerBlock * wrappedDistance(x, z)
+                : 0.0F;
+    }
+
+    private static float wrappedDistance(
+            float x,
+            float z
+    ) {
+        wrapAroundPlayer(x, z);
+
+        return (float) Math.sqrt(
+                wrappedX * wrappedX + wrappedZ * wrappedZ
+        );
+    }
+
+    // Writes the wrapped position of (x, z) to wrappedX and wrappedZ.
+    private static void wrapAroundPlayer(
+            float x,
+            float z
+    ) {
+        wrappedX = x;
+        wrappedZ = z;
+        wrappedHeightScale = 1.0F;
+
+        if (wrapWeight <= 0.0F || x <= 0.0F) {
+            return;
+        }
+
+        float weight =
+                wrapWeight
+                        * smoothStep(
+                        Mth.clamp(
+                                x / WRAP_NEAR_FADE_DISTANCE,
+                                0.0F,
+                                1.0F
+                        )
+                );
+
+        if (weight <= 0.0F) {
+            return;
+        }
+
+        float spread = (float) Math.tanh(z / (x * wrapAngle));
+        float angle = wrapAngle * spread;
+
+        float bentX = x * Mth.cos(angle);
+        float bentZ = x * Mth.sin(angle);
+
+        wrappedX = x + (bentX - x) * weight;
+        wrappedZ = z + (bentZ - z) * weight;
+
+        float endTaper =
+                1.0F
+                        - (float) Math.pow(
+                        Math.abs(spread),
+                        WRAP_END_TAPER_POWER
+                );
+
+        wrappedHeightScale = Mth.lerp(weight, 1.0F, endTaper);
+    }
+
+    /*
+     * Everything below this is hidden while the wall rises over the horizon.
+     * Clouds and curtain share it, so the cloud tops always show first.
+     */
+    private static float horizonClipAt(
+            float x,
+            float z
+    ) {
+        return horizonAt(x, z)
+                - curtainHorizonRelease
+                * HORIZON_RELEASE_DEPTH;
+    }
+
+    private static float curtainNearFade(
+            float x,
+            float z
+    ) {
+        return smoothStep(
+                Mth.clamp(
+                        wrappedDistance(x, z)
+                                / CURTAIN_NEAR_FADE_DISTANCE,
+                        0.0F,
+                        1.0F
+                )
+        );
+    }
+
+    private static float curtainBottomAt(
+            float x,
+            float z,
+            float top,
+            float curtainBottomY
+    ) {
+        /*
+         * The horizon is followed point by point: a flat cut-off would close
+         * in on eye level far along the wall and trim its distant base.
+         */
+        float horizon = horizonAt(x, z);
+
+        float baseBelowHorizon =
+                cameraLocalY
+                        + (horizon - cameraLocalY)
+                        * CURTAIN_BASE_DEPTH_FACTOR;
+
+        float ground = Math.min(curtainBottomY, baseBelowHorizon);
+
+        return Math.min(
+                top,
+                Math.max(
+                        ground - sinkAt(x, z),
+                        horizonClipAt(x, z)
+                )
+        );
     }
 
     private static void renderUnderbellyDetail(
@@ -2169,6 +3221,35 @@ public final class StormfrontCloudRenderer {
             float green,
             float blue
     ) {
+        wrapAroundPlayer(x, z);
+        x = wrappedX;
+        z = wrappedZ;
+
+        if (wrappedHeightScale < 1.0F) {
+            float horizon =
+                    horizonDropPerBlock
+                            * (float) Math.sqrt(x * x + z * z)
+                            + HORIZON_CLIP_Y
+                            + cameraLocalY;
+
+            y = horizon + (y - horizon) * wrappedHeightScale;
+        }
+
+        float distance =
+                (float) Math.sqrt(
+                        x * x
+                                + (y - cameraLocalY) * (y - cameraLocalY)
+                                + z * z
+                );
+
+        if (distance > pullInRadius) {
+            float scale = pullInRadius / distance;
+
+            x *= scale;
+            y = cameraLocalY + (y - cameraLocalY) * scale;
+            z *= scale;
+        }
+
         builder.addVertex(
                         matrix,
                         x,
@@ -2179,7 +3260,61 @@ public final class StormfrontCloudRenderer {
                         red,
                         green,
                         blue,
-                        1.0F
+                        formationAlpha
+                );
+    }
+
+    private static void addVertex(
+            VertexConsumer builder,
+            Matrix4fc matrix,
+            float x,
+            float y,
+            float z,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        wrapAroundPlayer(x, z);
+        x = wrappedX;
+        z = wrappedZ;
+
+        if (wrappedHeightScale < 1.0F) {
+            float horizon =
+                    horizonDropPerBlock
+                            * (float) Math.sqrt(x * x + z * z)
+                            + HORIZON_CLIP_Y
+                            + cameraLocalY;
+
+            y = horizon + (y - horizon) * wrappedHeightScale;
+        }
+
+        float distance =
+                (float) Math.sqrt(
+                        x * x
+                                + (y - cameraLocalY) * (y - cameraLocalY)
+                                + z * z
+                );
+
+        if (distance > pullInRadius) {
+            float scale = pullInRadius / distance;
+
+            x *= scale;
+            y = cameraLocalY + (y - cameraLocalY) * scale;
+            z *= scale;
+        }
+
+        builder.addVertex(
+                        matrix,
+                        x,
+                        y,
+                        z
+                )
+                .setColor(
+                        clampColour(red),
+                        clampColour(green),
+                        clampColour(blue),
+                        alpha * formationAlpha
                 );
     }
 
@@ -2294,12 +3429,36 @@ public final class StormfrontCloudRenderer {
     }
 
     private record StormfrontRenderState(
+            boolean gathering,
+            float gatheringProgress,
+            float formation,
+            // Wall progress; see HighstormTimings.
             float approachProgress,
+            float wallPassProgress,
             float passingProgress,
             boolean highstorm,
             boolean passing,
             long gameTime,
-            float verticalOffset
+            float verticalOffset,
+            float horizonSlope,
+            float worldBottomY
     ) {
+        // The camera-relative wall, still rolling over the player.
+        private StormfrontRenderState asArrivingWall() {
+            return new StormfrontRenderState(
+                    false, 0.0F, 1.0F, approachProgress, 0.0F, 0.0F,
+                    false, false,
+                    gameTime, verticalOffset, horizonSlope, worldBottomY
+            );
+        }
+
+        // The world-anchored storm as it stands just before it passes.
+        private StormfrontRenderState asActiveStorm() {
+            return new StormfrontRenderState(
+                    false, 0.0F, 1.0F, 0.0F, 1.0F, 0.0F,
+                    true, false,
+                    gameTime, verticalOffset, horizonSlope, worldBottomY
+            );
+        }
     }
 }

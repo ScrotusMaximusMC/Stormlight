@@ -9,7 +9,10 @@
 		"CloudRendererMixin",
 		"DaylightDarkeningMixin",
 		"CameraFovMixin",
-		"WeatherEffectRendererMixin"
+		"EntityOutlineMixin",
+		"WeatherEffectRendererMixin",
+		"SoundEngineLullMixin",
+		"StormFogMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
