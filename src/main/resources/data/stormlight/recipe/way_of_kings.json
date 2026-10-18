@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:lapis_lazuli"
+  ],
+  "result": {
+    "id": "stormlight:way_of_kings",
+    "count": 1
+  }
+}

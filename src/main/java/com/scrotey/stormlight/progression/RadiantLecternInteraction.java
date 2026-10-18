@@ -7,6 +7,7 @@ import com.scrotey.stormlight.network.OpenRadiantProgressionPayload;
 import com.scrotey.stormlight.network.OpenMysteriousBookPayload;
 import com.scrotey.stormlight.network.UnlockRadiantLevelPayload;
 import com.scrotey.stormlight.network.TakeLecternBookPayload;
+import com.scrotey.stormlight.network.OpenWayOfKingsPayload;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.LecternBlock;
@@ -15,6 +16,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -42,6 +44,16 @@ public final class RadiantLecternInteraction {
                                     serverPlayer,
                                     new OpenMysteriousBookPayload(pos)
                             );
+                        }
+                        return InteractionResult.SUCCESS;
+                    }
+
+                    if (hasWayOfKings(level, pos)) {
+                        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                            ServerPlayNetworking.send(serverPlayer, new OpenWayOfKingsPayload(
+                                    pos, RadiantProgression.getOrderNetworkId(serverPlayer),
+                                    RadiantProgression.getLevel(serverPlayer), serverPlayer.experienceLevel,
+                                    StonecuttingProgression.getCompletedCuts(serverPlayer)));
                         }
                         return InteractionResult.SUCCESS;
                     }
@@ -197,7 +209,7 @@ public final class RadiantLecternInteraction {
     }
 
     public static void takeLecternBook(
-            ServerPlayer player,
+            Player player,
             TakeLecternBookPayload payload
     ) {
         BlockPos pos = payload.lecternPos();
@@ -218,7 +230,8 @@ public final class RadiantLecternInteraction {
         ItemStack book = lectern.getBook();
 
         if (!book.is(ModItems.MYSTERIOUS_BOOK)
-                && !book.is(ModItems.WORDS_OF_RADIANCE)) {
+                && !book.is(ModItems.WORDS_OF_RADIANCE)
+                && !book.is(ModItems.WAY_OF_KINGS)) {
             return;
         }
 
@@ -244,6 +257,12 @@ public final class RadiantLecternInteraction {
         player.getInventory().placeItemBackInInventory(
                 removedBook
         );
+    }
+
+    private static boolean hasWayOfKings(Level level, BlockPos pos) {
+        return level.getBlockState(pos).is(Blocks.LECTERN)
+                && level.getBlockEntity(pos) instanceof LecternBlockEntity lectern
+                && lectern.getBook().is(ModItems.WAY_OF_KINGS);
     }
 
     private static boolean hasWordsOfRadiance(

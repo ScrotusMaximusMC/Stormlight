@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:garnet",
+  "result": {
+    "id": "stormlight:raw_garnet_chip",
+    "count": 1
+  }
+}

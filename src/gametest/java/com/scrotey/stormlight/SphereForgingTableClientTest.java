@@ -1,12 +1,13 @@
 package com.scrotey.stormlight;
 
+import com.scrotey.stormlight.item.ModItems;
+
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.block.entity.SphereForgingTableBlockEntity;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import com.scrotey.stormlight.block.custom.SphereForgingTableBlock;
-import com.scrotey.stormlight.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -61,7 +62,7 @@ public class SphereForgingTableClientTest implements FabricClientGameTest {
             use(world, new ItemStack(ModItems.MARK_MOULD));
             view(context, world, 3.0, 100, -0.6, 19, 38);
             context.takeScreenshot("forge-mould-set");
-            use(world, new ItemStack(Items.DIAMOND));
+            use(world, new ItemStack(ModItems.RAW_DIAMOND_MARK));
             context.waitTicks(5);
             context.takeScreenshot("forge-gem-set");
             view(context, world, -1.5, 100, -3.5, -34, 16);
@@ -80,6 +81,7 @@ public class SphereForgingTableClientTest implements FabricClientGameTest {
             context.takeScreenshot("forge-finished");
             view(context, world, 4.5, 100, 4.5, 139, 15);
             context.takeScreenshot("forge-back");
+
         }
     }
 

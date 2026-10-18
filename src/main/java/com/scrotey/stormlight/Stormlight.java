@@ -38,6 +38,7 @@ public class Stormlight implements ModInitializer {
         ModComponents.initialize();
         ModItems.initialize();
         RadiantProgression.initialize();
+        com.scrotey.stormlight.progression.StonecuttingProgression.initialize();
         ModSprenEntities.initialize();
         SprenManager.initialize();
         SprenSeekManager.initialize();
@@ -54,6 +55,7 @@ public class Stormlight implements ModInitializer {
         HighstormManager.initialize();
         SphereDecayManager.initialize();
         HighstormCommands.initialize();
+        com.scrotey.stormlight.debug.DebugUiCommands.initialize();
         ChrysalisCommands.initialize();
         StormlightManager.initialize();
         LashingManager.initialize();

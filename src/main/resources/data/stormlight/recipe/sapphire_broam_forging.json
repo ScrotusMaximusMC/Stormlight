@@ -1,6 +1,6 @@
 {
   "type": "stormlight:sphere_forging",
-  "ingredient": "stormlight:large_sapphire",
+  "ingredient": "stormlight:raw_sapphire_broam",
   "mould": "stormlight:broam_mould",
   "glass": 3,
   "result": {

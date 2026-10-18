@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:large_diamond",
+  "result": {
+    "id": "stormlight:raw_diamond_broam",
+    "count": 1
+  }
+}

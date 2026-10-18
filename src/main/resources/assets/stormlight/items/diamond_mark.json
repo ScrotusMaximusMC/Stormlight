@@ -1,41 +1,77 @@
 {
   "model": {
-    "type": "minecraft:range_dispatch",
-    "property": "minecraft:custom_model_data",
-    "index": 0,
-    "entries": [
+    "type": "minecraft:composite",
+    "models": [
       {
-        "threshold": 1,
-        "model": {
+        "type": "minecraft:range_dispatch",
+        "property": "minecraft:custom_model_data",
+        "index": 0,
+        "entries": [
+          {
+            "threshold": 1,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/diamond_mark_faint"
+            }
+          },
+          {
+            "threshold": 2,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/diamond_mark_soft"
+            }
+          },
+          {
+            "threshold": 3,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/diamond_mark_bright"
+            }
+          },
+          {
+            "threshold": 4,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/diamond_mark_brilliant"
+            }
+          }
+        ],
+        "fallback": {
           "type": "minecraft:model",
-          "model": "stormlight:item/diamond_mark_faint"
+          "model": "stormlight:item/diamond_mark"
         }
       },
       {
-        "threshold": 2,
-        "model": {
-          "type": "minecraft:model",
-          "model": "stormlight:item/diamond_mark_soft"
-        }
-      },
-      {
-        "threshold": 3,
-        "model": {
-          "type": "minecraft:model",
-          "model": "stormlight:item/diamond_mark_bright"
-        }
-      },
-      {
-        "threshold": 4,
-        "model": {
-          "type": "minecraft:model",
-          "model": "stormlight:item/diamond_mark_brilliant"
-        }
+        "type": "minecraft:range_dispatch",
+        "property": "minecraft:damage",
+        "normalize": true,
+        "fallback": {
+          "type": "minecraft:empty"
+        },
+        "entries": [
+          {
+            "threshold": 0.01,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/sphere_cracks_light"
+            }
+          },
+          {
+            "threshold": 0.4,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/sphere_cracks_moderate"
+            }
+          },
+          {
+            "threshold": 0.75,
+            "model": {
+              "type": "minecraft:model",
+              "model": "stormlight:item/sphere_cracks_heavy"
+            }
+          }
+        ]
       }
-    ],
-    "fallback": {
-      "type": "minecraft:model",
-      "model": "stormlight:item/diamond_mark"
-    }
+    ]
   }
 }

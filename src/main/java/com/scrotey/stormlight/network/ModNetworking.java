@@ -69,6 +69,10 @@ public final class ModNetworking {
         );
 
         PayloadTypeRegistry.clientboundPlay().register(
+                OpenWayOfKingsPayload.TYPE, OpenWayOfKingsPayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
                 OpenMysteriousBookPayload.TYPE,
                 OpenMysteriousBookPayload.CODEC
         );

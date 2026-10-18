@@ -13,6 +13,9 @@ cd "$(dirname "$0")/.."
 # Test class prefix -> regex matched against changed paths (lowercased, underscores removed).
 # Add a line here when you add tests for a new feature.
 RULES=(
+  "DebugUi|debugui"
+  "SphereWear|spherewear|spherecracks|assets/stormlight/items/(diamond|garnet|ruby|sapphire|emerald)(chip|mark|broam)\.json"
+  "WayOfKings|wayofkings|assets/stormlight/lang/"
   "Highstorm|highstorm|stormfront|cloudrenderermixin|soundenginelull|stormfog|weathereffectrenderer|daylightdarkening"
   "Gemcutting|gemcut"
   "SphereForging|sphereforg|sphereitem|mould"

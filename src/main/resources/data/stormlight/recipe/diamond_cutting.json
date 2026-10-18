@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "minecraft:diamond",
+  "result": {
+    "id": "stormlight:raw_diamond_chip",
+    "count": 1
+  }
+}

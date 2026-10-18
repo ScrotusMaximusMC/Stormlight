@@ -1,0 +1,7 @@
+{
+  "parent": "stormlight:item/chisel",
+  "textures": {
+    "steel": "minecraft:block/diamond_block",
+    "particle": "minecraft:block/diamond_block"
+  }
+}

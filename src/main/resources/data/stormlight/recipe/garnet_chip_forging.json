@@ -1,6 +1,6 @@
 {
   "type": "stormlight:sphere_forging",
-  "ingredient": "stormlight:garnet_nugget",
+  "ingredient": "stormlight:raw_garnet_chip",
   "mould": "stormlight:chip_mould",
   "glass": 1,
   "result": {

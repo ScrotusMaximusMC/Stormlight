@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "minecraft:emerald",
+  "result": {
+    "id": "stormlight:raw_emerald_chip",
+    "count": 1
+  }
+}
