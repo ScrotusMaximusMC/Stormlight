@@ -499,7 +499,8 @@ public final class StormlightManager {
     ) {
         return new StormlightStatusPayload(
                 ModAttachments.getPersonalStormlight(player),
-                RadiantProgression.getStormlightCapacity(player)
+                RadiantProgression.getStormlightCapacity(player),
+                RadiantProgression.getLevel(player)
         );
     }
 }

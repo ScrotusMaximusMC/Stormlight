@@ -9,6 +9,7 @@
 		"CloudRendererMixin",
 		"DaylightDarkeningMixin",
 		"CameraFovMixin",
+		"EntityOutlineMixin",
 		"WeatherEffectRendererMixin"
 	],
 	"injectors": {

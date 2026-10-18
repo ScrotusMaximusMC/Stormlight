@@ -26,8 +26,11 @@ import com.scrotey.stormlight.network.OpenMysteriousBookPayload;
 import com.scrotey.stormlight.client.progression.MysteriousBookScreen;
 import com.scrotey.stormlight.network.LashingStatePayload;
 import com.scrotey.stormlight.network.ToggleLashingPayload;
+import com.scrotey.stormlight.network.ExternalLashingInputPayload;
+import com.scrotey.stormlight.network.ExternalLashingTargetPayload;
 import com.scrotey.stormlight.block.ModBlocks;
 import com.scrotey.stormlight.client.lashing.ClientLashingState;
+import com.scrotey.stormlight.client.lashing.ClientExternalLashingState;
 import com.scrotey.stormlight.spren.ModSprenEntities;
 import com.scrotey.stormlight.client.spren.ModSprenModelLayers;
 import com.scrotey.stormlight.client.spren.SprenRenderer;
@@ -91,6 +94,16 @@ public class StormlightClient implements ClientModInitializer {
                     )
             );
 
+    private static final KeyMapping EXTERNAL_LASHING_KEY =
+            KeyMappingHelper.registerKeyMapping(
+                    new KeyMapping(
+                            "key.stormlight.external_lashing",
+                            InputConstants.Type.KEYSYM,
+                            InputConstants.KEY_H,
+                            STORMLIGHT_CATEGORY
+                    )
+            );
+
     @Override
     public void onInitializeClient() {
         ModSprenModelLayers.register();
@@ -141,6 +154,12 @@ public class StormlightClient implements ClientModInitializer {
         );
 
         ClientPlayNetworking.registerGlobalReceiver(
+                ExternalLashingTargetPayload.TYPE,
+                (payload, context) ->
+                        ClientExternalLashingState.update(payload)
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
                 OpenRadiantProgressionPayload.TYPE,
                 (payload, context) ->
                         context.client().gui.setScreen(
@@ -180,6 +199,7 @@ public class StormlightClient implements ClientModInitializer {
         ApproachingStormfrontEffects.tick(client);
         ClientHighstormWind.tick(client);
         ClientLashingState.tick(client);
+        ClientExternalLashingState.tick(client);
         if (client.player == null) {
             StormlightFovFeedback.setBreathingState(false, false);
             lashingKeyWasDown = false;
@@ -217,6 +237,16 @@ public class StormlightClient implements ClientModInitializer {
         while (LASHING_KEY.consumeClick()) {
             // Drain the click queue. Tap-versus-hold is determined from
             // the key's pressed and released state on the server.
+        }
+
+        while (EXTERNAL_LASHING_KEY.consumeClick()) {
+            if (client.gui.screen() == null) {
+                ClientPlayNetworking.send(
+                        new ExternalLashingInputPayload(
+                                client.options.keyShift.isDown()
+                        )
+                );
+            }
         }
 
         if (breathingOut) {

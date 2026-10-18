@@ -9,6 +9,7 @@ import com.scrotey.stormlight.highstorm.HighstormCommands;
 import com.scrotey.stormlight.highstorm.HighstormManager;
 import com.scrotey.stormlight.item.ModItems;
 import com.scrotey.stormlight.lashing.LashingManager;
+import com.scrotey.stormlight.lashing.ExternalLashingManager;
 import com.scrotey.stormlight.network.ModNetworking;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import com.scrotey.stormlight.screen.ModMenuTypes;
@@ -54,6 +55,7 @@ public class Stormlight implements ModInitializer {
         ChrysalisCommands.initialize();
         StormlightManager.initialize();
         LashingManager.initialize();
+        ExternalLashingManager.initialize();
 
         LOGGER.info("Hello Kaladin!");
     }

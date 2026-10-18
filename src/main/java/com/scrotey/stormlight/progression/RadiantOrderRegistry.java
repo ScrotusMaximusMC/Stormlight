@@ -12,6 +12,7 @@ public final class RadiantOrderRegistry {
     public static final int FALL_PROTECTION_LEVEL = 6;
     public static final int VERTICAL_LASHING_LEVEL = 8;
     public static final int REABSORPTION_LEVEL = 10;
+    public static final int EXTERNAL_LASHING_LEVEL = 10;
 
     public static final RadiantOrder WINDRUNNER = new RadiantOrder(
             "windrunner",
