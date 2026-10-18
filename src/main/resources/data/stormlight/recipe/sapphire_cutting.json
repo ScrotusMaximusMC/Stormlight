@@ -1,0 +1,8 @@
+{
+  "type": "stormlight:gemcutting",
+  "ingredient": "stormlight:sapphire",
+  "result": {
+    "id": "stormlight:raw_sapphire_chip",
+    "count": 1
+  }
+}

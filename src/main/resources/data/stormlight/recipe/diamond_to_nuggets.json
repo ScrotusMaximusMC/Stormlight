@@ -1,8 +1,0 @@
-{
-  "type": "stormlight:gemcutting",
-  "ingredient": "minecraft:diamond",
-  "result": {
-    "id": "stormlight:diamond_nugget",
-    "count": 9
-  }
-}

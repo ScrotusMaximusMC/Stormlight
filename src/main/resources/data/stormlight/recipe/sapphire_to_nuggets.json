@@ -1,8 +1,0 @@
-{
-  "type": "stormlight:gemcutting",
-  "ingredient": "stormlight:sapphire",
-  "result": {
-    "id": "stormlight:sapphire_nugget",
-    "count": 9
-  }
-}

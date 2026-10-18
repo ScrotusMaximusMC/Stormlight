@@ -1,6 +1,7 @@
 package com.scrotey.stormlight.block.entity;
 
 import com.scrotey.stormlight.item.ModItems;
+import com.scrotey.stormlight.progression.StonecuttingProgression;
 import com.scrotey.stormlight.recipe.ModRecipes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -39,7 +40,8 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
 
     public static boolean isGem(ItemStack stack) {
         return stack.is(Items.DIAMOND) || stack.is(Items.EMERALD) || stack.is(ModItems.GARNET)
-                || stack.is(ModItems.RUBY) || stack.is(ModItems.SAPPHIRE);
+                || stack.is(ModItems.RUBY) || stack.is(ModItems.SAPPHIRE)
+                || StonecuttingProgression.isLargeGem(stack);
     }
 
     public ItemStack getGem() { return gem.copy(); }
@@ -69,16 +71,25 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
         }
         ItemStack held = player.getItemInHand(hand);
         if (gem.isEmpty() && isGem(held)) {
+            if (StonecuttingProgression.isLargeGem(held)
+                    && StonecuttingProgression.getLevel(player) < StonecuttingProgression.BROAM_UNLOCK_LEVEL) {
+                player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(
+                        "message.stormlight.stonecutting.broam_locked"));
+                return false;
+            }
             var input = new SingleRecipeInput(held);
             if (server.recipeAccess().getRecipeFor(ModRecipes.GEMCUTTING_TYPE, input, server).isEmpty()) return false;
             gem = held.copyWithCount(1);
             if (!player.isCreative()) held.shrink(1);
-            gemKind = gem.is(Items.DIAMOND) ? 0 : gem.is(ModItems.GARNET) ? 1
-                    : gem.is(ModItems.RUBY) ? 2 : gem.is(ModItems.SAPPHIRE) ? 3 : 4;
+            gemKind = kindOf(gem);
             strikes = 0;
             lastStrike = Long.MIN_VALUE;
             sound(SoundEvents.GRINDSTONE_USE, 0.45F, 0.8F);
             sync();
+            return true;
+        }
+        if (held.isEmpty() && player.isShiftKeyDown() && gem.isEmpty()) {
+            StonecuttingProgression.showStatus(player);
             return true;
         }
         if (held.isEmpty() && player.isShiftKeyDown() && !gem.isEmpty()) {
@@ -88,19 +99,27 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
             sync();
             return true;
         }
-        if (!held.is(ModItems.CHISEL) || held.isBroken() || gem.isEmpty() || clampTicks < CLAMP_TICKS) return false;
+        if ((!held.is(ModItems.CHISEL) && !held.is(ModItems.DIAMOND_CHISEL))
+                || held.isBroken() || gem.isEmpty() || clampTicks < CLAMP_TICKS) return false;
+        // Check every strike so another player cannot bypass the rank or tool requirement.
+        if (StonecuttingProgression.isLargeGem(gem) && !StonecuttingProgression.canCutLargeGem(player, held)) {
+            player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.stormlight.stonecutting.broam_requirements"));
+            return false;
+        }
         long now = level.getGameTime();
         if (lastStrike != Long.MIN_VALUE && now - lastStrike < 4) return false;
         var input = new SingleRecipeInput(gem);
         var recipe = server.recipeAccess().getRecipeFor(ModRecipes.GEMCUTTING_TYPE, input, server).orElse(null);
         if (recipe == null) return false;
-        ItemStack result = recipe.value().assemble(input);
-        if (result.isEmpty()) return false;
+        if (recipe.value().assemble(input).isEmpty()) return false;
         lastStrike = now;
         held.hurtAndBreak(1, player, hand);
         sound(SoundEvents.STONE_HIT, 0.7F, 1.4F + strikes * 0.035F);
         sound(SoundEvents.ANVIL_HIT, 0.15F, 1.8F);
         if (++strikes == REQUIRED_STRIKES) {
+            ItemStack result = StonecuttingProgression.rollResult(gem, player, server.getRandom());
+            StonecuttingProgression.completeCut(player);
             ItemEntity drop = new ItemEntity(level, worldPosition.getX() + 0.5,
                     worldPosition.getY() + 1.4, worldPosition.getZ() + 0.5, result);
             drop.setDefaultPickUpDelay();
@@ -111,6 +130,13 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
         }
         sync();
         return true;
+    }
+
+    private static int kindOf(ItemStack gem) {
+        return gem.is(Items.DIAMOND) || gem.is(ModItems.LARGE_DIAMOND) ? 0
+                : gem.is(ModItems.GARNET) || gem.is(ModItems.LARGE_GARNET) ? 1
+                : gem.is(ModItems.RUBY) || gem.is(ModItems.LARGE_RUBY) ? 2
+                : gem.is(ModItems.SAPPHIRE) || gem.is(ModItems.LARGE_SAPPHIRE) ? 3 : 4;
     }
 
     private void sound(net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
@@ -146,8 +172,7 @@ public class GemcuttingTableBlockEntity extends BlockEntity {
         strikes = gem.isEmpty() ? 0 : Math.clamp(input.getIntOr("Strikes", 0), 0, 9);
         previousClampTicks = clampTicks = Math.clamp(input.getIntOr("ClampTicks", 0), 0, CLAMP_TICKS);
         gemKind = gem.isEmpty() ? Math.clamp(input.getIntOr("GemKind", 0), 0, 4)
-                : gem.is(Items.DIAMOND) ? 0 : gem.is(ModItems.GARNET) ? 1
-                : gem.is(ModItems.RUBY) ? 2 : gem.is(ModItems.SAPPHIRE) ? 3 : 4;
+                : kindOf(gem);
     }
     @Override public void preRemoveSideEffects(BlockPos pos, BlockState state) {
         if (level != null && !level.isClientSide()) {

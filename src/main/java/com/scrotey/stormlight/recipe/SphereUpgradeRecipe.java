@@ -323,6 +323,7 @@ public class SphereUpgradeRecipe extends CustomRecipe {
         }
 
         int totalCharge = 0;
+        int totalDamage = 0;
 
         /*
          * Add the charge from every sphere ingredient.
@@ -331,6 +332,7 @@ public class SphereUpgradeRecipe extends CustomRecipe {
         for (ItemStack stack : input.items()) {
             if (stack.getItem() instanceof SphereItem sphere) {
                 totalCharge += sphere.getCharge(stack);
+                totalDamage += stack.getDamageValue();
             }
         }
 
@@ -349,6 +351,8 @@ public class SphereUpgradeRecipe extends CustomRecipe {
                 totalCharge
         );
 
+        // Preserve wear when combining spheres into a larger denomination.
+        result.setDamageValue(totalDamage);
         return result;
     }
 

@@ -20,7 +20,7 @@ public class SphereItem extends Item {
     private final int capacity;
 
     public SphereItem(Properties properties, int capacity, String sphereName) {
-        super(properties);
+        super(properties.durability(capacity * 10));
         this.capacity = capacity;
         this.sphereName = sphereName;
     }
@@ -38,6 +38,16 @@ public class SphereItem extends Item {
         return capacity;
     }
 
+    /** Remaining lifetime is independent of the sphere's current charge. */
+    public int getHealth(ItemStack stack) {
+        return Math.max(0, capacity * 10 - stack.getDamageValue());
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return true;
+    }
+
     private final String sphereName;
 
     @SuppressWarnings("deprecation")
@@ -50,6 +60,9 @@ public class SphereItem extends Item {
             TooltipFlag flag
     ) {
         int charge = getCharge(stack);
+        textConsumer.accept(Component.translatable(
+                "tooltip.stormlight.sphere_health", getHealth(stack), capacity * 10
+        ).withStyle(ChatFormatting.GREEN));
 
         textConsumer.accept(
                 Component.translatable(
@@ -73,6 +86,10 @@ public class SphereItem extends Item {
             ItemStack stack,
             int newCharge
     ) {
+        setCharge(stack, newCharge, true);
+    }
+
+    private void setCharge(ItemStack stack, int newCharge, boolean applyWear) {
         int previousCharge =
                 getCharge(stack);
 
@@ -85,6 +102,21 @@ public class SphereItem extends Item {
                         )
                 );
 
+        // Only actively drawn Stormlight wears the sphere. Charging and
+        // passive leakage never change its remaining lifetime.
+        int chargeLost = Math.max(0, previousCharge - clampedCharge);
+        if (applyWear && chargeLost > 0) {
+            int damage = stack.getDamageValue() + chargeLost;
+            if (damage >= capacity * 10) {
+                stack.shrink(1);
+                return;
+            }
+            stack.setDamageValue(damage);
+            // Start timing at the new leakage rate, without charging past
+            // elapsed time at a rate the sphere did not yet have.
+            stack.set(ModComponents.STORMLIGHT_LAST_DECAY_TICK, -1L);
+        }
+
         stack.set(
                 ModComponents.STORMLIGHT_CHARGE,
                 clampedCharge
@@ -94,7 +126,7 @@ public class SphereItem extends Item {
          * Receiving new Stormlight restarts the decay timer.
          *
          * Highstorm charging happens gradually, so its final charging
-         * pulse becomes the start of the new ten-day decay period.
+         * pulse becomes the start of a new leakage period.
          */
         if (clampedCharge > previousCharge
                 || clampedCharge <= 0) {
@@ -124,9 +156,10 @@ public class SphereItem extends Item {
     /**
      * Applies time-based Stormlight leakage to this sphere.
      *
-     * Every denomination loses its entire capacity over exactly ten
-     * Minecraft days. Larger spheres therefore lose individual charge
-     * points more frequently than smaller spheres.
+     * No leakage occurs at or above 80% remaining health. Below that,
+     * leakage increases linearly with wear, approaching a full capacity
+     * per ten Minecraft days as health approaches zero. Leakage causes
+     * no additional wear.
      *
      * Returns true when the stack's data changed.
      */
@@ -137,7 +170,7 @@ public class SphereItem extends Item {
         int currentCharge =
                 getCharge(stack);
 
-        if (currentCharge <= 0) {
+        if (currentCharge <= 0 || stack.getDamageValue() <= capacity * 2) {
             long lastDecayTick =
                     stack.getOrDefault(
                             ModComponents.STORMLIGHT_LAST_DECAY_TICK,
@@ -163,7 +196,7 @@ public class SphereItem extends Item {
                 );
 
         /*
-         * Begin a fresh ten-day timer for newly infused spheres and
+         * Begin a fresh leakage timer for newly infused spheres and
          * safely recover if the stored timestamp is invalid.
          */
         if (lastDecayTick < 0L
@@ -177,9 +210,10 @@ public class SphereItem extends Item {
             return true;
         }
 
-        long ticksPerChargePoint =
-                FULL_DECAY_TICKS
-                        / capacity;
+        double leakageRate = Math.min(1.0,
+                (stack.getDamageValue() - capacity * 2) / (double) (capacity * 8));
+        long ticksPerChargePoint = Math.max(1L,
+                (long) Math.ceil(FULL_DECAY_TICKS / (capacity * leakageRate)));
 
         long elapsedTicks =
                 currentGameTick
@@ -213,10 +247,11 @@ public class SphereItem extends Item {
 
         setCharge(
                 stack,
-                remainingCharge
+                remainingCharge,
+                false
         );
 
-        if (remainingCharge > 0) {
+        if (!stack.isEmpty() && remainingCharge > 0) {
             stack.set(
                     ModComponents.STORMLIGHT_LAST_DECAY_TICK,
                     updatedDecayTick

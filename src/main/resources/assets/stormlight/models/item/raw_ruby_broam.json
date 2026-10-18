@@ -1,0 +1,12 @@
+{
+  "parent": "stormlight:item/raw_ruby_mark",
+  "display": {
+    "gui": {
+      "scale": [
+        1.25,
+        1.25,
+        1.25
+      ]
+    }
+  }
+}
