@@ -78,6 +78,7 @@ Large gems cannot be forged directly; use a raw broam with a broam mould and thr
 
 Craft a book with lapis lazuli to make The Way of Kings. Put it on a lectern and open it to read the
 field guide, a Stormlight reference page, your current Radiant order and next XP milestone, and a visual Stone Cutting tree with
-all ten levels, cut requirements, and outcome odds, plus a Broam Cutting tab with the level 5 unlock,
-diamond chisel requirement, and broam yields. The displayed progress belongs to the reader,
+all ten levels, cut requirements, and chip, mark, and broam odds on one Stone Cutting tree.
+The same page shows the level 5 broam unlock and diamond chisel requirement. Scroll or use the
+arrow buttons to explore the tree on smaller screens. The displayed progress belongs to the reader,
 so two players using the same lectern see their own levels. Use **Take Book** to retrieve it.

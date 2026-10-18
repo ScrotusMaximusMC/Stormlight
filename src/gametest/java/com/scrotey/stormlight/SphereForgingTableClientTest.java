@@ -96,9 +96,9 @@ public class SphereForgingTableClientTest implements FabricClientGameTest {
             context.waitTicks(2);
             context.takeScreenshot("way-of-kings-stone-cutting-tree");
             context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
-                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 40), 4)));
+                    new OpenWayOfKingsPayload(POS, 1, 3, 8, 40), 2)));
             context.waitTicks(5);
-            context.takeScreenshot("way-of-kings-broam-cutting-tree");
+            context.takeScreenshot("way-of-kings-combined-cutting-level-five");
             context.runOnClient(client -> client.gui.setScreen(new WayOfKingsScreen(
                     new OpenWayOfKingsPayload(POS, 1, 3, 8, 35), 3)));
             context.waitTicks(2);
